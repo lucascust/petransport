@@ -15,7 +15,12 @@
       theme: {
         extend: {
           colors: {
-            primary: '#2C5282', // Azul escuro
+            primary: {
+              100: '#EBF8FF', // Azul muito claro
+              600: '#2C5282', // Azul escuro
+              700: '#1A365D', // Azul muito escuro
+              DEFAULT: '#2C5282', // Azul escuro (default)
+            },
             secondary: '#90CDF4', // Azul claro
             dark: '#1A365D', // Azul muito escuro
             light: '#EBF8FF' // Azul muito claro
@@ -33,7 +38,7 @@
     }
   </style>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
-  <link rel="icon" type="image/svg+xml" href="/static/icons/favicon.svg">
+  <link rel="icon" type="image/png" href="/static/icons/favicon.png">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/flag-icon-css/6.6.6/css/flag-icons.min.css">
   {% block head %}{% endblock %}
 </head>
