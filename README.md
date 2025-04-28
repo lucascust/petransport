@@ -296,3 +296,11 @@ petransport/
 1. Install dependencies: `pip install -r requirements.txt`
 2. Set up Firebase as described above
 3. Run the application: `python app.py` 
+
+## Deploying to Render
+
+1. Add your Google Cloud service account JSON as a Secret File.
+2. Set the environment variable:
+   GOOGLE_APPLICATION_CREDENTIALS=/etc/secrets/service-account.json
+3. Set other required environment variables (MONGODB_URI, SECRET_KEY, etc).
+4. Deploy! 
