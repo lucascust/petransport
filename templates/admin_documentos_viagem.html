@@ -17,8 +17,7 @@
 
   .doc-row.selected label span {
     color: #2A5271 !important;
-    font-weight: 500;
-    font-family: Roboto, sans-serif;
+    font-weight: 600;
   }
 
   .doc-row input[type="checkbox"]+div {
@@ -128,6 +127,14 @@
   h1.text-2xl {
     font-size: 1.45rem;
   }
+
+  /* Add white background and drop shadow to document cards */
+  .doc-card {
+    background: #fff;
+    box-shadow: 0 2px 8px 0 rgba(29, 117, 187, 0.08), 0 1.5px 4px 0 rgba(60, 60, 60, 0.06);
+    border-radius: 0.75rem;
+    border: 1px solid #e5e7eb;
+  }
 </style>
 <div class="max-w-5xl mx-auto p-4">
   <div class="flex items-center mb-2">
@@ -151,8 +158,8 @@
               <h4 class="section-title">Documentos do Tutor</h4>
               <span class="tutor-badge ml-2" id="tutor-selected-count">0 selecionados</span>
             </div>
-            <div class="border rounded p-3 mb-2">
-              <div class="space-y-2" id="tutor-doc-list">
+            <div class="doc-card mb-2 p-2">
+              <div class="space-y-1" id="tutor-doc-list">
                 {% set tutor_docs = [
                 ('identityDocument', 'Documento de Identidade'),
                 ('passport', 'Passaporte'),
@@ -200,8 +207,8 @@
             <div>
               {% for pet in pet_doc_selection %}
               <div class="pet-doc-list mb-6{% if not loop.first %} hidden{% endif %}" id="pet-doc-list-{{pet.id}}">
-                <div class="border rounded p-3 mb-2">
-                  <div class="space-y-2">
+                <div class="doc-card mb-2 p-2">
+                  <div class="space-y-1">
                     {% set all_pet_doc_types = [
                     ('vaccinationCard', 'Carteira de Vacinação'),
                     ('microchipCertificate', 'Certificado de Microchip'),
