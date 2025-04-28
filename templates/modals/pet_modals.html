@@ -1,0 +1,54 @@
+<!-- Modal de Edição do Pet -->
+<div id="modal-pet" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center p-4">
+  <div class="bg-white rounded-lg shadow-xl max-w-md w-full max-h-[90vh] overflow-hidden flex flex-col">
+    <div class="px-4 py-3 border-b border-gray-200 flex justify-between items-center">
+      <h2 class="text-lg font-semibold text-gray-900">Editar Pet</h2>
+      <button onclick="fecharModal('modal-pet')" class="text-gray-400 hover:text-gray-500">
+        <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </button>
+    </div>
+    <div class="p-4 overflow-y-auto flex-1">
+      {% include "forms/edit_pet_form.html" %}
+    </div>
+    <div class="px-4 py-3 bg-gray-50 border-t border-gray-200 flex justify-end space-x-3">
+      <button type="button" onclick="fecharModal('modal-pet')"
+        class="px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 transition-colors">
+        Cancelar
+      </button>
+      <button type="submit" form="form-editar-pet"
+        class="px-4 py-2 bg-primary-600 text-white rounded-md hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 transition-colors">
+        Salvar
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal de Adição de Pet -->
+<div id="modal-adicionar-pet"
+  class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center p-4">
+  <div class="bg-white rounded-lg shadow-xl max-w-md w-full max-h-[90vh] overflow-hidden flex flex-col">
+    <div class="px-4 py-3 border-b border-gray-200 flex justify-between items-center">
+      <h2 class="text-lg font-semibold text-gray-900">Adicionar Novo Pet</h2>
+      <button onclick="fecharModal('modal-adicionar-pet')" class="text-gray-400 hover:text-gray-500">
+        <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </button>
+    </div>
+    <div class="p-4 overflow-y-auto flex-1">
+      {% include "forms/add_pet_form.html" %}
+    </div>
+    <div class="px-4 py-3 bg-gray-50 border-t border-gray-200 flex justify-end space-x-3">
+      <button type="button" onclick="fecharModal('modal-adicionar-pet')"
+        class="px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 transition-colors">
+        Cancelar
+      </button>
+      <button type="submit" form="form-adicionar-pet"
+        class="px-4 py-2 bg-primary-600 text-white rounded-md hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 transition-colors">
+        Adicionar Pet
+      </button>
+    </div>
+  </div>
+</div>

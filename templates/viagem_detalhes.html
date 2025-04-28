@@ -1,0 +1,1562 @@
+{% extends "base.html" %}
+
+{% block title %}Detalhes da Viagem - {{ travel.destination }}{% endblock %}
+
+{% block head %}
+<script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+<style>
+  /* Estilos comuns */
+  .progress-bar,
+  .pet-dropdown-button:focus,
+  .pet-dropdown-menu,
+  .pet-dropdown-item,
+  .status-badge {
+    transition: all 0.2s ease-in-out;
+  }
+
+  .pet-dropdown-button:focus {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3);
+  }
+
+  /* Animação para status badges */
+  .status-badge-complete {
+    animation: pulse 2s infinite;
+  }
+
+  @keyframes pulse {
+    0% {
+      box-shadow: 0 0 0 0 rgba(74, 222, 128, 0.4);
+    }
+
+    70% {
+      box-shadow: 0 0 0 6px rgba(74, 222, 128, 0);
+    }
+
+    100% {
+      box-shadow: 0 0 0 0 rgba(74, 222, 128, 0);
+    }
+  }
+
+  /* Classes de largura para barras de progresso - Consolidadas */
+  .w-0 {
+    width: 0%;
+  }
+
+  .w-10 {
+    width: 10%;
+  }
+
+  .w-20 {
+    width: 20%;
+  }
+
+  .w-30 {
+    width: 30%;
+  }
+
+  .w-40 {
+    width: 40%;
+  }
+
+  .w-50 {
+    width: 50%;
+  }
+
+  .w-60 {
+    width: 60%;
+  }
+
+  .w-70 {
+    width: 70%;
+  }
+
+  .w-80 {
+    width: 80%;
+  }
+
+  .w-90 {
+    width: 90%;
+  }
+
+  .w-100 {
+    width: 100%;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto" x-data x-init="
+       if (!window.Alpine.store('toast')) {
+         Alpine.store('toast', {
+           show: false,
+           type: 'success',
+           message: '',
+           showToast(type, message) {
+             this.type = type;
+             this.message = message;
+             this.show = true;
+             setTimeout(() => { this.show = false; }, 3500);
+           }
+         });
+       }
+     ">
+  <!-- MACROS para evitar repetição de código -->
+  {% macro status_badge(status) %}
+  <span class="ml-3 px-2.5 py-0.5 rounded-full text-xs font-medium 
+      {% if status == 'upcoming' %}bg-blue-100 text-blue-800
+      {% elif status == 'in_progress' %}bg-yellow-100 text-yellow-800
+      {% elif status == 'completed' %}bg-green-100 text-green-800
+      {% else %}bg-gray-100 text-gray-800{% endif %}">
+    {% if status == 'upcoming' %}Agendada
+    {% elif status == 'in_progress' %}Em Processamento
+    {% elif status == 'completed' %}Concluída
+    {% else %}Indefinida{% endif %}
+  </span>
+  {% endmacro %}
+
+  {% macro document_status(is_uploaded, element_id) %}
+  <span id="{{ element_id }}" class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
+      {% if is_uploaded %}bg-green-100 text-green-800{% else %}bg-red-100 text-red-800{% endif %}">
+    {% if is_uploaded %}Enviado{% else %}Pendente{% endif %}
+  </span>
+  {% endmacro %}
+
+  {% macro document_action(is_uploaded, doc_url, doc_path, tipo, doc_type, pet_id, element_id, document_id='',
+  storage_type='', public_url='') %}
+  <td class="px-4 py-3 text-sm font-medium" id="{{ element_id }}" {% if document_id
+    %}data-document-id="{{ document_id }}" {% endif %} {% if storage_type %}data-storage-type="{{ storage_type }}" {%
+    endif %} {% if public_url %}data-public-url="{{ public_url }}" {% endif %}>
+    {% if is_uploaded %}
+    <div class="flex space-x-2">
+      {% set view_url = public_url if storage_type == 'firebase' and public_url else doc_url %}
+      <button
+        onclick="openDocumentModal('{{ view_url }}', '{{ doc_path }}', '{{ tipo }}', '{{ doc_type }}', '${{ pet_id }}')"
+        class="text-blue-600 hover:text-blue-900 flex items-center">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24"
+          stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+        </svg>
+        Ver
+      </button>
+    </div>
+    {% else %}
+    <a href="javascript:void(0)"
+      onclick="openUploadModal('{{ tipo }}', '{{ doc_type }}', '{{ pet_id }}', '{{ usuario.username }}', '{{ travel._id }}')"
+      class="text-green-600 hover:text-green-900 flex items-center">
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24"
+        stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+          d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+      </svg>
+      Enviar
+    </a>
+    {% endif %}
+  </td>
+  {% endmacro %}
+
+  {% macro document_row(doc_type, doc_name, is_uploaded, doc_url, doc_path, tipo, pet_id='', document_id='',
+  storage_type='', public_url='') %}
+  <tr class="hover:bg-gray-50 transition-colors duration-150">
+    <td class="px-4 py-3">
+      <div class="flex items-center">
+        <div class="text-sm font-medium text-gray-900 relative group cursor-help flex items-center">
+          <span class="flex items-center doc-tooltip-trigger"
+            data-tooltip="{% if tipo == 'pet' %}{{ t('models.PetDocument.descriptions.' ~ doc_type, current_lang) }}{% else %}{{ t('models.HumanDocument.descriptions.' ~ doc_type, current_lang) }}{% endif %}">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-blue-500 mr-2" fill="none" viewBox="0 0 24 24"
+              stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+            {{ doc_name }}
+          </span>
+          <div
+            class="absolute z-20 left-0 mt-2 w-72 max-w-xs px-3 py-2 rounded-lg border bg-white text-xs text-gray-700 shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none group-hover:pointer-events-auto"
+            style="top: 100%; min-width: 200px;">
+            {% if tipo == 'pet' %}
+            {{ t('models.PetDocument.descriptions.' ~ doc_type, current_lang) }}
+            {% else %}
+            {{ t('models.HumanDocument.descriptions.' ~ doc_type, current_lang) }}
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </td>
+    <td class="px-4 py-3">
+      {% set status_id = (tipo ~ "-doc-" ~ (pet_id ~ "-" if pet_id else "") ~ doc_type ~ "-status") %}
+      {{ document_status(is_uploaded, status_id) }}
+    </td>
+    {% set action_id = (tipo ~ "-doc-" ~ (pet_id ~ "-" if pet_id else "") ~ doc_type ~ "-action") %}
+    {{ document_action(is_uploaded, doc_url, doc_path, tipo, doc_type, pet_id, action_id, document_id, storage_type,
+    public_url) }}
+  </tr>
+  {% endmacro %}
+
+  {% macro progress_bar(completed, total, classes='') %}
+  {% set percentage = (completed / total * 100)|int if total > 0 else 0 %}
+  <div class="flex justify-between items-center mb-1">
+    <span class="text-xs font-medium text-gray-700">Progresso dos documentos</span>
+    <span class="text-xs font-medium text-gray-700">{{ completed }}/{{ total }}</span>
+  </div>
+  <div class="w-full bg-gray-200 rounded-full h-2">
+    <div class="bg-blue-600 h-2 rounded-full progress-bar {{ classes }} 
+        {% if percentage <= 10 %}w-10
+        {% elif percentage <= 20 %}w-20
+        {% elif percentage <= 30 %}w-30
+        {% elif percentage <= 40 %}w-40
+        {% elif percentage <= 50 %}w-50
+        {% elif percentage <= 60 %}w-60
+        {% elif percentage <= 70 %}w-70
+        {% elif percentage <= 80 %}w-80
+        {% elif percentage <= 90 %}w-90
+        {% elif percentage <= 100 %}w-100
+        {% else %}w-0{% endif %}">
+    </div>
+  </div>
+  {% endmacro %}
+
+  <!-- Travel Header -->
+  <div class="mb-6 flex flex-col md:flex-row justify-between items-start md:items-center">
+    <div>
+      <div class="flex items-center">
+        <a href="{{ url_for('usuario_home', usuario=usuario.username) }}"
+          class="text-blue-600 hover:text-blue-800 mr-2">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+          </svg>
+        </a>
+        <h1 class="text-2xl font-bold text-gray-900">Viagem para {{ travel.destination }}</h1>
+        {{ status_badge(travel.status) }}
+      </div>
+    </div>
+    <div class="mt-4 md:mt-0 flex space-x-3">
+      <a href="{{ url_for('editar_viagem', usuario=usuario.username, viagem_id=travel._id) }}"
+        class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+        <svg xmlns="http://www.w3.org/2000/svg" class="-ml-1 mr-2 h-4 w-4 text-gray-500" fill="none" viewBox="0 0 24 24"
+          stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+        </svg>
+        Editar Viagem
+      </a>
+      {% if session.get('admin_logged_in') %}
+      <a href="{{ url_for('admin_documentos_viagem', viagem_id=travel._id) }}"
+        class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+        <svg xmlns="http://www.w3.org/2000/svg" class="-ml-1 mr-2 h-4 w-4 text-gray-500" fill="none" viewBox="0 0 24 24"
+          stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+        </svg>
+        Gerenciar Documentos
+      </a>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Resumo da viagem -->
+  <div class="w-full bg-white shadow-md overflow-hidden rounded-lg mb-8 border border-gray-100">
+    <div class="grid grid-cols-1 md:grid-cols-3">
+      <!-- Pets Section - Left Column (1/3 width) -->
+      <div class="flex flex-col p-4 border-b md:border-b-0 md:border-r border-gray-200 bg-primary/5 bg-gray-100">
+        <div class="flex items-center justify-between mb-1">
+          <h3 class="text-base font-semibold text-gray-800">Pets Viajando</h3>
+          <span class="text-xs font-medium bg-primary/10 text-primary px-2 py-1 rounded-full">
+            {{ pets|length }} {% if pets|length == 1 %}Pet{% else %}Pets{% endif %}
+          </span>
+        </div>
+        <div class="flex flex-wrap justify-center gap-5">
+          {% for pet in pets %}
+          <div class="flex flex-col items-center">
+            <div
+              class="h-16 w-16 sm:h-20 sm:w-20 border-4 border-white shadow-md rounded-full overflow-hidden bg-white flex items-center justify-center group transition-all duration-200 hover:border-primary/50 hover:shadow-lg">
+              {% if pet.photo %}
+              {% if pet.photo is string %}
+              <img src="{{ url_for('static', filename='uploads/' + pet.photo) }}" alt="Foto de {{ pet.name }}"
+                class="h-full w-full object-cover">
+              {% elif pet.photo is mapping %}
+              {% if pet.photo.path %}
+              {% if pet.photo.path.startswith('static/') %}
+              <img src="/{{ pet.photo.path }}" alt="Foto de {{ pet.name }}" class="h-full w-full object-cover">
+              {% else %}
+              <img src="{{ url_for('static', filename='uploads/' + pet.photo.path) }}" alt="Foto de {{ pet.name }}"
+                class="h-full w-full object-cover">
+              {% endif %}
+              {% elif pet.photo.filename %}
+              <img src="{{ url_for('static', filename='uploads/' + pet.photo.filename) }}" alt="Foto de {{ pet.name }}"
+                class="h-full w-full object-cover">
+              {% endif %}
+              {% endif %}
+              {% else %}
+              <div class="w-full h-full bg-gray-100 flex items-center justify-center">
+                <svg class="w-10 h-10 text-gray-400" viewBox="0 0 512 512" fill="currentColor">
+                  <path
+                    d="M256 224c-79.41 0-192 122.76-192 200.25 0 34.9 26.81 55.75 71.74 55.75 48.84 0 81.09-25.08 120.26-25.08 39.51 0 71.85 25.08 120.26 25.08 44.93 0 71.74-20.85 71.74-55.75C448 346.76 335.41 224 256 224zm-147.28-12.61c-10.4-34.65-42.44-57.09-71.56-50.13-29.12 6.96-44.29 40.69-33.89 75.34 10.4 34.65 42.44 57.09 71.56 50.13 29.12-6.96 44.29-40.69 33.89-75.34zm84.72-20.78c30.94-8.14 46.42-49.94 34.58-93.36s-46.52-72.01-77.46-63.87-46.42 49.94-34.58 93.36c11.84 43.42 46.53 72.02 77.46 63.87zm281.39-29.34c-29.12-6.96-61.15 15.48-71.56 50.13-10.4 34.65 4.77 68.38 33.89 75.34 29.12 6.96 61.15-15.48 71.56-50.13 10.4-34.65-4.77-68.38-33.89-75.34zm-156.27 29.34c30.94 8.14 65.62-20.45 77.46-63.87 11.84-43.42-3.64-85.21-34.58-93.36s-65.62 20.45-77.46 63.87c-11.84 43.42 3.64 85.22 34.58 93.36z" />
+                </svg>
+              </div>
+              {% endif %}
+            </div>
+            <span class="font-medium mt-1 text-sm text-center text-gray-700">{{ pet.name }}</span>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+
+      <!-- Travel Info Section - Right Column (2/3 width) -->
+      <div class="col-span-2 p-4">
+        <!-- Header with title and date -->
+        <div class="flex items-center justify-between mb-2">
+          <h3 class="text-base font-semibold text-gray-800">Informações da Viagem</h3>
+
+        </div>
+
+        <div class="mb-9 h-px bg-gray-200"></div>
+
+        <!-- Travel info row -->
+        <div class="flex flex-col sm:flex-row sm:items-center gap-1 justify-evenly">
+
+          <!-- Travel Method -->
+          <div class="flex items-center">
+            <div class="flex items-center justify-center w-10 h-10 rounded-lg bg-gray-100 mr-4 shadow-sm">
+              {% if travel.travel_method == 'plane' %}
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-primary" width="16" height="16"
+                viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                stroke-linejoin="round">
+                <path
+                  d="M17.8 19.2 16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.5 5.3c.3.4.8.5 1.3.3l.5-.2c.4-.3.6-.7.5-1.2z" />
+              </svg>
+              {% elif travel.travel_method == 'car' %}
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-primary" width="16" height="16"
+                viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                stroke-linejoin="round">
+                <path
+                  d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.5-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9l-1.4 2.9A3.7 3.7 0 0 0 2 12v4c0 .6.4 1 1 1h2" />
+                <circle cx="7" cy="17" r="2"></circle>
+                <circle cx="17" cy="17" r="2"></circle>
+              </svg>
+              {% elif travel.travel_method == 'bus' %}
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-primary" width="16" height="16"
+                viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                stroke-linejoin="round">
+                <path d="M8 6v6"></path>
+                <path d="M15 6v6"></path>
+                <path d="M2 12h19.6"></path>
+                <path
+                  d="M18 18h3s.5-1.7.8-2.8c.1-.4.2-.8.2-1.2 0-.4-.1-.8-.2-1.2l-1.4-5C20.1 6.8 19.1 6 18 6H4a2 2 0 0 0-2 2v10h3">
+                </path>
+                <circle cx="7" cy="18" r="2"></circle>
+                <path d="M9 18h5"></path>
+                <circle cx="16" cy="18" r="2"></circle>
+              </svg>
+              {% elif travel.travel_method == 'train' %}
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-primary" fill="none" viewBox="0 0 24 24"
+                stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M17 18c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zM7 18c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zM5 4h14c1.1 0 2 .9 2 2v10c0 1.1-.9 2-2 2H5c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2zM5 14h14M5 10h14M5 6h14" />
+              </svg>
+              {% elif travel.travel_method == 'ship' %}
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-primary" fill="none" viewBox="0 0 24 24"
+                stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
+              </svg>
+              {% else %}
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-primary" fill="none" viewBox="0 0 24 24"
+                stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M12 13V7M15 10l-3 3-3-3M4 4h16a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2zM9 18H7M17 18h-2" />
+              </svg>
+              {% endif %}
+            </div>
+            <div class="flex flex-col">
+              <span class="text-xs text-gray-500">Meio de Transporte</span>
+              <span class="font-medium text-gray-800">{{ t_enum('Travel', 'travelMethod', travel.travel_method,
+                current_lang) }}</span>
+            </div>
+          </div>
+
+          <!-- Origin and Destination -->
+          <div class="border-l border-r border-gray-200 px-4 min-w-80">
+            <div class="flex items-center justify-between">
+              <div class="flex flex-col min-w-0 flex-1 max-w-[40%] items-center">
+                <div class="inline-block text-left">
+                  <span class="text-xs text-gray-500">Origem</span>
+                  <div class="flex items-center space-x-2">
+                    <span class="font-medium text-gray-800 truncate" x-data="airportDisplay('{{ travel.origin }}')"
+                      x-init="init()">
+                      <template x-if="airport">
+                        <div class="flex items-center">
+                          <img :src="getFlagUrl(airport.country)" class="w-6 h-4 mr-2 rounded shadow-sm"
+                            :alt="airport.country">
+                          <span x-text="airport.city ? airport.city.replace(/\s*\([^)]*\)/g, '') : ''"
+                            class="truncate"></span>
+                        </div>
+                      </template>
+                      <template x-if="!airport && code">
+                        <span>{{ travel.origin }}</span>
+                      </template>
+                      <template x-if="!code">
+                        <span>Não informado</span>
+                      </template>
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="flex-shrink-0 flex justify-center w-[20%]">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-primary" fill="none" viewBox="0 0 24 24"
+                  stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                </svg>
+              </div>
+
+              <div class="flex flex-col min-w-0 flex-1 max-w-[40%] items-center">
+                <div class="inline-block text-left">
+                  <span class="text-xs text-gray-500">Destino</span>
+                  <div class="flex items-center space-x-2">
+                    <span class="font-medium text-gray-800 truncate" x-data="airportDisplay('{{ travel.destination }}')"
+                      x-init="init()">
+                      <template x-if="airport">
+                        <div class="flex items-center">
+                          <img :src="getFlagUrl(airport.country)" class="w-6 h-4 mr-2 rounded shadow-sm"
+                            :alt="airport.country">
+                          <span x-text="airport.city ? airport.city.replace(/\s*\([^)]*\)/g, '') : ''"
+                            class="truncate"></span>
+                        </div>
+                      </template>
+                      <template x-if="!airport && code">
+                        <span>{{ travel.destination }}</span>
+                      </template>
+                      <template x-if="!code">
+                        <span>Não informado</span>
+                      </template>
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Travel Date (or estimated) -->
+          <div class="flex items-center">
+            <div class="flex items-center justify-center w-10 h-10 rounded-lg bg-gray-100 mr-4 shadow-sm">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-primary" fill="none" viewBox="0 0 24 24"
+                stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              </svg>
+            </div>
+            <div class="flex flex-col">
+              <span class="text-xs text-gray-500">Data da Viagem</span>
+              {% if travel.travelTicketDate %}
+              <div class="flex items-center gap-2">
+                <span class="font-medium text-gray-800">
+                  {{ travel.travelTicketDate.strftime('%d/%m/%Y') }}
+                </span>
+                <span
+                  class="inline-flex items-center px-2 py-0.5 h-5 text-xs rounded border bg-emerald-100 text-emerald-700 border-emerald-200 font-medium">Confirmada</span>
+              </div>
+              {% elif travel.estimated_date %}
+              <div class="flex items-center gap-2">
+                <span class="font-medium text-amber-700">
+                  {{ travel.estimated_date }}
+                </span>
+                <span class="relative group">
+                  <span
+                    class="inline-flex items-center gap-1 px-2 py-0.5 h-5 text-xs rounded border bg-amber-100 text-amber-700 border-amber-200 font-medium cursor-pointer">
+                    Estimada
+                    <svg xmlns="http://www.w3.org/2000/svg" class="inline ml-1 text-amber-500" width="12" height="12"
+                      fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <circle cx="12" cy="12" r="10" stroke-width="2" />
+                      <line x1="12" y1="8" x2="12" y2="12" stroke-width="2" />
+                      <circle cx="12" cy="16" r="1" />
+                    </svg>
+                  </span>
+                  <div
+                    class="fixed left-1/2 -translate-x-1/2 z-50 hidden group-hover:block flex-col min-w-[220px] max-w-xs mt-2 px-4 py-3 rounded-lg border bg-white text-sm text-gray-700 shadow-lg tooltip-content"
+                    style="top: auto; pointer-events: none;">
+                    <span class="font-medium text-xs mb-1">Data Estimada</span>
+                    <span class="text-gray-500">Confirme a data com a passagem assim que possível, pois esta data é
+                      apenas uma
+                      estimativa.</span>
+                  </div>
+                </span>
+              </div>
+              {% else %}
+              <span class="text-muted-foreground italic">Data não informada</span>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Área de documentos - Layout lado a lado -->
+  <div class="mb-6">
+    <h2 class="text-xl font-medium text-gray-900 mb-4">Documentos Necessários</h2>
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <!-- Documentos dos Pets (Card Esquerdo) -->
+      <div x-data="{ open: false, selectedPet: '{{ pets[0]._id if pets else '' }}' }"
+        x-init="$nextTick(() => { updateProgressBars('pet', selectedPet); })"
+        x-effect="updateProgressBars('pet', selectedPet)"
+        class="bg-white shadow rounded-lg overflow-hidden border border-gray-100">
+        <!-- Card header com título, progresso e dropdown -->
+        <div class="p-4 bg-white border-b border-gray-200">
+          {% set pet_docs_dict = travel.required_documents.pet_docs %}
+          <!-- Card header content - Title and pet selector side by side -->
+          <div class="flex flex-col sm:flex-row justify-between items-center gap-3 mb-3">
+            <h3 class="text-lg font-medium text-gray-900">Documentos dos Pets</h3>
+
+            <!-- Pet selector dropdown -->
+            <div class="relative w-full sm:w-auto">
+              <!-- Dropdown button -->
+              <button @click="open = !open" type="button"
+                class="flex w-full sm:w-auto items-center justify-between rounded-lg border border-gray-300 bg-white p-2 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 pet-dropdown-button">
+                {% for pet in pets %}
+                {% set pet_id = pet._id|string %}
+                {% set pet_required_docs = pet_docs_dict[pet_id] if pet_id in pet_docs_dict else [] %}
+                {% set completed, total = get_pet_progress(pet_id).split(',') %}
+                {% set pet_doc_percentage = (completed|int / total|int * 100)|int if total|int > 0 else 0 %}
+                <div x-show="selectedPet === '{{ pet._id }}'" class="flex items-center">
+                  {% if pet.photo %}
+                  {% if pet.photo is string %}
+                  <img src="{{ url_for('static', filename='uploads/' + pet.photo) }}" alt="Foto de {{ pet.name }}"
+                    class="h-8 w-8 rounded-full mr-2 border border-gray-200">
+                  {% elif pet.photo is mapping %}
+                  {% if pet.photo.path %}
+                  {% if pet.photo.path.startswith('static/') %}
+                  <img src="/{{ pet.photo.path }}" alt="Foto de {{ pet.name }}"
+                    class="h-8 w-8 rounded-full mr-2 border border-gray-200">
+                  {% else %}
+                  <img src="{{ url_for('static', filename='uploads/' + pet.photo.path) }}" alt="Foto de {{ pet.name }}"
+                    class="h-8 w-8 rounded-full mr-2 border border-gray-200">
+                  {% endif %}
+                  {% elif pet.photo.filename %}
+                  <img src="{{ url_for('static', filename='uploads/' + pet.photo.filename) }}"
+                    alt="Foto de {{ pet.name }}" class="h-8 w-8 rounded-full mr-2 border border-gray-200">
+                  {% endif %}
+                  {% endif %}
+                  {% else %}
+                  <div
+                    class="h-8 w-8 rounded-full bg-blue-100 mr-2 flex items-center justify-center text-sm font-bold text-blue-600">
+                    {{ pet.name[0] }}
+                  </div>
+                  {% endif %}
+                  <div class="flex items-center">
+                    <span class="text-sm font-medium text-gray-700">{{ pet.name }}</span>
+                    <span
+                      class="ml-2 px-2 py-0.5 text-xs rounded-full 
+                      {% if pet_doc_percentage == 100 %}bg-green-100 text-green-800{% else %}bg-yellow-100 text-yellow-800{% endif %}">
+                      {{ pet_doc_percentage }}%
+                    </span>
+                  </div>
+                </div>
+                {% endfor %}
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400 ml-2" viewBox="0 0 20 20"
+                  fill="currentColor">
+                  <path fill-rule="evenodd"
+                    d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
+                    clip-rule="evenodd" />
+                </svg>
+              </button>
+
+              <!-- Dropdown menu -->
+              <div x-show="open" @click.outside="open = false"
+                class="absolute z-10 mt-1 w-full rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 pet-dropdown-menu">
+                <div class="py-1" role="menu" aria-orientation="vertical">
+                  {% for pet in pets %}
+                  {% set pet_id = pet._id|string %}
+                  {% set pet_required_docs = pet_docs_dict[pet_id] if pet_id in pet_docs_dict else [] %}
+                  {% set completed, total = get_pet_progress(pet_id).split(',') %}
+                  {% set pet_doc_percentage = (completed|int / total|int * 100)|int if total|int > 0 else 0 %}
+                  <button
+                    @click="selectedPet = '{{ pet._id }}'; open = false; $nextTick(() => { updateProgressBars('pet', selectedPet); })"
+                    type="button" :class="{ 'bg-blue-50': selectedPet === '{{ pet._id }}' }"
+                    class="flex w-full items-center justify-between px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 pet-dropdown-item"
+                    role="menuitem">
+                    <div class="flex items-center">
+                      {% if pet.photo %}
+                      {% if pet.photo is string %}
+                      <img src="{{ url_for('static', filename='uploads/' + pet.photo) }}" alt="Foto de {{ pet.name }}"
+                        class="h-8 w-8 rounded-full mr-2 border border-gray-200">
+                      {% elif pet.photo is mapping %}
+                      {% if pet.photo.path %}
+                      {% if pet.photo.path.startswith('static/') %}
+                      <img src="/{{ pet.photo.path }}" alt="Foto de {{ pet.name }}"
+                        class="h-8 w-8 rounded-full mr-2 border border-gray-200">
+                      {% else %}
+                      <img src="{{ url_for('static', filename='uploads/' + pet.photo.path) }}"
+                        alt="Foto de {{ pet.name }}" class="h-8 w-8 rounded-full mr-2 border border-gray-200">
+                      {% endif %}
+                      {% elif pet.photo.filename %}
+                      <img src="{{ url_for('static', filename='uploads/' + pet.photo.filename) }}"
+                        alt="Foto de {{ pet.name }}" class="h-8 w-8 rounded-full mr-2 border border-gray-200">
+                      {% endif %}
+                      {% endif %}
+                      {% else %}
+                      <div
+                        class="h-8 w-8 rounded-full bg-blue-100 mr-2 flex items-center justify-center text-sm font-bold text-blue-600">
+                        {{ pet.name[0] }}
+                      </div>
+                      {% endif %}
+                      <span>{{ pet.name }}</span>
+                    </div>
+                    <span
+                      class="ml-2 px-2 py-0.5 text-xs rounded-full 
+                      {% if pet_doc_percentage == 100 %}bg-green-100 text-green-800{% else %}bg-yellow-100 text-yellow-800{% endif %}">
+                      {{ pet_doc_percentage }}%
+                    </span>
+                  </button>
+                  {% endfor %}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Progress information for each pet -->
+          {% for pet in pets %}
+          {% set pet_id = pet._id|string %}
+          <div x-show="selectedPet === '{{ pet._id }}'" class="mt-3">
+            {{ progress_bar(pet_progress[pet_id]['completed'], pet_progress[pet_id]['total']) }}
+          </div>
+          {% endfor %}
+        </div>
+        <div>
+          <!-- Pet document tables -->
+          <div>
+            {% for pet in pets %}
+            {% set pet_id = pet._id|string %}
+            {% set pet_required_docs = pet_docs_dict[pet_id] if pet_id in pet_docs_dict else [] %}
+            <div x-show="selectedPet === '{{ pet._id }}'" class="overflow-hidden">
+              <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200 rounded-lg overflow-hidden border border-gray-200">
+                  <thead class="bg-gray-50">
+                    <tr>
+                      <th scope="col"
+                        class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Documento
+                      </th>
+                      <th scope="col"
+                        class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status
+                      </th>
+                      <th scope="col"
+                        class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ações
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody class="bg-white divide-y divide-gray-200">
+                    <!-- Lista dinâmica de documentos para pet -->
+                    {% for doc_type in pet_required_docs %}
+                    {% set is_uploaded = pet_id in pet_documents and doc_type in pet_documents[pet_id] and
+                    pet_documents[pet_id][doc_type] %}
+                    {% set doc_obj = pet_documents[pet_id][doc_type] if is_uploaded else None %}
+                    {% set doc_url = url_for('static', filename=doc_obj.path) if doc_obj and (doc_obj.storage_type is
+                    not defined or doc_obj.storage_type != 'firebase') else (doc_obj.public_url if doc_obj and
+                    doc_obj.storage_type == 'firebase' else '') %}
+                    {% set doc_path = doc_obj.path if doc_obj else '' %}
+                    {% set doc_id = doc_obj._id|string if doc_obj and doc_obj._id is defined else '' %}
+                    {% set storage_type = doc_obj.storage_type if doc_obj and doc_obj.storage_type is defined else '' %}
+                    {% set public_url = doc_obj.public_url if doc_obj and doc_obj.public_url is defined else '' %}
+                    {% set doc_name = {
+                    'vaccinationCard': 'Carteira de Vacinação',
+                    'microchipCertificate': 'Certificado de Microchip',
+                    'rabiesSerologyReport': 'Relatório de Sorologia Antirrábica',
+                    'leishmaniasisSerologyReport': 'Relatório de Sorologia para Leishmaniose',
+                    'importPermit': 'Permissão de Importação',
+                    'petPassport': 'Passaporte do Pet',
+                    'cvi': 'CVI (Certificado Veterinário Internacional)',
+                    'importAuthorization': 'Autorização de Importação',
+                    'arrivalNotice': 'Notificação de Chegada',
+                    'endorsedCvi': 'CVI Endossado',
+                    'awbCargo': 'AWB Cargo',
+                    'petFacilities': 'Instalações para Pet'
+                    }.get(doc_type, doc_type) %}
+                    {{ document_row(doc_type, doc_name, is_uploaded, doc_url, doc_path, 'pet', pet._id, doc_id,
+                    storage_type, public_url) }}
+                    {% endfor %}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+
+      <!-- Documentos do Responsável (Card Direito) -->
+      <div class="bg-white shadow rounded-lg overflow-hidden border border-gray-100">
+        <!-- Card header com título e progresso -->
+        <div class="p-4 bg-white border-b border-gray-200">
+          <!-- Card header content -->
+          <div class="flex flex-col sm:flex-row justify-between items-center gap-3 mb-3">
+            <div class="flex items-center gap-2">
+              <h3 class="text-lg font-medium text-gray-900">Documentos do Responsável</h3>
+            </div>
+            <!-- Elemento espaçador para equilibrar o layout -->
+            <div class="invisible w-full sm:w-auto">
+              <div class="flex items-center rounded-lg border border-transparent bg-transparent p-2">
+                <div class="h-8 w-8 mr-2"></div>
+                <span class="text-sm font-medium invisible">Espaçador</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Set Variables -->
+          {% set human_docs = travel.required_documents.human_docs %}
+          {{ progress_bar(owner_progress['completed'], owner_progress['total']) }}
+        </div>
+
+        <!-- Human document table -->
+        <div>
+          <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200 rounded-lg overflow-hidden border border-gray-200">
+              <thead class="bg-gray-50">
+                <tr>
+                  <th scope="col"
+                    class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Documento
+                  </th>
+                  <th scope="col"
+                    class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                  <th scope="col"
+                    class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ações</th>
+                </tr>
+              </thead>
+              <tbody class="bg-white divide-y divide-gray-200">
+                <!-- Lista dinâmica de documentos humanos -->
+                {% for doc_type in human_docs %}
+                {% set is_uploaded = doc_type in user_documents and user_documents[doc_type] %}
+                {% set doc_obj = user_documents[doc_type] if is_uploaded else None %}
+                {% set doc_url = url_for('static', filename=doc_obj.path) if doc_obj and (doc_obj.storage_type is not
+                defined or doc_obj.storage_type != 'firebase') else (doc_obj.public_url if doc_obj and
+                doc_obj.storage_type == 'firebase' else '') %}
+                {% set doc_path = doc_obj.path if doc_obj else '' %}
+                {% set doc_id = doc_obj._id|string if doc_obj and doc_obj._id is defined else '' %}
+                {% set storage_type = doc_obj.storage_type if doc_obj and doc_obj.storage_type is defined else '' %}
+                {% set public_url = doc_obj.public_url if doc_obj and doc_obj.public_url is defined else '' %}
+                {% set doc_name = {
+                'identityDocument': 'Documento de Identidade',
+                'passport': 'Passaporte',
+                'travelTicket': 'Passagem',
+                'travelAuthorization': 'Autorização de Viagem',
+                'carDocument': 'Documento do Carro',
+                'addressProof': 'Comprovante de Endereço',
+                'cviIssuanceAuthorization': 'Autorização de Emissão do CVI'
+                }.get(doc_type, doc_type) %}
+                {{ document_row(doc_type, doc_name, is_uploaded, doc_url, doc_path, 'human', '', doc_id, storage_type,
+                public_url) }}
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Histórico e Notas -->
+  <div class="bg-white shadow rounded-lg overflow-hidden mb-8">
+    <div class="px-4 py-5 sm:px-6 border-b border-gray-200">
+      <h2 class="text-lg leading-6 font-medium text-gray-900">Histórico e Notas</h2>
+    </div>
+    <div class="px-4 py-5 sm:p-6">
+      {% if travel.history %}
+      <ul class="space-y-4">
+        {% for event in travel.history %}
+        <li class="flex space-x-3">
+          <div class="flex-shrink-0">
+            <div class="h-8 w-8 rounded-full flex items-center justify-center 
+              {% if event.type == 'status_change' %}bg-blue-100 text-blue-500
+              {% elif event.type == 'document_upload' %}bg-green-100 text-green-500
+              {% elif event.type == 'admin_note' %}bg-purple-100 text-purple-500
+              {% else %}bg-gray-100 text-gray-500{% endif %}">
+              {% if event.type == 'status_change' %}
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24"
+                stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+              </svg>
+              {% elif event.type == 'document_upload' %}
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24"
+                stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10" />
+              </svg>
+              {% elif event.type == 'admin_note' %}
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24"
+                stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+              </svg>
+              {% else %}
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24"
+                stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              {% endif %}
+            </div>
+          </div>
+          <div>
+            <p class="text-sm font-medium text-gray-900">
+              {# Tradução especial para eventos de upload de documento #}
+              {% if event.type == 'document_upload' %}
+              {# Tenta extrair o doc_type da descrição #}
+              {% set doc_type = None %}
+              {% if "'" in event.description %}
+              {% set _parts = event.description.split("'") %}
+              {% if _parts|length > 1 %}
+              {% set doc_type = _parts[1] %}
+              {% endif %}
+              {% endif %}
+              {% if doc_type %}
+              {# Tenta traduzir como documento de pet #}
+              {{ event.description.replace(doc_type, t_field('PetDocument', doc_type, current_lang) or
+              t_field('HumanDocument', doc_type, current_lang) or doc_type) }}
+              {% else %}
+              {{ event.description }}
+              {% endif %}
+              {% else %}
+              {{ t_ui('history', event.type, event.description, lang=current_lang) or event.description }}
+              {% endif %}
+            </p>
+            <p class="text-xs text-gray-500">{{ event.date.strftime('%d/%m/%Y %H:%M') }}</p>
+          </div>
+        </li>
+        {% endfor %}
+      </ul>
+      {% else %}
+      <div class="text-center py-8">
+        <svg xmlns="http://www.w3.org/2000/svg" class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24"
+          stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+        </svg>
+        <h3 class="mt-2 text-sm font-medium text-gray-900">
+          {{ t_ui('messages', 'history', 'empty', lang=current_lang) or 'Nenhum histórico disponível' }}
+        </h3>
+        <p class="mt-1 text-sm text-gray-500">
+          {{ t_ui('messages', 'history', 'empty_hint', lang=current_lang) or 'O histórico desta viagem será exibido aqui
+          conforme as atualizações acontecem.' }}
+        </p>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+
+
+  <!-- Macros para modais -->
+  {% macro modal_header(id, title, close_id) %}
+  <div class="flex justify-between items-center pb-3 border-b">
+    <h3 class="text-lg font-medium" id="{{ id }}">{{ title }}</h3>
+    <button id="{{ close_id }}" class="text-black close-modal hover:text-gray-700" aria-label="Fechar">
+      <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+      </svg>
+    </button>
+  </div>
+  {% endmacro %}
+
+  <!-- Modal para visualização de documentos -->
+  <div id="documentViewerModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden"
+    role="dialog" aria-modal="true" aria-labelledby="documentTitle">
+    <div
+      class="relative top-20 mx-auto p-5 border w-11/12 md:w-3/4 shadow-lg rounded-md bg-white max-h-[85vh] flex flex-col">
+      {{ modal_header('documentTitle', 'Visualizando Documento', 'closeDocumentModal') }}
+
+      <div class="my-4 flex-grow overflow-auto" id="documentContentContainer" style="min-height: 60vh;">
+        <!-- Container areas -->
+        <div id="pdfContainer" class="w-full h-full min-h-[600px] flex justify-center items-center hidden"></div>
+        <div id="imageContainer" class="w-full flex justify-center items-center hidden overflow-hidden">
+          <div class="relative w-full max-w-4xl">
+            <div class="flex items-center justify-center">
+              <img id="documentImage" src="" alt="Documento" class="object-contain max-w-full max-h-[70vh] mx-auto">
+            </div>
+            <div class="absolute bottom-0 right-0 p-2 bg-white bg-opacity-75 rounded-tl-md">
+              <div class="flex space-x-2">
+                <button id="zoomOutImage" class="p-1 rounded hover:bg-gray-200 text-gray-700">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24"
+                    stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4" />
+                  </svg>
+                </button>
+                <button id="resetZoomImage" class="p-1 rounded hover:bg-gray-200 text-gray-700">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24"
+                    stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5v-4m0 0h-4m4 0l-5-5" />
+                  </svg>
+                </button>
+                <button id="zoomInImage" class="p-1 rounded hover:bg-gray-200 text-gray-700">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24"
+                    stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div id="loadingContainer" class="flex justify-center items-center h-64">
+          <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500" aria-label="Carregando"></div>
+        </div>
+        <div id="errorContainer" class="hidden text-center text-red-500 p-4">
+          Não foi possível carregar o documento.
+        </div>
+      </div>
+
+      <div class="flex justify-end pt-2 border-t">
+        <a id="downloadDocumentLink" href="#" download
+          class="mr-3 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 flex items-center">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24"
+            stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+          </svg>
+          Download
+        </a>
+        <button id="updateDocumentBtn"
+          class="mr-3 px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 flex items-center">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24"
+            stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+          </svg>
+          Atualizar
+        </button>
+        <button id="deleteDocumentBtn"
+          class="mr-3 px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 flex items-center">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24"
+            stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+          </svg>
+          Excluir
+        </button>
+        <button id="closeDocumentBtn"
+          class="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500">
+          Fechar
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- PDF Viewer Modal -->
+  <div id="pdfViewerModal"
+    class="fixed inset-0 z-50 overflow-auto flex items-center justify-center p-4 bg-black bg-opacity-75 hidden"
+    role="dialog" aria-modal="true" aria-labelledby="pdfTitle">
+    <div class="relative w-full max-w-3xl max-h-[80vh] bg-white rounded-b-2xl rounded-t-lg shadow-xl flex flex-col">
+      <!-- Modal header -->
+      <div class="flex items-center justify-between p-4 border-b rounded-t">
+        <h3 id="pdfTitle" class="text-xl font-semibold text-gray-900"></h3>
+        <button id="closePdfModal"
+          class="text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm p-1.5 ml-auto inline-flex items-center"
+          aria-label="Fechar">
+          <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+            <path fill-rule="evenodd"
+              d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+              clip-rule="evenodd"></path>
+          </svg>
+        </button>
+      </div>
+
+      <!-- PDF Viewer -->
+      <div id="pdfViewer" class="relative flex-grow overflow-y-auto">
+        <!-- Desktop Toolbar -->
+        <div
+          class="flex flex-wrap gap-2 items-center justify-between px-4 py-2 bg-gray-50 border-b sticky top-0 z-10 md:flex hidden"
+          role="toolbar" aria-label="Controles do PDF">
+          <!-- Navigation -->
+          <div class="flex items-center space-x-1">
+            <button id="pdfFirstPage" class="p-1 rounded hover:bg-gray-200 text-gray-700" aria-label="Primeira página">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd"
+                  d="M15.707 15.707a1 1 0 01-1.414 0l-5-5a1 1 0 010-1.414l5-5a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 010 1.414z"
+                  clip-rule="evenodd" />
+                <path fill-rule="evenodd"
+                  d="M7.707 15.707a1 1 0 01-1.414 0l-5-5a1 1 0 010-1.414l5-5a1 1 0 111.414 1.414L3.414 10l4.293 4.293a1 1 0 010 1.414z"
+                  clip-rule="evenodd" />
+              </svg>
+            </button>
+            <button id="pdfPrevPage" class="p-1 rounded hover:bg-gray-200 text-gray-700" aria-label="Página anterior">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd"
+                  d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z"
+                  clip-rule="evenodd" />
+              </svg>
+            </button>
+            <div class="text-sm text-gray-700" aria-live="polite">
+              Página <span id="pdfCurrentPage">1</span> de <span id="pdfTotalPages">1</span>
+            </div>
+            <button id="pdfNextPage" class="p-1 rounded hover:bg-gray-200 text-gray-700" aria-label="Próxima página">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd"
+                  d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
+                  clip-rule="evenodd" />
+              </svg>
+            </button>
+            <button id="pdfLastPage" class="p-1 rounded hover:bg-gray-200 text-gray-700" aria-label="Última página">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd"
+                  d="M4.293 15.707a1 1 0 001.414 0l5-5a1 1 0 000-1.414l-5-5a1 1 0 00-1.414 1.414L8.586 10 4.293 14.293a1 1 0 000 1.414z"
+                  clip-rule="evenodd" />
+                <path fill-rule="evenodd"
+                  d="M12.293 15.707a1 1 0 001.414 0l5-5a1 1 0 000-1.414l-5-5a1 1 0 00-1.414 1.414L16.586 10l-4.293 4.293a1 1 0 000 1.414z"
+                  clip-rule="evenodd" />
+              </svg>
+            </button>
+          </div>
+
+          <!-- Zoom -->
+          <div class="flex items-center space-x-1">
+            <button id="pdfZoomOut" class="p-1 rounded hover:bg-gray-200 text-gray-700" aria-label="Diminuir zoom">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M5 10a1 1 0 011-1h8a1 1 0 110 2H6a1 1 0 01-1-1z" clip-rule="evenodd" />
+              </svg>
+            </button>
+            <span id="pdfZoomLevel" class="text-sm text-gray-700 w-16 text-center" aria-live="polite">100%</span>
+            <button id="pdfZoomIn" class="p-1 rounded hover:bg-gray-200 text-gray-700" aria-label="Aumentar zoom">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd"
+                  d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z"
+                  clip-rule="evenodd" />
+              </svg>
+            </button>
+          </div>
+
+          <!-- Additional Controls -->
+          <div class="flex items-center space-x-1">
+            <button id="pdfRotate" class="p-1 rounded hover:bg-gray-200 text-gray-700" aria-label="Rotacionar">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd"
+                  d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z"
+                  clip-rule="evenodd" />
+              </svg>
+            </button>
+            <button id="pdfFullscreen" class="p-1 rounded hover:bg-gray-200 text-gray-700" aria-label="Tela cheia">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd"
+                  d="M3 4a1 1 0 011-1h4a1 1 0 010 2H6.414l2.293 2.293a1 1 0 01-1.414 1.414L5 6.414V8a1 1 0 01-2 0V4zm9 1a1 1 0 010-2h4a1 1 0 011 1v4a1 1 0 01-2 0V6.414l-2.293 2.293a1 1 0 11-1.414-1.414L13.586 5H12zm-9 7a1 1 0 012 0v1.586l2.293-2.293a1 1 0 011.414 1.414L6.414 15H8a1 1 0 010 2H4a1 1 0 01-1-1v-4zm13-1a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 010-2h1.586l-2.293-2.293a1 1 0 011.414-1.414L15 13.586V12a1 1 0 011-1z"
+                  clip-rule="evenodd" />
+              </svg>
+            </button>
+            <button id="pdfDownloadBtn" class="p-1 rounded hover:bg-gray-200 text-gray-700" aria-label="Download">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd"
+                  d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z"
+                  clip-rule="evenodd" />
+              </svg>
+            </button>
+            <button id="pdfDeleteBtn" class="p-1 rounded hover:bg-gray-200 text-red-600" aria-label="Excluir">
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M3 6h18" />
+                <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
+                <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- Mobile Toolbar -->
+        <div
+          class="sticky top-0 p-2 bg-gray-50 border-b flex flex-wrap gap-2 justify-between items-center md:hidden z-10"
+          role="toolbar" aria-label="Controles do PDF (mobile)">
+          <div class="flex items-center gap-1">
+            <button id="pdfPrevPage-mobile" class="p-1 rounded hover:bg-gray-200 text-gray-700"
+              aria-label="Página anterior">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd"
+                  d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z"
+                  clip-rule="evenodd" />
+              </svg>
+            </button>
+            <span class="text-xs text-gray-700" aria-live="polite">
+              <span id="pdfCurrentPageMobile">1</span>/<span id="pdfTotalPagesMobile">1</span>
+            </span>
+            <button id="pdfNextPage-mobile" class="p-1 rounded hover:bg-gray-200 text-gray-700"
+              aria-label="Próxima página">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd"
+                  d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
+                  clip-rule="evenodd" />
+              </svg>
+            </button>
+          </div>
+          <div class="flex items-center gap-1">
+            <button id="pdfZoomOut-mobile" class="p-1 rounded hover:bg-gray-200 text-gray-700"
+              aria-label="Diminuir zoom">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M5 10a1 1 0 011-1h8a1 1 0 110 2H6a1 1 0 01-1-1z" clip-rule="evenodd" />
+              </svg>
+            </button>
+            <button id="pdfRotate-mobile" class="p-1 rounded hover:bg-gray-200 text-gray-700" aria-label="Rotacionar">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd"
+                  d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z"
+                  clip-rule="evenodd" />
+              </svg>
+            </button>
+            <button id="pdfDownloadBtn-mobile" class="p-1 rounded hover:bg-gray-200 text-gray-700"
+              aria-label="Download">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd"
+                  d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z"
+                  clip-rule="evenodd" />
+              </svg>
+            </button>
+            <button id="pdfDeleteBtn-mobile" class="p-1 rounded hover:bg-gray-200 text-red-600" aria-label="Excluir">
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M3 6h18" />
+                <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
+                <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- PDF Content -->
+        <div class="justify-center items-center p-4 bg-white overflow-auto">
+          <!-- PDF Canvas Wrapper (relative) -->
+          <div class="relative max-w-full overflow-auto">
+            <!-- Loading Indicator (now only covers the canvas) -->
+            <div id="pdfLoading"
+              class="hidden absolute inset-0 flex items-center justify-center bg-white bg-opacity-80 z-20"
+              aria-live="polite" aria-busy="true">
+              <div class="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"
+                aria-label="Carregando PDF"></div>
+            </div>
+            <!-- PDF Canvas Container -->
+            <canvas id="pdfCanvas" class="shadow-md mx-auto w-full" aria-label="Visualizador de PDF"></canvas>
+          </div>
+        </div>
+      </div>
+      <!-- Thin footer -->
+      <div
+        class="w-full border-t border-gray-200 bg-white py-2 px-4 text-xs text-gray-500 rounded-b-2xl flex items-center justify-end"
+        style="min-height: 32px;">
+        <span class="ml-auto">Visualizador de PDF</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal de Upload de Documento -->
+  {% include "modals/upload_modal.html" %}
+
+  <!-- Toast notification -->
+  <div id="toast"
+    class="fixed bottom-5 right-5 p-4 rounded-md shadow-lg transform transition-all duration-300 ease-in-out translate-y-full opacity-0"
+    :class="{'translate-y-0 opacity-100': $store.toast.show, 'bg-green-500': $store.toast.type === 'success', 'bg-red-500': $store.toast.type === 'error'}"
+    x-show="$store.toast.show" role="alert" aria-live="assertive">
+    <div class="flex">
+      <div class="flex-shrink-0">
+        <svg x-show="$store.toast.type === 'success'" class="h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg"
+          viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+          <path fill-rule="evenodd"
+            d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+            clip-rule="evenodd" />
+        </svg>
+        <svg x-show="$store.toast.type === 'error'" class="h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg"
+          viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+          <path fill-rule="evenodd"
+            d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+            clip-rule="evenodd" />
+        </svg>
+      </div>
+      <div class="ml-3">
+        <p class="text-sm font-medium text-white" x-text="$store.toast.message"></p>
+      </div>
+    </div>
+  </div>
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      const toastData = localStorage.getItem('showToastAfterReload');
+      if (toastData && window.Alpine && Alpine.store && Alpine.store('toast')) {
+        const { type, message } = JSON.parse(toastData);
+        setTimeout(() => {
+          Alpine.store('toast').showToast(type, message);
+        }, 300); // slight delay to ensure Alpine is ready
+        localStorage.removeItem('showToastAfterReload');
+      }
+    });
+  </script>
+
+  <!-- Portal para tooltips globais -->
+  <div id="tooltip-portal-root" style="position: fixed; z-index: 9999; pointer-events: none;"></div>
+</div>
+
+<!-- Scripts -->
+<script src="{{ url_for('static', filename='js/upload_modal.js') }}"></script>
+<script src="{{ url_for('static', filename='js/document_manager.js') }}"></script>
+<script src="{{ url_for('static', filename='js/pdf_viewer.js') }}"></script>
+{% endblock %}
+
+{% block scripts %}
+<!-- IATA Airport Code Lookup - now loaded from shared JS -->
+<script src="{{ url_for('static', filename='js/airport_iata.js') }}"></script>
+<script>
+  // Alpine.js component for displaying airport information with flags (now using shared functions)
+  document.addEventListener('alpine:init', () => {
+    Alpine.data('airportDisplay', (iataCode) => ({
+      code: iataCode || '',
+      airport: null,
+      init() {
+        this.airport = getAirportByCode(this.code);
+      },
+      getFlagUrl(countryCode) {
+        return getAirportFlagUrl(countryCode);
+      }
+    }));
+  });
+</script>
+
+<!-- Data variables rendered by Jinja -->
+<script id="document-data" type="application/json">
+  {
+    "petDocs": [{% for doc in travel.required_documents.pet_docs %}"{{ doc }}"{% if not loop.last %},{% endif %}{% endfor %}],
+    "humanDocs": [{% for doc in travel.required_documents.human_docs %}"{{ doc }}"{% if not loop.last %},{% endif %}{% endfor %}],
+    "petDocuments": {
+      {% for pet_id, docs in pet_documents.items() %}
+        "{{ pet_id }}": {
+          {% for doc_type, doc in docs.items() %}
+            "{{ doc_type }}": {% if doc %}{
+              "path": "{{ doc.path }}",
+              "_id": "{{ doc._id|string if doc._id is defined else '' }}"
+            } {% else %} null {% endif %}{% if not loop.last %}, {% endif %}
+          {% endfor %}
+        }{% if not loop.last %}, {% endif %}
+      {% endfor %}
+    },
+    "humanDocuments": {
+      {% for doc_type in travel.required_documents.human_docs %}
+        "{{ doc_type }}": {% if doc_type in travel.document_ids and travel.document_ids[doc_type] and doc_type in user_documents %} {
+          "path": "{{ user_documents[doc_type].path }}",
+          "_id": "{{ travel.document_ids[doc_type]|string }}"
+        } {% else %} null {% endif %}{% if not loop.last %}, {% endif %}
+      {% endfor %}
+    }
+  }
+</script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
+<!-- Load new modularized JavaScript files -->
+<script src="{{ url_for('static', filename='js/document_manager.js') }}"></script>
+<script src="{{ url_for('static', filename='js/pdf_viewer.js') }}"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    // Load document data from JSON rendered by Jinja
+    const documentData = JSON.parse(document.getElementById('document-data').textContent);
+
+    // Initialize DocManager with the parsed data
+    DocManager.init(
+      documentData.petDocs,
+      documentData.petDocuments,
+      documentData.humanDocs,
+      documentData.humanDocuments
+    );
+
+    // Initialize the PDF viewer
+    if (window.PdfViewer && typeof PdfViewer.initialize === 'function') {
+      PdfViewer.initialize();
+    }
+
+    // Setup image zoom controls
+    function setupImageZoomControls() {
+      const zoomIn = document.getElementById('zoomInImage');
+      const zoomOut = document.getElementById('zoomOutImage');
+      const resetZoom = document.getElementById('resetZoomImage');
+      const img = document.getElementById('documentImage');
+
+      if (zoomIn) {
+        zoomIn.addEventListener('click', function () {
+          if (!img) return;
+          const currentZoom = parseFloat(img.getAttribute('data-zoom') || '1');
+          const newZoom = Math.min(currentZoom + 0.25, 3);
+          img.style.transform = `scale(${newZoom})`;
+          img.setAttribute('data-zoom', newZoom);
+        });
+      }
+
+      if (zoomOut) {
+        zoomOut.addEventListener('click', function () {
+          if (!img) return;
+          const currentZoom = parseFloat(img.getAttribute('data-zoom') || '1');
+          const newZoom = Math.max(currentZoom - 0.25, 0.5);
+          img.style.transform = `scale(${newZoom})`;
+          img.setAttribute('data-zoom', newZoom);
+        });
+      }
+
+      if (resetZoom) {
+        resetZoom.addEventListener('click', function () {
+          if (!img) return;
+          fitImageToContainer(img);
+        });
+      }
+    }
+
+    setupImageZoomControls();
+
+    // Implement the openDocumentModal function
+    window.openDocumentModal = function (documentUrl, filename, tipo, documento, pet_id) {
+      // Remove any '$' character that might have been added to pet_id
+      if (pet_id && pet_id.startsWith('$')) {
+        pet_id = pet_id.substring(1);
+      }
+
+      // Extract filename from path
+      const filenameOnly = filename.split('/').pop();
+
+      // Get the element to check for Firebase storage attributes
+      const selector = tipo === 'pet' ? `pet-doc-${pet_id}-${documento}-action` : `human-doc-${documento}-action`;
+      const actionElement = document.getElementById(selector);
+
+      // Check for Firebase metadata
+      const isFirebase = actionElement?.getAttribute('data-storage-type') === 'firebase';
+      const publicUrl = actionElement?.getAttribute('data-public-url');
+
+      // Determine the correct URL to use
+      let finalUrl;
+      if (isFirebase && publicUrl) {
+        finalUrl = publicUrl;
+      } else {
+        // For local storage, make sure we're using the right path
+        finalUrl = documentUrl.startsWith('/static') ? documentUrl : `/static/uploads/${filenameOnly}`;
+      }
+
+      // Check if it's a PDF - more comprehensive check
+      const isPdf = finalUrl.toLowerCase().endsWith('.pdf') ||
+        documentUrl.toLowerCase().endsWith('.pdf') ||
+        filenameOnly.toLowerCase().endsWith('.pdf');
+
+      // Get translated document name using DocManager
+      const docTranslated = DocManager.getDocumentName(documento);
+
+      // Store parameters for update/delete buttons
+      storeDocumentParams(tipo, documento, pet_id, filename);
+
+      // Configure download link for both modals
+      setupDownloadLink(finalUrl, filenameOnly);
+
+      if (isPdf) {
+        // Use the PDF viewer for PDFs
+        if (window.PdfViewer && typeof PdfViewer.loadPDF === 'function') {
+          PdfViewer.loadPDF(finalUrl, `Visualizando ${docTranslated}`);
+          document.getElementById('pdfViewerModal').classList.remove('hidden');
+        } else {
+          console.error("PDF Viewer not initialized properly");
+        }
+      } else {
+        // Use the original modal for non-PDF documents
+        resetDocumentViewer();
+        document.getElementById('documentTitle').textContent = `Visualizando ${docTranslated}`;
+        loadImage(finalUrl);
+        document.getElementById('documentViewerModal').classList.remove('hidden');
+      }
+    };
+
+    // Helper Functions
+    function storeDocumentParams(tipo, documento, pet_id, filename) {
+      const buttons = [
+        document.getElementById('updateDocumentBtn'),
+        document.getElementById('deleteDocumentBtn'),
+        document.getElementById('pdfDeleteBtn'),
+        document.getElementById('pdfDeleteBtn-mobile')
+      ];
+
+      buttons.forEach(button => {
+        if (button) {
+          button.setAttribute('data-tipo', tipo);
+          button.setAttribute('data-documento', documento);
+          button.setAttribute('data-pet-id', pet_id || '');
+        }
+      });
+
+      if (document.getElementById('deleteDocumentBtn')) {
+        document.getElementById('deleteDocumentBtn').setAttribute('data-path', filename);
+      }
+
+      // Get the selector for the action element
+      const selector = tipo === 'pet'
+        ? `pet-doc-${pet_id}-${documento}-action`
+        : `human-doc-${documento}-action`;
+
+      const actionElement = document.getElementById(selector);
+      if (actionElement) {
+        // Get the document ID
+        const docIdAttr = actionElement.getAttribute('data-document-id');
+        if (docIdAttr) {
+          if (document.getElementById('deleteDocumentBtn')) {
+            document.getElementById('deleteDocumentBtn').setAttribute('data-document-id', docIdAttr);
+          }
+          if (document.getElementById('pdfDeleteBtn')) {
+            document.getElementById('pdfDeleteBtn').setAttribute('data-document-id', docIdAttr);
+          }
+          if (document.getElementById('pdfDeleteBtn-mobile')) {
+            document.getElementById('pdfDeleteBtn-mobile').setAttribute('data-document-id', docIdAttr);
+          }
+        }
+
+        // Get Firebase metadata if available
+        const storageType = actionElement.getAttribute('data-storage-type');
+        const publicUrl = actionElement.getAttribute('data-public-url');
+
+        if (storageType === 'firebase' && publicUrl) {
+          if (document.getElementById('deleteDocumentBtn')) {
+            document.getElementById('deleteDocumentBtn').setAttribute('data-storage-type', 'firebase');
+            document.getElementById('deleteDocumentBtn').setAttribute('data-public-url', publicUrl);
+          }
+        }
+      }
+    }
+
+    function setupDownloadLink(url, filename) {
+      const downloadLinks = [
+        document.getElementById('downloadDocumentLink'),
+        document.getElementById('pdfDownloadBtn'),
+        document.getElementById('pdfDownloadBtn-mobile')
+      ];
+
+      downloadLinks.forEach(link => {
+        if (link) {
+          if (link.tagName === 'A') {
+            link.href = url;
+            link.setAttribute('download', filename);
+            link.title = `Baixar ${filename}`;
+          } else {
+            // For button elements, add click handler
+            link.onclick = () => window.open(url, '_blank');
+          }
+        }
+      });
+    }
+
+    function resetDocumentViewer() {
+      // Hide all containers
+      document.getElementById('pdfContainer').classList.add('hidden');
+      document.getElementById('imageContainer').classList.add('hidden');
+      document.getElementById('errorContainer').classList.add('hidden');
+
+      // Show loading indicator
+      document.getElementById('loadingContainer').classList.remove('hidden');
+
+      // Clear previous content
+      document.getElementById('documentImage').src = '';
+    }
+
+    function loadImage(url) {
+      // Reset image and show loading indicator first
+      const documentImage = document.getElementById('documentImage');
+      const loadingContainer = document.getElementById('loadingContainer');
+      const imageContainer = document.getElementById('imageContainer');
+      const errorContainer = document.getElementById('errorContainer');
+
+      documentImage.src = '';
+      loadingContainer.classList.remove('hidden');
+      imageContainer.classList.add('hidden');
+      errorContainer.classList.add('hidden');
+
+      // Set image attributes for cross-origin resources (like Firebase Storage)
+      if (url.includes('firebasestorage.googleapis.com')) {
+        documentImage.setAttribute('crossorigin', 'anonymous');
+      } else {
+        documentImage.removeAttribute('crossorigin');
+      }
+
+      // Set up event handlers
+      documentImage.onload = function () {
+        // Hide loading indicator
+        loadingContainer.classList.add('hidden');
+        // Show image container
+        imageContainer.classList.remove('hidden');
+
+        // Set data attributes for zoom functionality
+        this.setAttribute('data-original-width', this.naturalWidth);
+        this.setAttribute('data-original-height', this.naturalHeight);
+        this.setAttribute('data-zoom', '1');
+
+        // Calculate appropriate size and apply it
+        fitImageToContainer(this);
+      };
+
+      documentImage.onerror = function () {
+        console.error('Error loading image:', url);
+        showDocumentError();
+      };
+
+      // Finally set the image source
+      documentImage.src = url;
+    }
+
+    function fitImageToContainer(img) {
+      const maxWidth = window.innerWidth * 0.8;
+      const maxHeight = window.innerHeight * 0.7;
+
+      const imgRatio = img.naturalWidth / img.naturalHeight;
+      const containerRatio = maxWidth / maxHeight;
+
+      if (imgRatio > containerRatio) {
+        // Image is wider than container ratio
+        img.style.width = Math.min(maxWidth, img.naturalWidth) + 'px';
+        img.style.height = 'auto';
+      } else {
+        // Image is taller than container ratio
+        img.style.height = Math.min(maxHeight, img.naturalHeight) + 'px';
+        img.style.width = 'auto';
+      }
+
+      img.style.transform = 'scale(1)';
+      img.setAttribute('data-zoom', '1');
+    }
+
+    // Show error message when document can't be loaded
+    window.showDocumentError = function () {
+      // Hide loading and viewer containers
+      document.getElementById('loadingContainer').classList.add('hidden');
+      document.getElementById('pdfContainer').classList.add('hidden');
+      document.getElementById('imageContainer').classList.add('hidden');
+
+      // Set error message with download link
+      const errorContainer = document.getElementById('errorContainer');
+      errorContainer.innerHTML = `
+      <div class="text-center">
+        <svg xmlns="http://www.w3.org/2000/svg" class="mx-auto h-12 w-12 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+        </svg>
+        <h3 class="mt-2 text-lg font-medium text-red-800">Não foi possível visualizar o documento</h3>
+        <p class="mt-1 text-sm text-gray-600">O documento pode estar indisponível ou em um formato não suportado.</p>
+        <a id="downloadDirectLink" href="#" download class="mt-4 inline-flex items-center px-4 py-2 border border-transparent text-sm leading-5 font-medium rounded-md text-white bg-blue-600 hover:bg-blue-500 focus:outline-none focus:border-blue-700 focus:shadow-outline-blue active:bg-blue-700 transition ease-in-out duration-150">
+          <svg class="-ml-1 mr-2 h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+          </svg>
+          Baixar Arquivo
+        </a>
+      </div>
+    `;
+
+      // Configure direct download link
+      const downloadLink = document.getElementById('downloadDirectLink');
+      if (downloadLink) {
+        const mainDownloadLink = document.getElementById('downloadDocumentLink');
+        if (mainDownloadLink) {
+          downloadLink.href = mainDownloadLink.href;
+          downloadLink.setAttribute('download', mainDownloadLink.getAttribute('download') || '');
+        }
+      }
+
+      // Show error container
+      errorContainer.classList.remove('hidden');
+    }
+  });
+</script>
+{% endblock %}
+
+{% macro get_pet_progress(pet_id) %}
+{{ pet_progress[pet_id]['completed'] }},{{ pet_progress[pet_id]['total'] }}
+{% endmacro %}
+
+{% macro get_owner_progress() %}
+{{ owner_progress['completed'] }},{{ owner_progress['total'] }}
+{% endmacro %}

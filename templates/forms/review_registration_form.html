@@ -1,0 +1,214 @@
+<!-- Modal de Revisão de Cadastro -->
+<div id="modal-revisar-cadastro"
+  class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center p-4">
+  <div class="bg-white rounded-lg shadow-xl max-w-3xl w-full max-h-[90vh] overflow-hidden flex flex-col">
+    <div
+      class="px-4 py-3 border-b border-gray-200 flex justify-between items-center bg-gradient-to-r from-blue-600 to-blue-500">
+      <h2 class="text-lg font-semibold text-white flex items-center">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 24 24" fill="none"
+          stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+          <circle cx="12" cy="7" r="4"></circle>
+        </svg>
+        Revisar Cadastro
+      </h2>
+      <button onclick="fecharModal('modal-revisar-cadastro')" class="text-white hover:text-gray-200">
+        <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </button>
+    </div>
+    <div class="p-4 overflow-y-auto flex-1" x-data="{ editMode: false }">
+      <div class="flex justify-end mb-4">
+        <button @click="editMode = !editMode"
+          :class="editMode ? 'bg-gray-600 hover:bg-gray-700' : 'bg-blue-600 hover:bg-blue-700'"
+          class="inline-flex items-center px-3 py-1.5 border border-transparent rounded-md shadow-sm text-sm font-medium text-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+          <svg x-show="!editMode" xmlns="http://www.w3.org/2000/svg" class="-ml-1 mr-2 h-4 w-4" fill="none"
+            viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+          </svg>
+          <svg x-show="editMode" xmlns="http://www.w3.org/2000/svg" class="-ml-1 mr-2 h-4 w-4" fill="none"
+            viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+          <span x-text="editMode ? 'Cancelar Edição' : 'Editar Dados'"></span>
+        </button>
+      </div>
+      <form id="form-revisar-cadastro" method="POST" action="{{ url_for('editar_perfil', usuario=usuario.username) }}"
+        enctype="multipart/form-data" x-ref="form">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+          <!-- Nome Completo -->
+          <div class="col-span-2 sm:col-span-1">
+            <label for="owner_name" class="block text-sm font-medium text-gray-700 mb-1">
+              {{ t_field("User", "owner_name", current_lang)|default("Nome Completo") }}
+            </label>
+            <div class="relative">
+              <input type="text" id="owner_name" name="owner_name" x-bind:disabled="!editMode"
+                class="block w-full rounded-lg border border-input bg-background px-3 py-2 ps-9 text-sm text-foreground shadow-sm shadow-black/5 transition-shadow placeholder:text-muted-foreground/70 focus-visible:border-ring focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/20 disabled:cursor-not-allowed disabled:opacity-50"
+                value="{{ usuario.owner_name }}">
+              <div
+                class="pointer-events-none absolute inset-y-0 start-0 flex items-center justify-center ps-3 text-muted-foreground/80 peer-disabled:opacity-50">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                  stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                  aria-hidden="true">
+                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                  <circle cx="12" cy="7" r="4"></circle>
+                </svg>
+              </div>
+            </div>
+          </div>
+
+          <div class="hidden sm:block sm:col-span-1"></div>
+
+          <!-- Email e Contato -->
+          <div>
+            <label for="email" class="block text-sm font-medium text-gray-700 mb-1">
+              {{ t_field("User", "email", current_lang)|default("Email") }}
+            </label>
+            <div class="relative">
+              <input type="email" id="email" name="email" x-bind:disabled="!editMode"
+                class="block w-full rounded-lg border border-input bg-background px-3 py-2 ps-9 text-sm text-foreground shadow-sm shadow-black/5 transition-shadow placeholder:text-muted-foreground/70 focus-visible:border-ring focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/20 disabled:cursor-not-allowed disabled:opacity-50"
+                value="{{ usuario.email }}">
+              <div
+                class="pointer-events-none absolute inset-y-0 start-0 flex items-center justify-center ps-3 text-muted-foreground/80 peer-disabled:opacity-50">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                  stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                  aria-hidden="true">
+                  <circle cx="12" cy="12" r="4"></circle>
+                  <path d="M16 8v5a3 3 0 0 0 6 0v-1a10 10 0 1 0-3.92 7.94"></path>
+                </svg>
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <label for="contact_number" class="block text-sm font-medium text-gray-700 mb-1">
+              {{ t_field("User", "contact_number", current_lang)|default("Telefone") }}
+            </label>
+            <div class="relative">
+              <input type="text" id="contact_number" name="contact_number" x-bind:disabled="!editMode"
+                class="block w-full rounded-lg border border-input bg-background px-3 py-2 ps-9 text-sm text-foreground shadow-sm shadow-black/5 transition-shadow placeholder:text-muted-foreground/70 focus-visible:border-ring focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/20 disabled:cursor-not-allowed disabled:opacity-50"
+                value="{{ usuario.contact_number }}">
+              <div
+                class="pointer-events-none absolute inset-y-0 start-0 flex items-center justify-center ps-3 text-muted-foreground/80 peer-disabled:opacity-50">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                  stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                  aria-hidden="true">
+                  <path
+                    d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z">
+                </svg>
+              </div>
+            </div>
+          </div>
+
+          <!-- CPF ou Passaporte -->
+          <div>
+            <label for="identification" class="block text-sm font-medium text-gray-700 mb-1">
+              {{ t_field("User", "cpf", current_lang)|default("CPF") }}
+            </label>
+            <div class="relative">
+              <input type="text" id="identification" name="cpf" x-bind:disabled="!editMode"
+                class="block w-full rounded-lg border border-input bg-background px-3 py-2 ps-9 text-sm text-foreground shadow-sm shadow-black/5 transition-shadow placeholder:text-muted-foreground/70 focus-visible:border-ring focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/20 disabled:cursor-not-allowed disabled:opacity-50"
+                value="{{ usuario.cpf }}" oninput="formatarCPF(this)">
+              <div
+                class="pointer-events-none absolute inset-y-0 start-0 flex items-center justify-center ps-3 text-muted-foreground/80 peer-disabled:opacity-50">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                  stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                  aria-hidden="true">
+                  <rect x="3" y="4" width="18" height="16" rx="2"></rect>
+                  <line x1="7" y1="12" x2="17" y2="12"></line>
+                  <line x1="7" y1="8" x2="10" y2="8"></line>
+                  <line x1="7" y1="16" x2="13" y2="16"></line>
+                </svg>
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <label for="passport" class="block text-sm font-medium text-gray-700 mb-1">
+              {{ t_field("User", "passport_number", current_lang)|default("Passaporte") }}
+            </label>
+            <div class="relative">
+              <input type="text" id="passport" name="passport_number" x-bind:disabled="!editMode"
+                class="block w-full rounded-lg border border-input bg-background px-3 py-2 ps-9 text-sm text-foreground shadow-sm shadow-black/5 transition-shadow placeholder:text-muted-foreground/70 focus-visible:border-ring focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/20 disabled:cursor-not-allowed disabled:opacity-50"
+                value="{% if usuario.passport_number and usuario.passport_number != 'None' and usuario.passport_number != None %}{{ usuario.passport_number }}{% endif %}"
+                placeholder="{{ t_ui('placeholders', 'no_passport', '', current_lang)|default('Número do passaporte (opcional)') }}">
+              <div
+                class="pointer-events-none absolute inset-y-0 start-0 flex items-center justify-center ps-3 text-muted-foreground/80 peer-disabled:opacity-50">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 448 512" fill="currentColor"
+                  aria-hidden="true">
+                  <path
+                    d="M129.62 176h39.09c1.49-27.03 6.54-51.35 14.21-70.41-27.71 13.24-48.02 39.19-53.3 70.41zm0 32c5.29 31.22 25.59 57.17 53.3 70.41-7.68-19.06-12.72-43.38-14.21-70.41h-39.09zM224 286.69c7.69-7.45 20.77-34.42 23.43-78.69h-46.87c2.67 44.26 15.75 71.24 23.44 78.69zM200.57 176h46.87c-2.66-44.26-15.74-71.24-23.43-78.69-7.7 7.45-20.78 34.43-23.44 78.69zm64.51 102.41c27.71-13.24 48.02-39.19 53.3-70.41h-39.09c-1.49 27.03-6.53 51.35-14.21 70.41zM416 0H64C28.65 0 0 28.65 0 64v384c0 35.35 28.65 64 64 64h352c17.67 0 32-14.33 32-32V32c0-17.67-14.33-32-32-32zm-80 416H112c-8.8 0-16-7.2-16-16s7.2-16 16-16h224c8.8 0 16 7.2 16 16s-7.2 16-16 16zm-112-96c-70.69 0-128-57.31-128-128S153.31 64 224 64s128 57.31 128 128-57.31 128-128 128zm41.08-214.41c7.68 19.06 12.72 43.38 14.21 70.41h39.09c-5.28-31.22-25.59-57.17-53.3-70.41z">
+                </svg>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Endereços -->
+        <div>
+          <label for="residential_address" class="block text-sm font-medium text-gray-700 mb-1">
+            {{ t_field("User", "residential_address", current_lang)|default("Endereço Residencial") }}
+          </label>
+          <div class="relative">
+            <input type="text" id="residential_address" name="residential_address" x-bind:disabled="!editMode"
+              class="block w-full rounded-lg border border-input bg-background px-3 py-2 ps-9 text-sm text-foreground shadow-sm shadow-black/5 transition-shadow placeholder:text-muted-foreground/70 focus-visible:border-ring focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/20 disabled:cursor-not-allowed disabled:opacity-50"
+              value="{% if usuario.residential_address and usuario.residential_address != 'None' and usuario.residential_address != None %}{% if usuario.residential_address.formatted %}{{ usuario.residential_address.formatted }}{% else %}{{ usuario.residential_address }}{% endif %}{% endif %}"
+              placeholder="{{ t_ui('placeholders', 'no_address', '', current_lang)|default('Informe seu endereço residencial') }}">
+            <div
+              class="pointer-events-none absolute inset-y-0 start-0 flex items-center justify-center ps-3 text-muted-foreground/80 peer-disabled:opacity-50">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                class="lucide lucide-map-pin-house-icon lucide-map-pin-house">
+                <path
+                  d="M15 22a1 1 0 0 1-1-1v-4a1 1 0 0 1 .445-.832l3-2a1 1 0 0 1 1.11 0l3 2A1 1 0 0 1 22 17v4a1 1 0 0 1-1 1z" />
+                <path
+                  d="M18 10a8 8 0 0 0-16 0c0 4.993 5.539 10.193 7.399 11.799a1 1 0 0 0 1.202 0 32 32 0 0 0 .824-.738" />
+                <path d="M18 22v-3" />
+                <circle cx="10" cy="10" r="3" />
+              </svg>
+            </div>
+          </div>
+          <div id="residential_address-details" class="address-details text-sm text-gray-500 mt-1"></div>
+        </div>
+
+        <div>
+          <label for="delivery_address" class="block text-sm font-medium text-gray-700 mb-1">
+            {{ t_field("User", "delivery_address", current_lang)|default("Endereço de Entrega") }}
+          </label>
+          <div class="relative">
+            <input type="text" id="delivery_address" name="delivery_address" x-bind:disabled="!editMode"
+              class="block w-full rounded-lg border border-input bg-background px-3 py-2 ps-9 text-sm text-foreground shadow-sm shadow-black/5 transition-shadow placeholder:text-muted-foreground/70 focus-visible:border-ring focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/20 disabled:cursor-not-allowed disabled:opacity-50"
+              value="{% if usuario.delivery_address and usuario.delivery_address != 'None' and usuario.delivery_address != None %}{% if usuario.delivery_address.formatted %}{{ usuario.delivery_address.formatted }}{% else %}{{ usuario.delivery_address }}{% endif %}{% endif %}"
+              placeholder="{{ t_ui('placeholders', 'no_delivery_address', '', current_lang)|default('Informe seu endereço de entrega') }}">
+            <div
+              class="pointer-events-none absolute inset-y-0 start-0 flex items-center justify-center ps-3 text-muted-foreground/80 peer-disabled:opacity-50">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                class="lucide lucide-map-pin-plus-icon lucide-map-pin-plus">
+                <path
+                  d="M19.914 11.105A7.298 7.298 0 0 0 20 10a8 8 0 0 0-16 0c0 4.993 5.539 10.193 7.399 11.799a1 1 0 0 0 1.202 0 32 32 0 0 0 .824-.738" />
+                <circle cx="12" cy="10" r="3" />
+                <path d="M16 18h6" />
+                <path d="M19 15v6" />
+              </svg>
+            </div>
+          </div>
+          <div id="delivery_address-details" class="address-details text-sm text-gray-500 mt-1"></div>
+        </div>
+    </div>
+    </form>
+    <div class="px-4 py-3 bg-gray-50 border-t border-gray-200 flex justify-end space-x-3">
+      <button type="button" onclick="fecharModal('modal-revisar-cadastro')"
+        class="px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 transition-colors">
+        Fechar
+      </button>
+      <button type="submit" form="form-revisar-cadastro" x-show="editMode"
+        class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors">
+        Salvar Alterações
+      </button>
+    </div>
+  </div>
+</div>
+</div>

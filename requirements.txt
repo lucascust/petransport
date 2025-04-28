@@ -1,0 +1,15 @@
+Flask==3.0.2
+pymongo==4.6.2
+python-dotenv==1.0.1
+Werkzeug==3.0.1
+PyPDF2==3.0.1
+Pillow==10.2.0
+pydantic==2.11.2
+Faker==23.2.0
+requests==2.32.3
+
+# Testing dependencies
+pytest==8.1.1
+mongomock==4.1.2
+pytest-cov==4.1.0
+coverage==7.4.3 firebase-admin==6.7.0

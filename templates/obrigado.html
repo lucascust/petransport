@@ -1,0 +1,421 @@
+{% extends "base.html" %}
+
+{% block title %}Obrigado{% endblock %}
+
+{% block head %}
+<style>
+  body {
+    background-color: #EBF8FF;
+    background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%2390CDF4' fill-opacity='0.2'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+  }
+
+  .main-content {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 20px;
+  }
+
+  .card {
+    background-color: white;
+    border-radius: 16px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+    width: 100%;
+    max-width: 700px;
+    overflow: hidden;
+  }
+
+  .progress-bar {
+    width: 100%;
+    height: 4px;
+    background-color: #EBF8FF;
+    position: relative;
+    overflow: hidden;
+    border-radius: 2px;
+  }
+
+  .progress-bar::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+    width: 0;
+    background-color: #2C5282;
+    animation: progress 5s linear forwards;
+  }
+
+  @keyframes progress {
+    0% {
+      width: 0;
+    }
+
+    100% {
+      width: 100%;
+    }
+  }
+
+  .card-content {
+    padding: 30px;
+  }
+
+  .fade-in {
+    animation: fadeIn 0.5s ease-in forwards;
+    opacity: 0;
+  }
+
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .delay-100 {
+    animation-delay: 0.1s;
+  }
+
+  .delay-200 {
+    animation-delay: 0.2s;
+  }
+
+  .delay-300 {
+    animation-delay: 0.3s;
+  }
+
+  .delay-400 {
+    animation-delay: 0.4s;
+  }
+
+  .delay-500 {
+    animation-delay: 0.5s;
+  }
+
+  .paw-print {
+    position: absolute;
+    opacity: 0.1;
+    color: #2C5282;
+  }
+
+  .paw-1 {
+    top: 10%;
+    left: 5%;
+    transform: rotate(15deg);
+  }
+
+  .paw-2 {
+    top: 30%;
+    right: 8%;
+    transform: rotate(-20deg);
+  }
+
+  .paw-3 {
+    bottom: 25%;
+    left: 12%;
+    transform: rotate(30deg);
+  }
+
+  .paw-4 {
+    bottom: 15%;
+    right: 15%;
+    transform: rotate(-10deg);
+  }
+
+  .countdown-container {
+    display: flex;
+    align-items: center;
+    margin-top: 30px;
+    margin-bottom: 24px;
+  }
+
+  .countdown-number {
+    font-size: 32px;
+    font-weight: 700;
+    color: #2C5282;
+    margin-right: 15px;
+  }
+
+  .tip-box {
+    background-color: #EBF8FF;
+    padding: 15px;
+    border-radius: 8px;
+    border-left: 4px solid #4299E1;
+    margin-bottom: 24px;
+  }
+
+  .profile-section {
+    display: flex;
+    justify-content: center;
+    position: relative;
+    margin-bottom: 20px;
+  }
+
+  .profile-image {
+    width: 220px;
+    height: 220px;
+    border-radius: 50%;
+    background-color: #EBF8FF;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    position: relative;
+  }
+
+  .profile-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .plane {
+    position: absolute;
+    top: -15px;
+    right: -15px;
+    animation: fly 3s ease-in-out infinite;
+  }
+
+  @keyframes fly {
+    0% {
+      transform: translateY(0) rotate(0deg);
+    }
+
+    50% {
+      transform: translateY(-15px) rotate(2deg);
+    }
+
+    100% {
+      transform: translateY(0) rotate(0deg);
+    }
+  }
+
+  .button-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .whatsapp-button {
+    background-color: #2C5282;
+    color: white;
+    font-weight: 700;
+    padding: 16px 32px;
+    border-radius: 50px;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+    border: none;
+    cursor: pointer;
+    width: 100%;
+    max-width: 400px;
+  }
+
+  .whatsapp-button:hover {
+    background-color: #1A365D;
+    transform: scale(1.05);
+    box-shadow: 0 10px 20px rgba(44, 82, 130, 0.2);
+  }
+
+  .whatsapp-icon {
+    margin-right: 10px;
+  }
+
+  .services-section {
+    background-color: #EBF8FF;
+    padding: 24px;
+  }
+
+  .services-title {
+    color: #2C5282;
+    font-weight: 600;
+    margin-bottom: 15px;
+    text-align: center;
+  }
+
+  .services-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 15px;
+  }
+
+  .service-item {
+    display: flex;
+    align-items: flex-start;
+  }
+
+  .service-icon {
+    color: #2C5282;
+    margin-right: 10px;
+    margin-top: 3px;
+  }
+
+  @media (min-width: 768px) {
+    .card-content {
+      padding: 40px;
+    }
+
+    .top-section {
+      display: flex;
+      align-items: center;
+    }
+
+    .left-column {
+      width: 60%;
+      padding-right: 30px;
+    }
+
+    .right-column {
+      width: 40%;
+    }
+
+    .services-grid {
+      grid-template-columns: repeat(3, 1fr);
+    }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Paw Print Background Elements -->
+<div class="paw-print paw-1">
+  <svg width="50" height="50" viewBox="0 0 512 512" fill="currentColor">
+    <path
+      d="M256,33.2c-11,0-19.8,8.9-19.8,19.8c0,11,8.9,19.8,19.8,19.8s19.8-8.9,19.8-19.8C275.8,42.1,267,33.2,256,33.2z M174.6,66.4c-11,0-19.8,8.9-19.8,19.8c0,11,8.9,19.8,19.8,19.8s19.8-8.9,19.8-19.8C194.4,75.3,185.5,66.4,174.6,66.4z M337.4,66.4c-11,0-19.8,8.9-19.8,19.8c0,11,8.9,19.8,19.8,19.8s19.8-8.9,19.8-19.8C357.2,75.3,348.3,66.4,337.4,66.4z M143.7,142.7c-15.5,0-28,12.5-28,28s12.5,28,28,28s28-12.5,28-28S159.2,142.7,143.7,142.7z M368.3,142.7c-15.5,0-28,12.5-28,28s12.5,28,28,28s28-12.5,28-28S383.8,142.7,368.3,142.7z M256,160c-35.3,0-64,28.7-64,64s28.7,64,64,64s64-28.7,64-64S291.3,160,256,160z" />
+  </svg>
+</div>
+<div class="paw-print paw-2">
+  <svg width="40" height="40" viewBox="0 0 512 512" fill="currentColor">
+    <path
+      d="M256,33.2c-11,0-19.8,8.9-19.8,19.8c0,11,8.9,19.8,19.8,19.8s19.8-8.9,19.8-19.8C275.8,42.1,267,33.2,256,33.2z M174.6,66.4c-11,0-19.8,8.9-19.8,19.8c0,11,8.9,19.8,19.8,19.8s19.8-8.9,19.8-19.8C194.4,75.3,185.5,66.4,174.6,66.4z M337.4,66.4c-11,0-19.8,8.9-19.8,19.8c0,11,8.9,19.8,19.8,19.8s19.8-8.9,19.8-19.8C357.2,75.3,348.3,66.4,337.4,66.4z M143.7,142.7c-15.5,0-28,12.5-28,28s12.5,28,28,28s28-12.5,28-28S159.2,142.7,143.7,142.7z M368.3,142.7c-15.5,0-28,12.5-28,28s12.5,28,28,28s28-12.5,28-28S383.8,142.7,368.3,142.7z M256,160c-35.3,0-64,28.7-64,64s28.7,64,64,64s64-28.7,64-64S291.3,160,256,160z" />
+  </svg>
+</div>
+<div class="paw-print paw-3">
+  <svg width="60" height="60" viewBox="0 0 512 512" fill="currentColor">
+    <path
+      d="M256,33.2c-11,0-19.8,8.9-19.8,19.8c0,11,8.9,19.8,19.8,19.8s19.8-8.9,19.8-19.8C275.8,42.1,267,33.2,256,33.2z M174.6,66.4c-11,0-19.8,8.9-19.8,19.8c0,11,8.9,19.8,19.8,19.8s19.8-8.9,19.8-19.8C194.4,75.3,185.5,66.4,174.6,66.4z M337.4,66.4c-11,0-19.8,8.9-19.8,19.8c0,11,8.9,19.8,19.8,19.8s19.8-8.9,19.8-19.8C357.2,75.3,348.3,66.4,337.4,66.4z M143.7,142.7c-15.5,0-28,12.5-28,28s12.5,28,28,28s28-12.5,28-28S159.2,142.7,143.7,142.7z M368.3,142.7c-15.5,0-28,12.5-28,28s12.5,28,28,28s28-12.5,28-28S383.8,142.7,368.3,142.7z M256,160c-35.3,0-64,28.7-64,64s28.7,64,64,64s64-28.7,64-64S291.3,160,256,160z" />
+  </svg>
+</div>
+<div class="paw-print paw-4">
+  <svg width="45" height="45" viewBox="0 0 512 512" fill="currentColor">
+    <path
+      d="M256,33.2c-11,0-19.8,8.9-19.8,19.8c0,11,8.9,19.8,19.8,19.8s19.8-8.9,19.8-19.8C275.8,42.1,267,33.2,256,33.2z M174.6,66.4c-11,0-19.8,8.9-19.8,19.8c0,11,8.9,19.8,19.8,19.8s19.8-8.9,19.8-19.8C194.4,75.3,185.5,66.4,174.6,66.4z M337.4,66.4c-11,0-19.8,8.9-19.8,19.8c0,11,8.9,19.8,19.8,19.8s19.8-8.9,19.8-19.8C357.2,75.3,348.3,66.4,337.4,66.4z M143.7,142.7c-15.5,0-28,12.5-28,28s12.5,28,28,28s28-12.5,28-28S159.2,142.7,143.7,142.7z M368.3,142.7c-15.5,0-28,12.5-28,28s12.5,28,28,28s28-12.5,28-28S383.8,142.7,368.3,142.7z M256,160c-35.3,0-64,28.7-64,64s28.7,64,64,64s64-28.7,64-64S291.3,160,256,160z" />
+  </svg>
+</div>
+
+<div class="main-content">
+  <div class="card">
+    <div class="progress-bar"></div>
+    <div class="card-content">
+      <div class="top-section">
+        <div class="left-column fade-in">
+          <h1 class="text-[28px] font-bold text-primary mb-[10px]">Obrigado!</h1>
+          <p>Vamos preparar tudo para você e seu pet.</p>
+          <div class="countdown-container">
+            <span id="countdown" class="countdown-number">5</span>
+            <p>Conectando ao WhatsApp da Dra. Fernanda Cavalcanti...</p>
+          </div>
+
+        </div>
+        <div class="right-column">
+          <div class="profile-section fade-in delay-300">
+            <div class="profile-image" style="border: 4px solid #2C5282;">
+              <img src="/static/images/obrigado/fernanda_vigiagro.jpg" alt="Dra. Fernanda Cavalcanti">
+            </div>
+            <div class="plane">
+              <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#2C5282" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round">
+                <path
+                  d="M17.8 19.2L16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.5 5.3c.3.4.8.5 1.3.3l.5-.2c.4-.3.6-.7.5-1.2z">
+                </path>
+              </svg>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="fade-in delay-400">
+        <div class="button-container">
+          <p>Se o redirecionamento não ocorrer automaticamente:</p>
+          <a href="#" id="whatsapp-button" class="whatsapp-button">
+            <span class="whatsapp-icon">
+              <svg width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
+                <path
+                  d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
+              </svg>
+            </span>
+            INICIAR CONVERSA NO WHATSAPP
+          </a>
+        </div>
+      </div>
+    </div>
+    <div class="services-section fade-in delay-500">
+      <h3 class="services-title">Serviços da Dra. Fernanda Cavalcanti</h3>
+      <div class="services-grid">
+        <div class="service-item">
+          <span class="service-icon">
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="#2C5282">
+              <path fill-rule="evenodd"
+                d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                clip-rule="evenodd"></path>
+            </svg>
+          </span>
+          <span>Assessoria para viagens internacionais</span>
+        </div>
+        <div class="service-item">
+          <span class="service-icon">
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="#2C5282">
+              <path fill-rule="evenodd"
+                d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                clip-rule="evenodd"></path>
+            </svg>
+          </span>
+          <span>Documentação completa para pets</span>
+        </div>
+        <div class="service-item">
+          <span class="service-icon">
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="#2C5282">
+              <path fill-rule="evenodd"
+                d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                clip-rule="evenodd"></path>
+            </svg>
+          </span>
+          <span>Consultoria especializada</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  // Countdown timer
+  let count = 5;
+  const countdownElement = document.getElementById('countdown');
+  const countdownInterval = setInterval(() => {
+    count--;
+    countdownElement.textContent = count;
+    if (count <= 0) {
+      clearInterval(countdownInterval);
+      redirectToWhatsApp();
+    }
+  }, 1000);
+  // WhatsApp redirect function
+  function redirectToWhatsApp() {
+    window.location.href = "https://api.whatsapp.com/send?phone=5518997958295&text=Olá%20Dra.%20Fernanda,%20gostaria%20de%20informações%20sobre%20viagem%20com%20meu%20pet.";
+  }
+  // Button click handler
+  document.getElementById('whatsapp-button').addEventListener('click', function (e) {
+    e.preventDefault();
+    redirectToWhatsApp();
+  });
+</script>
+{% endblock %}

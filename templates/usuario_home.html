@@ -1,0 +1,693 @@
+{% extends "base.html" %}
+
+{% block title %}{{ usuario.owner_name }} - Portal do Usuário{% endblock %}
+
+{% block head %}
+<script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
+<!-- Shared IATA airport lookup -->
+<script src="{{ url_for('static', filename='js/airport_iata.js') }}"></script>
+{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto">
+  <!-- Cabeçalho com informações do usuário e seus pets -->
+  <div class="bg-white rounded-lg shadow-md p-6 mb-4">
+    <div class="flex flex-col md:flex-row md:items-center md:justify-between">
+      <div class="mb-4 md:mb-0">
+        <h1 class="text-2xl font-bold text-gray-800">{{ greeting }}, {{ usuario.owner_name }}</h1>
+      </div>
+      <div class="flex items-center space-x-3">
+        <button onclick="abrirModalRevisarCadastro()"
+          class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+          <svg xmlns="http://www.w3.org/2000/svg" class="-ml-1 mr-2 h-4 w-4" fill="none" viewBox="0 0 24 24"
+            stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+          </svg>
+          Revisar Cadastro
+        </button>
+      </div>
+    </div>
+
+    <!-- Seção de Pets dentro do mesmo container -->
+    <div class="mt-2 border-t border-gray-200 pt-2">
+      <div class="flex justify-between items-center mb-4">
+        <h2 class="text-xl font-bold text-gray-800">Seus Pets</h2>
+        <button onclick="abrirModalAdicionarPet()"
+          class="inline-flex items-center px-3 py-1.5 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
+          <svg xmlns="http://www.w3.org/2000/svg" class="-ml-1 mr-2 h-4 w-4" fill="none" viewBox="0 0 24 24"
+            stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+          </svg>
+          Adicionar Pet
+        </button>
+      </div>
+
+      {% if usuario.pets %}
+      <div class="space-y-3 sm:grid sm:grid-cols-2 sm:gap-4 sm:space-y-0 max-w-2xl">
+        {% for pet in usuario.pets %}
+        <div
+          class="pet-card bg-gray-50 rounded-md border border-gray-200 overflow-hidden flex hover:shadow-md transition-shadow"
+          data-pet="{{ pet.name }}" data-especie="{{ pet.species }}" data-raca="{{ pet.breed }}"
+          data-sexo="{{ pet.gender }}" data-nascimento="{{ pet.birth_date|default('') }}"
+          data-microchip="{{ pet.microchip|default('') }}">
+
+          <!-- Foto do pet -->
+          <div class="w-16 h-16 flex-shrink-0 relative">
+            {% if pet.photo %}
+            {% if pet.photo is string %}
+            <img src="{{ url_for('static', filename='uploads/' + pet.photo) }}" alt="Foto de {{ pet.name }}"
+              class="w-full h-full object-cover">
+            {% elif pet.photo is mapping %}
+            {% if pet.photo.path %}
+            {% if pet.photo.path.startswith('static/') %}
+            <img src="/{{ pet.photo.path }}" alt="Foto de {{ pet.name }}" class="w-full h-full object-cover">
+            {% else %}
+            <img src="{{ url_for('static', filename='uploads/' + pet.photo.path) }}" alt="Foto de {{ pet.name }}">
+            {% endif %}
+            {% elif pet.photo.filename %}
+            <img src="{{ url_for('static', filename='uploads/' + pet.photo.filename) }}" alt="Foto de {{ pet.name }}"
+              class="w-full h-full object-cover">
+            {% endif %}
+            {% endif %}
+            {% else %}
+            <div class="w-full h-full bg-gray-200 flex items-center justify-center">
+              <svg class="w-8 h-8 text-gray-400" viewBox="0 0 512 512" fill="currentColor">
+                <path
+                  d="M256 224c-79.41 0-192 122.76-192 200.25 0 34.9 26.81 55.75 71.74 55.75 48.84 0 81.09-25.08 120.26-25.08 39.51 0 71.85 25.08 120.26 25.08 44.93 0 71.74-20.85 71.74-55.75C448 346.76 335.41 224 256 224zm-147.28-12.61c-10.4-34.65-42.44-57.09-71.56-50.13-29.12 6.96-44.29 40.69-33.89 75.34 10.4 34.65 42.44 57.09 71.56 50.13 29.12-6.96 44.29-40.69 33.89-75.34zm84.72-20.78c30.94-8.14 46.42-49.94 34.58-93.36s-46.52-72.01-77.46-63.87-46.42 49.94-34.58 93.36c11.84 43.42 46.53 72.02 77.46 63.87zm281.39-29.34c-29.12-6.96-61.15 15.48-71.56 50.13-10.4 34.65 4.77 68.38 33.89 75.34 29.12 6.96 61.15-15.48 71.56-50.13 10.4-34.65-4.77-68.38-33.89-75.34zm-156.27 29.34c30.94 8.14 65.62-20.45 77.46-63.87 11.84-43.42-3.64-85.21-34.58-93.36s-65.62 20.45-77.46 63.87c-11.84 43.42 3.64 85.22 34.58 93.36z" />
+              </svg>
+            </div>
+            {% endif %}
+          </div>
+
+          <!-- Detalhes do pet -->
+          <div class="flex-1 p-2 flex flex-col justify-between min-w-0">
+            <div>
+              <div class="flex justify-between items-start">
+                <h5 class="font-medium text-gray-900 truncate">{{ pet.name }}</h5>
+                <span
+                  class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-primary-100 text-primary-800">
+                  {{ t_enum("Pet", "species", pet.species, current_lang)|title }}
+                </span>
+              </div>
+              <div class="flex justify-between items-center mt-0.5">
+                <div class="text-xs text-gray-500">
+                  {{ pet.breed }}
+                  {% if pet.fur_color %}• {{ pet.fur_color }} {% endif
+                  %}
+                  • {{ t_enum("Pet", "gender", pet.gender, current_lang)|title }}
+                </div>
+                <button onclick="abrirModalEditarPet(this)" data-pet-name="{{ pet.name }}"
+                  data-pet-species="{{ pet.species }}" data-pet-breed="{{ pet.breed }}"
+                  data-pet-fur-color="{{ pet.fur_color|default('') }}" data-pet-gender="{{ pet.gender }}"
+                  data-pet-birth-date="{{ pet.birth_date|default('') }}" data-pet-weight="{{ pet.weight|default('') }}"
+                  data-pet-microchip="{{ pet.microchip|default('') }}"
+                  data-pet-photo="{{ pet.photo.path if pet.photo and pet.photo.path else '' }}"
+                  class="text-xs px-2 py-0.5 text-gray-600 hover:text-primary-600 transition-colors">
+                  <svg class="w-3 h-3 inline" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"
+                    fill="currentColor">
+                    <path
+                      d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
+                  </svg>
+                  Editar
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+      {% else %}
+      <div class="text-center py-8 bg-gray-50 rounded-lg border border-gray-200">
+        <svg xmlns="http://www.w3.org/2000/svg" class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24"
+          stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+        </svg>
+        <h3 class="mt-2 text-lg font-medium text-gray-900">Nenhum pet cadastrado</h3>
+        <p class="mt-1 text-sm text-gray-500">Você ainda não possui pets cadastrados. Adicione seu primeiro pet para
+          gerenciar suas viagens.</p>
+        <div class="mt-6">
+          <a href="{{ url_for('usuario_adicionar_pet', usuario=usuario.username) }}"
+            class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
+            <svg xmlns="http://www.w3.org/2000/svg" class="-ml-1 mr-2 h-5 w-5" fill="none" viewBox="0 0 24 24"
+              stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+            </svg>
+            Adicionar Primeiro Pet
+          </a>
+        </div>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Área principal - Viagens -->
+  <div class="bg-white rounded-lg shadow-md overflow-hidden">
+    <div class="p-6 border-b border-gray-200">
+      <div class="flex justify-between items-center">
+        <h2 class="text-xl font-bold text-gray-800">Suas Viagens</h2>
+        <a href="{{ url_for('criar_viagem', usuario=usuario.username) }}"
+          class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+          <svg xmlns="http://www.w3.org/2000/svg" class="-ml-1 mr-2 h-4 w-4" fill="none" viewBox="0 0 24 24"
+            stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+          </svg>
+          Nova Viagem
+        </a>
+      </div>
+
+      <!-- Alpine.js para gerenciar as abas de diferentes tipos de viagens -->
+      <div x-data="{ activeTab: 'upcoming' }" class="mt-2">
+        <div class="border-b border-gray-200">
+          <nav class="-mb-px flex space-x-8">
+            <button @click="activeTab = 'upcoming'"
+              :class="{ 'border-blue-500 text-blue-600': activeTab === 'upcoming', 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300': activeTab !== 'upcoming' }"
+              class="whitespace-nowrap py-3 px-1 border-b-2 font-medium text-sm focus:outline-none">
+              Em Andamento
+            </button>
+            <button @click="activeTab = 'completed'"
+              :class="{ 'border-blue-500 text-blue-600': activeTab === 'completed', 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300': activeTab !== 'completed' }"
+              class="whitespace-nowrap py-3 px-1 border-b-2 font-medium text-sm focus:outline-none">
+              Viagens Concluídas
+            </button>
+          </nav>
+        </div>
+
+        <!-- Lista de viagens em andamento (combinando upcoming e in_progress) -->
+        <div x-show="activeTab === 'upcoming'" class="animate__animated animate__fadeIn pt-2">
+          {% set in_progress_travels = travels|selectattr("status", "equalto", "upcoming")|list %}
+          {% if in_progress_travels %}
+          <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+              <thead class="bg-gray-50">
+                <tr>
+                  <th scope="col"
+                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Destino</th>
+                  <th scope="col"
+                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Data Estimada
+                  </th>
+                  <th scope="col"
+                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Pets</th>
+                  <th scope="col"
+                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Método</th>
+                  <th scope="col"
+                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status Docs
+                  </th>
+                  <th scope="col"
+                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ações</th>
+                </tr>
+              </thead>
+              <tbody class="bg-white divide-y divide-gray-200">
+                {% for travel in in_progress_travels %}
+                <tr class="hover:bg-gray-50 transition">
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="flex items-center">
+                      <div {% if travel.status=='upcoming' %}
+                        class="flex-shrink-0 h-8 w-8 flex items-center justify-center bg-blue-100 text-blue-500 rounded-full"
+                        {% else %}
+                        class="flex-shrink-0 h-8 w-8 flex items-center justify-center bg-orange-100 text-orange-500 rounded-full"
+                        {% endif %}>
+                        {% if travel.travel_method == 'plane' %}
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24"
+                          stroke="currentColor">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                        </svg>
+                        {% elif travel.travel_method == 'car' %}
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24"
+                          stroke="currentColor">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M8 7h8m-8 5h8m-4-9v18m0-18v18" />
+                        </svg>
+                        {% else %}
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24"
+                          stroke="currentColor">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
+                        </svg>
+                        {% endif %}
+                      </div>
+                      <div class="ml-4">
+                        <div class="text-sm font-medium text-gray-900"><span class="iata-city"
+                            data-iata="{{ travel.destination }}">{{ travel.destination }}</span></div>
+                        <div class="text-xs text-gray-500">De: <span class="iata-city"
+                            data-iata="{{ travel.origin }}">{{ travel.origin }}</span></div>
+                      </div>
+                    </div>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="text-sm text-gray-900">{{ travel.estimated_date }}</div>
+                    {% if travel.ticket_date %}
+                    <div class="text-xs text-gray-500">Passagem: {{ travel.ticket_date.strftime('%d/%m/%Y') }}</div>
+                    {% endif %}
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="flex -space-x-2">
+                      {% for pet_id in travel.pet_ids %}
+                      {% set pet = usuario.pets|selectattr("id", "equalto", pet_id)|first %}
+                      {% if pet %}
+                      <div class="relative group inline-block">
+                        {% if pet.photo %}
+                        {% if pet.photo is string %}
+                        <img class="h-8 w-8 rounded-full border-2 border-white"
+                          src="{{ url_for('static', filename='uploads/' + pet.photo) }}" alt="{{ pet.name }}">
+                        {% elif pet.photo is mapping %}
+                        {% if pet.photo.path %}
+                        {% if pet.photo.path.startswith('static/') %}
+                        <img class="h-8 w-8 rounded-full border-2 border-white" src="/{{ pet.photo.path }}"
+                          alt="{{ pet.name }}">
+                        {% else %}
+                        <img class="h-8 w-8 rounded-full border-2 border-white"
+                          src="{{ url_for('static', filename='uploads/' + pet.photo.path) }}" alt="{{ pet.name }}">
+                        {% endif %}
+                        {% elif pet.photo.filename %}
+                        <img class="h-8 w-8 rounded-full border-2 border-white"
+                          src="{{ url_for('static', filename='uploads/' + pet.photo.filename) }}" alt="{{ pet.name }}">
+                        {% endif %}
+                        {% endif %}
+                        {% else %}
+                        <div
+                          class="h-8 w-8 rounded-full bg-gray-200 border-2 border-white flex items-center justify-center text-xs font-bold text-gray-500">
+                          {{ pet.name[0] }}
+                        </div>
+                        {% endif %}
+                        <div
+                          class="absolute left-1/2 -translate-x-1/2 bottom-full mb-1 hidden group-hover:block bg-gray-900 text-white text-xs rounded px-2 py-1 whitespace-nowrap z-10 shadow-lg">
+                          {{ pet.name }}
+                        </div>
+                      </div>
+                      {% endif %}
+                      {% endfor %}
+                    </div>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
+                      {% if travel.travel_method == 'plane' %}bg-purple-100 text-purple-800
+                      {% elif travel.travel_method == 'car' %}bg-green-100 text-green-800
+                      {% elif travel.travel_method == 'bus' %}bg-yellow-100 text-yellow-800
+                      {% else %}bg-gray-100 text-gray-800{% endif %}">
+                      {{ t_enum("Travel", "travelMethod", travel.travel_method, current_lang) }}
+                    </span>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="flex items-center group relative" x-data="{
+                        showTip: false,
+                        tipX: 0,
+                        tipY: 0,
+                        updateTipPosition() {
+                          const bar = this.$refs.progressBar;
+                          if (bar) {
+                            const rect = bar.getBoundingClientRect();
+                            this.tipX = rect.left + rect.width / 2;
+                            this.tipY = rect.top - 24; // 24px above the bar for more space
+                          }
+                        }
+                      }" @mouseenter="showTip = true; updateTipPosition()" @mouseleave="showTip = false">
+                      <div class="h-2 w-full bg-gray-200 rounded-full overflow-hidden" x-ref="progressBar">
+                        {% set prog = travel_doc_progress[travel._id|string] %}
+                        {% set percent = (prog.completed / prog.total * 100) | int if prog.total > 0 else 0 %}
+                        <div class="bg-blue-500 h-full transition-all duration-300" style="width: {{ percent }}%"></div>
+                      </div>
+                      <span class="ml-2 text-xs text-gray-500">{{ percent }}%</span>
+                      <!-- Portal Tooltip -->
+                      <template x-teleport="body">
+                        {% include 'components/documents_tooltip.html' with context %}
+                      </template>
+                    </div>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                    <a href="{{ url_for('viagem_detalhes', usuario=usuario.username, viagem_id=travel._id) }}"
+                      class="text-blue-600 hover:text-blue-900">Ver Detalhes</a>
+                  </td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+          {% else %}
+          <div class="text-center py-12 bg-gray-50 rounded-lg">
+            <svg xmlns="http://www.w3.org/2000/svg" class="mx-auto h-12 w-12 text-gray-400" fill="none"
+              viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <h3 class="mt-2 text-lg font-medium text-gray-900">Sem viagens em andamento</h3>
+            <p class="mt-1 text-sm text-gray-500">Você não tem viagens em andamento no momento.</p>
+            <div class="mt-6">
+              <a href="{{ url_for('criar_viagem', usuario=usuario.username) }}"
+                class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                <svg xmlns="http://www.w3.org/2000/svg" class="-ml-1 mr-2 h-5 w-5" fill="none" viewBox="0 0 24 24"
+                  stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                </svg>
+                Criar Nova Viagem
+              </a>
+            </div>
+          </div>
+          {% endif %}
+        </div>
+
+        <!-- Lista de viagens concluídas -->
+        <div x-show="activeTab === 'completed'" class="animate__animated animate__fadeIn py-4" style="display: none;">
+          {% set completed_travels = travels|selectattr("status", "equalto", "completed")|list %}
+          {% if completed_travels %}
+          <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+              <thead class="bg-gray-50">
+                <tr>
+                  <th scope="col"
+                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Destino</th>
+                  <th scope="col"
+                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Data da
+                    Viagem</th>
+                  <th scope="col"
+                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Pets</th>
+                  <th scope="col"
+                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Método</th>
+                  <th scope="col"
+                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                  <th scope="col"
+                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ações</th>
+                </tr>
+              </thead>
+              <tbody class="bg-white divide-y divide-gray-200">
+                {% for travel in completed_travels %}
+                <tr class="hover:bg-gray-50 transition">
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="flex items-center">
+                      <div
+                        class="flex-shrink-0 h-8 w-8 flex items-center justify-center bg-green-100 text-green-500 rounded-full">
+                        {% if travel.travel_method == 'plane' %}
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24"
+                          stroke="currentColor">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                        </svg>
+                        {% elif travel.travel_method == 'car' %}
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24"
+                          stroke="currentColor">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M8 7h8m-8 5h8m-4-9v18m0-18v18" />
+                        </svg>
+                        {% else %}
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24"
+                          stroke="currentColor">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
+                        </svg>
+                        {% endif %}
+                      </div>
+                      <div class="ml-4">
+                        <div class="text-sm font-medium text-gray-900"><span class="iata-city"
+                            data-iata="{{ travel.destination }}">{{ travel.destination }}</span></div>
+                        <div class="text-xs text-gray-500">De: <span class="iata-city"
+                            data-iata="{{ travel.origin }}">{{ travel.origin }}</span></div>
+                      </div>
+                    </div>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="text-sm text-gray-900">{{ travel.completedDate if travel.completedDate else
+                      travel.estimated_date }}</div>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="flex -space-x-2">
+                      {% for pet_id in travel.pet_ids %}
+                      {% set pet = usuario.pets|selectattr("id", "equalto", pet_id)|first %}
+                      {% if pet %}
+                      <div class="relative group inline-block">
+                        {% if pet.photo %}
+                        {% if pet.photo is string %}
+                        <img class="h-8 w-8 rounded-full border-2 border-white"
+                          src="{{ url_for('static', filename='uploads/' + pet.photo) }}" alt="{{ pet.name }}">
+                        {% elif pet.photo is mapping %}
+                        {% if pet.photo.path %}
+                        {% if pet.photo.path.startswith('static/') %}
+                        <img class="h-8 w-8 rounded-full border-2 border-white" src="/{{ pet.photo.path }}"
+                          alt="{{ pet.name }}">
+                        {% else %}
+                        <img class="h-8 w-8 rounded-full border-2 border-white"
+                          src="{{ url_for('static', filename='uploads/' + pet.photo.path) }}" alt="{{ pet.name }}">
+                        {% endif %}
+                        {% elif pet.photo.filename %}
+                        <img class="h-8 w-8 rounded-full border-2 border-white"
+                          src="{{ url_for('static', filename='uploads/' + pet.photo.filename) }}" alt="{{ pet.name }}">
+                        {% endif %}
+                        {% endif %}
+                        {% else %}
+                        <div
+                          class="h-8 w-8 rounded-full bg-gray-200 border-2 border-white flex items-center justify-center text-xs font-bold text-gray-500">
+                          {{ pet.name[0] }}
+                        </div>
+                        {% endif %}
+                        <div
+                          class="absolute left-1/2 -translate-x-1/2 bottom-full mb-1 hidden group-hover:block bg-gray-900 text-white text-xs rounded px-2 py-1 whitespace-nowrap z-10 shadow-lg">
+                          {{ pet.name }}
+                        </div>
+                      </div>
+                      {% endif %}
+                      {% endfor %}
+                    </div>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
+                      {% if travel.travel_method == 'plane' %}bg-purple-100 text-purple-800
+                      {% elif travel.travel_method == 'car' %}bg-green-100 text-green-800
+                      {% elif travel.travel_method == 'bus' %}bg-yellow-100 text-yellow-800
+                      {% else %}bg-gray-100 text-gray-800{% endif %}">
+                      {{ t_enum("Travel", "travel_method", travel.travel_method, current_lang) }}
+                    </span>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <span
+                      class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                      Concluída
+                    </span>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                    <a href="{{ url_for('viagem_detalhes', usuario=usuario.username, viagem_id=travel._id) }}"
+                      class="text-blue-600 hover:text-blue-900">Ver Detalhes</a>
+                  </td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+          {% else %}
+          <div class="text-center py-12 bg-gray-50 rounded-lg">
+            <svg xmlns="http://www.w3.org/2000/svg" class="mx-auto h-12 w-12 text-gray-400" fill="none"
+              viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+            </svg>
+            <h3 class="mt-2 text-lg font-medium text-gray-900">Sem viagens concluídas</h3>
+            <p class="mt-1 text-sm text-gray-500">Você ainda não tem viagens concluídas no histórico.</p>
+          </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Include the review registration modal as a single include -->
+{% include 'forms/review_registration_form.html' %}
+{% include 'forms/edit_pet_form.html' %}
+{% include 'forms/add_pet_form.html' %}
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    // Funções adicionais podem ser adicionadas aqui
+  });
+
+  // Formatar CPF
+  function formatarCPF(input) {
+    // Remove todos os caracteres não numéricos
+    let valor = input.value.replace(/\D/g, '');
+
+    // Limita a 11 dígitos
+    valor = valor.substring(0, 11);
+
+    // Aplica a formatação
+    if (valor.length > 3) {
+      valor = valor.replace(/(\d{3})(\d)/, '$1.$2');
+    }
+    if (valor.length > 7) {
+      valor = valor.replace(/(\d{3})(\d)/, '$1.$2');
+    }
+    if (valor.length > 11) {
+      valor = valor.replace(/(\d{3})(\d{1,2})$/, '$1-$2');
+    }
+
+    // Atualiza o valor do input
+    input.value = valor;
+  }
+
+  // Formatar Data
+  function formatarData(input) {
+    // Remove caracteres não numéricos
+    let valor = input.value.replace(/\D/g, '');
+
+    // Limita a 8 dígitos (DDMMAAAA)
+    valor = valor.substring(0, 8);
+
+    // Aplica a formatação
+    if (valor.length > 4) {
+      valor = valor.replace(/(\d{2})(\d{2})(\d{4})/, '$1/$2/$3');
+    } else if (valor.length > 2) {
+      valor = valor.replace(/(\d{2})(\d{2})/, '$1/$2/');
+    }
+
+    // Atualiza o valor do input
+    input.value = valor;
+  }
+
+  // Formatar Microchip
+  function formatMicrochip(input) {
+    let valor = input.value.replace(/\D/g, '');
+    valor = valor.substring(0, 15);
+    input.value = valor;
+  }
+
+  // Google Places API para os campos de endereço
+  let residentialAutocomplete;
+  let deliveryAutocomplete;
+
+  // Inicializa Google Places API
+  function initGooglePlaces() {
+    // Setup do autocomplete para endereço residencial
+    const residentialInput = document.getElementById('residential_address');
+    if (residentialInput) {
+      residentialAutocomplete = new google.maps.places.Autocomplete(residentialInput, {
+        componentRestrictions: { country: 'br' }
+      });
+
+      residentialAutocomplete.addListener('place_changed', function () {
+        const place = residentialAutocomplete.getPlace();
+        if (place.geometry) {
+          atualizarEnderecoDetails(place, 'residential_address');
+        }
+      });
+    }
+
+    // Setup do autocomplete para endereço de entrega
+    const deliveryInput = document.getElementById('delivery_address');
+    if (deliveryInput) {
+      deliveryAutocomplete = new google.maps.places.Autocomplete(deliveryInput, {
+        componentRestrictions: { country: 'br' }
+      });
+
+      deliveryAutocomplete.addListener('place_changed', function () {
+        const place = deliveryAutocomplete.getPlace();
+        if (place.geometry) {
+          atualizarEnderecoDetails(place, 'delivery_address');
+        }
+      });
+    }
+  }
+
+  // Atualiza os detalhes do endereço selecionado
+  function atualizarEnderecoDetails(place, addressType) {
+    const detailsContainer = document.getElementById(`${addressType}-details`);
+    if (!detailsContainer) return;
+
+    // Extrai os componentes do endereço
+    let cidade = '';
+    let estado = '';
+    let pais = '';
+    let cep = '';
+
+    place.address_components.forEach(component => {
+      const types = component.types;
+      if (types.includes('locality')) {
+        cidade = component.long_name;
+      }
+      if (types.includes('administrative_area_level_1')) {
+        estado = component.short_name;
+      }
+      if (types.includes('country')) {
+        pais = component.long_name;
+      }
+      if (types.includes('postal_code')) {
+        cep = component.long_name;
+      }
+    });
+
+    // Atualiza os campos ocultos com as coordenadas e endereço formatado
+    detailsContainer.innerHTML = `
+      <input type="hidden" name="${addressType}_lat" value="${place.geometry.location.lat()}">
+      <input type="hidden" name="${addressType}_lng" value="${place.geometry.location.lng()}">
+      <input type="hidden" name="${addressType}_formatted" value="${place.formatted_address}">
+      <input type="hidden" name="${addressType}_cidade" value="${cidade}">
+      <input type="hidden" name="${addressType}_estado" value="${estado}">
+      <input type="hidden" name="${addressType}_pais" value="${pais}">
+      <input type="hidden" name="${addressType}_cep" value="${cep}">
+      <div class="mt-1 text-xs text-blue-600">${place.formatted_address}</div>
+    `;
+  }
+</script>
+
+<!-- Google Places API -->
+<script>
+  const GOOGLE_MAPS_API_KEY = "{{ google_maps_api_key }}";
+</script>
+<script
+  src="https://maps.googleapis.com/maps/api/js?key={{ google_maps_api_key }}&libraries=places&callback=initGooglePlaces"
+  async defer></script>
+
+<script>
+  function abrirModalRevisarCadastro() {
+    document.getElementById('modal-revisar-cadastro').classList.remove('hidden');
+    document.getElementById('modal-revisar-cadastro').classList.add('flex');
+  }
+  function fecharModal(modalId) {
+    document.getElementById(modalId).classList.add('hidden');
+    document.getElementById(modalId).classList.remove('flex');
+  }
+  function abrirModalEditarPet(button) {
+    // Fill the form fields with the data attributes from the button
+    document.getElementById('pet_name').value = button.getAttribute('data-pet-name') || '';
+    document.getElementById('species').value = button.getAttribute('data-pet-species') || '';
+    document.getElementById('breed').value = button.getAttribute('data-pet-breed') || '';
+    document.getElementById('fur_color').value = button.getAttribute('data-pet-fur-color') || '';
+    document.getElementById('gender').value = button.getAttribute('data-pet-gender') || '';
+    document.getElementById('birth_date').value = button.getAttribute('data-pet-birth-date') || '';
+    document.getElementById('weight').value = button.getAttribute('data-pet-weight') || '';
+    document.getElementById('microchip').value = button.getAttribute('data-pet-microchip') || '';
+    document.getElementById('username_pet').value = '{{ usuario.username }}';
+    document.getElementById('nome_original_pet').value = button.getAttribute('data-pet-name') || '';
+    // Set the photo preview if available
+    var photoPath = button.getAttribute('data-pet-photo');
+    if (photoPath) {
+      document.getElementById('foto_atual').src = '/static/uploads/' + photoPath;
+    } else {
+      document.getElementById('foto_atual').src = '';
+    }
+    // Show the modal
+    document.getElementById('modal-editar-pet').classList.remove('hidden');
+    document.getElementById('modal-editar-pet').classList.add('flex');
+  }
+  function abrirModalAdicionarPet() {
+    document.getElementById('modal-adicionar-pet').classList.remove('hidden');
+    document.getElementById('modal-adicionar-pet').classList.add('flex');
+  }
+</script>
+
+<script>
+  // Replace IATA codes with city names in .iata-city spans
+  document.addEventListener('DOMContentLoaded', function () {
+    document.querySelectorAll('.iata-city').forEach(function (el) {
+      var code = el.getAttribute('data-iata');
+      if (code) {
+        var city = getAirportCityByCode(code);
+        el.textContent = city || code;
+      }
+    });
+  });
+</script>
+{% endblock %}

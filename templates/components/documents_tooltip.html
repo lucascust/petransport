@@ -1,0 +1,47 @@
+{#
+Reusable Documents Tooltip
+Usage:
+{% include 'components/documents_tooltip.html' with context %}
+Required context variables:
+- prog: dict with keys 'missing_docs', 'completed', 'total'
+- showTip: Alpine.js boolean for tooltip visibility
+- tipX, tipY: Alpine.js coordinates for tooltip position
+#}
+<template x-teleport="body">
+  <div x-show="showTip" x-cloak
+    :style="'position:fixed; left:' + tipX + 'px; top:' + tipY + 'px; transform:translateX(-50%); z-index:9999;'"
+    class="min-w-[220px] max-w-xs px-4 py-3 rounded-lg border bg-white text-xs text-gray-700 shadow-lg tooltip-content pointer-events-none">
+    <span class="font-semibold text-xs mb-1 text-gray-800 text-center block mb-2">Documentos pendentes</span>
+    {% set owner_missing = prog.missing_docs | selectattr('2', '==', None) | list %}
+    {% set pet_names_missing = prog.missing_docs | map(attribute=2) | reject('equalto', None) | unique | list %}
+    {% if owner_missing %}
+    <div class="text-gray-400 text-2xs mb-1">Responsável</div>
+    <ul>
+      {% for label, doc_type, pet_name in owner_missing %}
+      <li class="flex items-center text-red-700 mb-1">
+        <svg class="w-4 h-4 mr-1 text-red-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+        <span>{{ label }}</span>
+      </li>
+      {% endfor %}
+    </ul>
+    {% endif %}
+    {% for pet in pet_names_missing %}
+    <div class="text-gray-400 text-2xs mb-1">{{ pet }}</div>
+    <ul>
+      {% for label, doc_type, pet_name in prog.missing_docs if pet_name == pet %}
+      <li class="flex items-center text-red-700 mb-1">
+        <svg class="w-4 h-4 mr-1 text-red-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+        <span>{{ label }}</span>
+      </li>
+      {% endfor %}
+    </ul>
+    {% endfor %}
+    {% if not prog.missing_docs %}
+    <span class="text-green-600 text-center block">Todos os documentos enviados!</span>
+    {% endif %}
+  </div>
+</template>

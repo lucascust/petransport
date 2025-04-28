@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+
+{% block title %}Página não encontrada{% endblock %}
+
+{% block content %}
+<div class="min-h-[60vh] flex items-center justify-center">
+  <div class="text-center">
+    <h1 class="text-9xl font-bold text-primary-600">404</h1>
+    <h2 class="text-3xl font-semibold text-gray-800 mt-4 mb-2">Página não encontrada</h2>
+    <p class="text-gray-600 mb-8">Desculpe, a página que você está procurando não existe ou não está disponível.</p>
+    <a href="{{ url_for('home') }}"
+      class="px-6 py-3 bg-primary-600 text-white rounded-md hover:bg-primary-700 transition-colors inline-flex items-center">
+      <svg class="w-5 h-5 mr-2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+        <path fill-rule="evenodd"
+          d="M9.707 14.707a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 1.414L7.414 9H15a1 1 0 110 2H7.414l2.293 2.293a1 1 0 010 1.414z"
+          clip-rule="evenodd" />
+      </svg>
+      Voltar para a página inicial
+    </a>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,1590 @@
+{% extends "base.html" %}
+
+{% block title %}Cadastro de Tutor{% endblock %}
+
+{% block content %}
+<div class="registration-container">
+  <h1 class="page-title">Cadastro de Novo Responsável</h1>
+
+  <form action="{{ url_for('criar_usuario') }}" method="POST" class="registration-form" enctype="multipart/form-data">
+    <div class="form-section">
+      <h2 class="section-title" style="margin-bottom: 8px;">Informações do Responsável</h2>
+      <div class="form-table">
+        <div class="form-row">
+          <div class="form-cell">
+            <div class="form-group">
+              <label for="fullName">Nome Completo</label>
+              <input type="text" id="fullName" name="owner_name" placeholder="Digite seu nome completo">
+              <div class="error-message"></div>
+            </div>
+          </div>
+          <div class="form-cell"></div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-cell">
+            <div class="form-group">
+              <label for="email">Email</label>
+              <input type="text" id="email" name="email" placeholder="seu.email@exemplo.com">
+              <div class="error-message"></div>
+            </div>
+          </div>
+          <div class="form-cell">
+            <div class="form-group">
+              <label for="contactNumber">Número para contato</label>
+              <input type="text" id="contactNumber" name="contact_number" placeholder="+55 11 99999-9999">
+              <div class="error-message"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-cell">
+            <div class="form-group">
+              <label>Possui CPF?</label>
+              <div class="radio-group" data-name="hasCpf">
+                <button type="button" class="radio-button" data-value="yes" data-name="hasCpf"
+                  onclick="ativarRadioButton(this, 'hasCpf', 'yes'); document.getElementById('cpf-group').style.display = 'block'; document.getElementById('passport-group').style.display = 'none';">Sim</button>
+                <button type="button" class="radio-button" data-value="no" data-name="hasCpf"
+                  onclick="ativarRadioButton(this, 'hasCpf', 'no'); document.getElementById('cpf-group').style.display = 'none'; document.getElementById('passport-group').style.display = 'block';">Não</button>
+              </div>
+              <div class="error-message"></div>
+            </div>
+          </div>
+          <div class="form-cell">
+            <div class="form-group" id="cpf-group" style="display: none;">
+              <label for="cpf">CPF</label>
+              <input type="text" id="cpf" name="cpf" oninput="formatarCPF(this)">
+              <div class="error-message"></div>
+            </div>
+            <div class="form-group" id="passport-group" style="display: none;">
+              <label for="passportNumber">Número do Passaporte</label>
+              <input type="text" id="passportNumber" name="passport_number" maxlength="9"
+                oninput="formatPassport(this)">
+              <div class="error-message"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-cell">
+            <div class="form-group">
+              <label for="residentialAddress">Endereço Residencial</label>
+              <input type="text" id="residentialAddress" name="residential_address">
+              <div class="error-message"></div>
+              <div id="residentialAddress-details" class="address-details"></div>
+            </div>
+          </div>
+          <div class="form-cell">
+            <div class="form-group">
+              <div class="invisible-label">Endereço de Entrega</div>
+              <button type="button" id="toggleDeliveryAddress" class="link-address"
+                onclick="document.getElementById('deliveryAddress-group').style.display = document.getElementById('deliveryAddress-group').style.display === 'block' ? 'none' : 'block';">
+                <span class="link-text">Usar endereço diferente para entregas</span>
+              </button>
+            </div>
+            <div class="form-group" id="deliveryAddress-group" style="display: none;">
+              <label for="deliveryAddress">Endereço de Entrega</label>
+              <input type="text" id="deliveryAddress" name="delivery_address">
+              <div class="error-message"></div>
+              <div id="deliveryAddress-details" class="address-details"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="map-section">
+        <div class="map-container">
+          <div class="map-controls">
+            <button type="button" class="map-toggle active" data-type="residential">
+              <span class="map-toggle-icon">🏠</span>
+              Residencial
+            </button>
+            <button type="button" class="map-toggle" data-type="delivery">
+              <span class="map-toggle-icon">📦</span>
+              Entrega
+            </button>
+          </div>
+          <div id="mapContainer" class="address-map"></div>
+        </div>
+      </div>
+
+      <div class="form-table">
+        <div class="form-row">
+          <div class="form-cell">
+            <div class="form-group">
+              <label for="howDidYouKnow">Como soube do meu trabalho?</label>
+              <select id="howDidYouKnow" name="how_did_you_know">
+                <option value="">Selecione uma opção</option>
+                <option value="instagram">Instagram</option>
+                <option value="facebook">Facebook</option>
+                <option value="google">Google</option>
+                <option value="youtube">Youtube</option>
+                <option value="recommendation">Indicação</option>
+                <option value="other">Outro</option>
+              </select>
+              <div class="error-message"></div>
+            </div>
+          </div>
+          <div class="form-cell"></div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-cell">
+            <div class="form-group">
+              <label>Você possui alguma necessidade de adaptação no atendimento?</label>
+              <small class="form-text">Para pessoas com deficiência</small>
+              <div class="radio-group" data-name="hasSpecialNeeds">
+                <button type="button" class="radio-button" data-value="yes" data-name="hasSpecialNeeds"
+                  onclick="ativarRadioButton(this, 'hasSpecialNeeds', 'yes'); document.getElementById('specialNeedsDetails-group').style.display = 'block';">Sim</button>
+                <button type="button" class="radio-button" data-value="no" data-name="hasSpecialNeeds"
+                  onclick="ativarRadioButton(this, 'hasSpecialNeeds', 'no'); document.getElementById('specialNeedsDetails-group').style.display = 'none';">Não</button>
+              </div>
+              <div class="error-message"></div>
+            </div>
+          </div>
+          <div class="form-cell">
+            <div class="form-group" id="specialNeedsDetails-group" style="display: none;">
+              <label for="specialNeedsDetails">Detalhes sobre o que precisa ser adaptado para melhor atendê-lo</label>
+              <textarea id="specialNeedsDetails" name="special_needs_details" rows="3" style="resize: none;"></textarea>
+              <div class="error-message"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="form-section">
+      <h2 class="section-title" style="margin-bottom: 8px;">Pets</h2>
+      <div id="pets-container">
+        <div class="pet-form">
+          <div class="pet-header">
+            <h3 class="pet-title">Pet #1</h3>
+          </div>
+          <div class="pet-form-grid">
+            <div class="form-group">
+              <label for="pets[0][name]">Nome do Pet</label>
+              <input type="text" name="pets[0][name]">
+              <div class="error-message"></div>
+            </div>
+            <div class="form-group">
+              <label for="pets[0][species]">Espécie</label>
+              <select name="pets[0][species]">
+                <option value="">Selecione a espécie</option>
+                <option value="canine">Cachorro</option>
+                <option value="feline">Gato</option>
+                <option value="bird">Pássaro</option>
+                <option value="rodent">Roedor</option>
+                <option value="other">Outros</option>
+              </select>
+              <div class="error-message"></div>
+            </div>
+            <div class="form-group">
+              <label for="pets[0][breed]">Raça</label>
+              <input type="text" name="pets[0][breed]">
+              <div class="error-message"></div>
+            </div>
+            <div class="form-group">
+              <label for="pets[0][gender]">Sexo</label>
+              <select name="pets[0][gender]">
+                <option value="">Selecione o sexo</option>
+                <option value="male">Macho</option>
+                <option value="female">Fêmea</option>
+              </select>
+              <div class="error-message"></div>
+            </div>
+            <div class="form-group">
+              <label for="pets[0][birth_date]">Data de Nascimento</label>
+              <input type="text" id="pets[0][birth_date]" name="pets[0][birth_date]" placeholder="DD/MM/AAAA"
+                maxlength="10" oninput="ValidacaoFormulario.formatarData(this)" novalidate>
+              <div class="error-message"></div>
+            </div>
+            <div class="form-group">
+              <label for="pets[0][weight]">Peso do Animal (kg)</label>
+              <input type="text" id="pets[0][weight]" name="pets[0][weight]" placeholder="Ex: 10.5" step="0.1" min="0"
+                max="100">
+              <div class="error-message"></div>
+            </div>
+            <div class="form-group">
+              <label for="pets[0][microchip]">Código do Microchip</label>
+              <input type="text" name="pets[0][microchip]" maxlength="15" oninput="formatMicrochip(this)">
+              <small class="form-text">Máximo 15 dígitos</small>
+              <div class="error-message"></div>
+            </div>
+            <div class="form-group full-width">
+              <label for="pets[0][photo]">Foto do Pet</label>
+              <input type="file" name="pets[0][photo]" accept="image/*">
+              <small class="form-text">Formatos aceitos: JPG, PNG, GIF. Tamanho máximo: 5MB</small>
+              <div class="error-message"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <button type="button" id="add-pet" class="btn-add">
+        <span class="btn-icon">+</span>
+        <span class="btn-text">Adicionar Pet</span>
+      </button>
+    </div>
+
+    <div class="submit-container">
+      <button type="submit" class="btn-primary">Cadastrar Usuário</button>
+    </div>
+  </form>
+</div>
+
+<style>
+  .registration-container {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 10px;
+  }
+
+  .page-title {
+    margin: 0 0 4px 0;
+    font-size: 1.5em;
+  }
+
+  .form-section {
+    margin-bottom: 4px;
+    background: #f8f9fa;
+    padding: 6px;
+    border-radius: 4px;
+  }
+
+  .section-title {
+    margin: 0;
+    font-size: 1.2em;
+  }
+
+  .form-table {
+    display: table;
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  .form-row {
+    display: table-row;
+  }
+
+  .form-cell {
+    display: table-cell;
+    padding: 4px;
+    width: 50%;
+  }
+
+  .form-cell.full-width {
+    width: 100%;
+  }
+
+  .form-group {
+    margin-bottom: 4px;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    min-height: 100%;
+  }
+
+  .form-group label {
+    display: block;
+    margin-bottom: 2px;
+    font-weight: 500;
+    font-size: 0.9em;
+  }
+
+  .form-group input[type="text"],
+  .form-group input[type="email"],
+  .form-group input[type="tel"],
+  .form-group input[type="number"],
+  .form-group select,
+  .form-group textarea {
+    width: 100%;
+    padding: 4px;
+    border: 1px solid #ddd;
+    border-radius: 3px;
+  }
+
+  .form-group input[type="date"] {
+    padding: 3px;
+    width: 100%;
+    border: 1px solid #ddd;
+    border-radius: 3px;
+  }
+
+  .form-text {
+    font-size: 0.75em;
+    color: #666;
+    margin-top: 1px;
+  }
+
+  .address-details {
+    margin-top: 4px;
+    font-size: 0.85em;
+    color: #666;
+  }
+
+  .pet-form {
+    background: white;
+    padding: 6px;
+    border-radius: 4px;
+    margin-bottom: 4px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  }
+
+  .pet-title {
+    margin: 0 0 2px 0;
+    font-size: 1em;
+  }
+
+  .pet-form-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 6px;
+  }
+
+  .submit-container {
+    text-align: center;
+    margin-top: 16px;
+  }
+
+  .btn-primary {
+    display: inline-block;
+    padding: 10px 32px;
+    background: #007bff;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: 500;
+    font-size: 1.1em;
+    min-width: 200px;
+    transition: all 0.2s ease;
+  }
+
+  .btn-primary:hover {
+    background: #0056b3;
+    transform: translateY(-1px);
+  }
+
+  .btn-primary:active {
+    transform: translateY(0);
+  }
+
+  .btn-add {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    background: #28a745;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: 500;
+    font-size: 0.9em;
+    transition: all 0.2s ease;
+    margin-top: 8px;
+  }
+
+  .btn-add:hover {
+    background: #218838;
+    transform: translateY(-1px);
+  }
+
+  .btn-add:active {
+    transform: translateY(0);
+  }
+
+  .btn-icon {
+    font-size: 1.1em;
+    font-weight: bold;
+  }
+
+  .btn-text {
+    font-size: 0.95em;
+  }
+
+  @media screen and (max-width: 768px) {
+    .registration-container {
+      padding: 8px;
+    }
+
+    .page-title {
+      font-size: 1.3em;
+    }
+
+    .form-table {
+      display: block;
+    }
+
+    .form-row {
+      display: block;
+      margin-bottom: 16px;
+    }
+
+    .form-cell {
+      display: block;
+      width: 100%;
+      padding: 4px 0;
+    }
+
+    .map-section {
+      margin-top: 16px;
+    }
+
+    .pet-form {
+      padding: 8px;
+    }
+
+    .btn-primary {
+      width: 100%;
+      min-width: unset;
+      padding: 12px;
+    }
+
+    .btn-add {
+      width: 100%;
+      justify-content: center;
+    }
+
+    .map-controls {
+      bottom: 16px;
+      left: 16px;
+      right: 16px;
+      flex-direction: column;
+    }
+
+    .map-toggle {
+      width: 100%;
+    }
+  }
+
+  @media screen and (max-width: 480px) {
+    .page-title {
+      font-size: 1.2em;
+    }
+
+    .section-title {
+      font-size: 1.1em;
+    }
+
+    .pet-title {
+      font-size: 0.95em;
+    }
+
+    .form-group label {
+      font-size: 0.85em;
+    }
+
+    .form-group input,
+    .form-group select,
+    .form-group textarea {
+      padding: 6px;
+      font-size: 0.9em;
+    }
+
+    .form-text {
+      font-size: 0.7em;
+    }
+  }
+
+  /* Remove o balão nativo do navegador */
+  input:invalid,
+  select:invalid,
+  textarea:invalid {
+    box-shadow: none;
+  }
+
+  /* Remove o balão nativo do navegador */
+  input:invalid::-webkit-validation-bubble-message,
+  select:invalid::-webkit-validation-bubble-message,
+  textarea:invalid::-webkit-validation-bubble-message {
+    display: none;
+  }
+
+  /* Remove o balão nativo do navegador no Firefox */
+  input:invalid {
+    box-shadow: none;
+  }
+
+  /* Remove o balão nativo do navegador no IE */
+  input:invalid::-ms-validation-bubble-message {
+    display: none;
+  }
+
+  .form-group.error input,
+  .form-group.error select,
+  .form-group.error textarea {
+    border-color: #dc3545;
+  }
+
+  .form-group.error input:focus,
+  .form-group.error select:focus,
+  .form-group.error textarea:focus {
+    box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25);
+  }
+
+  .form-group.error label {
+    color: #dc3545;
+  }
+
+  .error-message {
+    color: #dc3545;
+    font-size: 0.85em;
+    margin-top: 4px;
+    display: none;
+  }
+
+  .form-group.error .error-message {
+    display: block;
+  }
+
+  .checkbox-wrapper {
+    margin-top: 4px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: flex-start;
+  }
+
+  .checkbox-wrapper input[type="checkbox"] {
+    margin: 0;
+    margin-right: 4px;
+  }
+
+  .checkbox-wrapper label {
+    margin-left: 4px;
+    font-weight: normal;
+    font-size: 0.9em;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+
+  .map-section {
+    width: 100%;
+  }
+
+  .map-container {
+    background: white;
+    padding: 8px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    position: relative;
+    width: 100%;
+    border-radius: 4px;
+  }
+
+  .address-map {
+    width: 100%;
+    height: 180px;
+    border-radius: 4px;
+    overflow: hidden;
+    border: 1px solid #ddd;
+  }
+
+  .map-controls {
+    display: none !important;
+    gap: 8px;
+    position: absolute;
+    bottom: 16px;
+    left: 16px;
+    right: 16px;
+    z-index: 1;
+  }
+
+  .map-toggle {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 6px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    background: white;
+    cursor: pointer;
+    font-size: 0.9em;
+    color: #666;
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+
+  .map-toggle:hover {
+    background: #f8f9fa;
+  }
+
+  .map-toggle.active {
+    background: #007bff;
+    color: white;
+    border-color: #007bff;
+  }
+
+  .map-toggle-icon {
+    font-size: 1.1em;
+  }
+
+  .radio-group {
+    display: flex;
+    gap: 8px;
+    margin-top: 4px;
+    width: 100%;
+  }
+
+  .radio-group button {
+    flex: 1;
+    min-width: 0;
+    padding: 3px;
+    border: 1px solid #ddd;
+    border-radius: 3px;
+    background: white;
+    transition: all 0.2s ease;
+    cursor: pointer;
+    font-size: 0.9em;
+    color: #666;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .radio-group button:hover {
+    border-color: #007bff;
+    background: #f8f9fa;
+  }
+
+  .radio-group button.active {
+    background: #007bff;
+    color: white;
+    border-color: #007bff;
+  }
+
+  .invisible-label {
+    height: 28px;
+    margin-bottom: 2px;
+    visibility: hidden;
+  }
+
+  .link-address {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    padding: 4px 0;
+    background: none;
+    color: #007bff;
+    border: none;
+    cursor: pointer;
+    font-size: 0.9em;
+    text-align: left;
+    transition: all 0.2s ease;
+    margin: 0;
+  }
+
+  .link-address:hover {
+    color: #0056b3;
+    text-decoration: underline;
+  }
+
+  .link-address.active {
+    color: #0056b3;
+    font-weight: 500;
+  }
+
+  .link-address .link-icon {
+    font-size: 1.2em;
+  }
+
+  .link-address .link-text {
+    flex: 1;
+  }
+
+  @media screen and (max-width: 768px) {
+    .link-address {
+      padding: 6px 0;
+      font-size: 0.85em;
+    }
+  }
+</style>
+{% endblock %}
+
+{% block scripts %}
+<!-- Google Places API -->
+<script>
+  const GOOGLE_MAPS_API_KEY = "{{ google_maps_api_key }}";
+</script>
+<script
+  src="https://maps.googleapis.com/maps/api/js?key={{ google_maps_api_key }}&libraries=places&callback=initGooglePlaces"
+  async defer></script>
+
+<script>
+  // Cache de elementos DOM frequentemente acessados
+  const DOM = {
+    init() {
+      this.form = document.querySelector('.registration-form');
+      this.petsContainer = document.getElementById('pets-container');
+      this.addPetBtn = document.getElementById('add-pet');
+      this.residentialAddress = document.getElementById('residentialAddress');
+      this.deliveryAddress = document.getElementById('deliveryAddress');
+      this.toggleDeliveryAddress = document.getElementById('toggleDeliveryAddress');
+      this.mapaContainer = document.getElementById('mapContainer');
+      this.radioButtons = document.querySelectorAll('.radio-button');
+      this.mapaToggles = document.querySelectorAll('.map-toggle');
+      this.deliveryAddressGroup = document.getElementById('deliveryAddress-group');
+      this.mapaControls = document.querySelector('.map-controls');
+      this.cpfGroup = document.getElementById('cpf-group');
+      this.passportGroup = document.getElementById('passport-group');
+      this.specialNeedsDetailsGroup = document.getElementById('specialNeedsDetails-group');
+    }
+  };
+
+  // Gerenciador de Pets
+  class PetManager {
+    constructor() {
+      this.petCount = 1;
+      this.init();
+    }
+
+    init() {
+      DOM.addPetBtn.addEventListener('click', () => this.adicionarPet());
+    }
+
+    adicionarPet() {
+      const newPetForm = this.criarPetForm();
+      DOM.petsContainer.appendChild(newPetForm);
+      this.petCount++;
+      this.atualizarNumerosPets();
+    }
+
+    criarPetForm() {
+      const form = document.createElement('div');
+      form.className = 'pet-form';
+      form.innerHTML = this.getPetFormTemplate();
+      return form;
+    }
+
+    getPetFormTemplate() {
+      return `
+        <div class="pet-header">
+          <h3 class="pet-title">Pet #${this.petCount}</h3>
+          <button type="button" class="remove-pet" onclick="removerPet(this)">
+            <i class="fas fa-trash"></i>
+          </button>
+        </div>
+        <div class="pet-form-grid">
+          <div class="form-group">
+            <label for="pets[${this.petCount - 1}][name]">Nome do Pet</label>
+            <input type="text" name="pets[${this.petCount - 1}][name]">
+            <div class="error-message"></div>
+          </div>
+          <div class="form-group">
+            <label for="pets[${this.petCount - 1}][species]">Espécie</label>
+            <select name="pets[${this.petCount - 1}][species]">
+              <option value="">Selecione a espécie</option>
+              <option value="canine">Cachorro</option>
+              <option value="feline">Gato</option>
+              <option value="bird">Pássaro</option>
+              <option value="rodent">Roedor</option>
+              <option value="other">Outros</option>
+            </select>
+            <div class="error-message"></div>
+          </div>
+          <div class="form-group">
+            <label for="pets[${this.petCount - 1}][breed]">Raça</label>
+            <input type="text" name="pets[${this.petCount - 1}][breed]">
+            <div class="error-message"></div>
+          </div>
+          <div class="form-group">
+            <label for="pets[${this.petCount - 1}][gender]">Sexo</label>
+            <select name="pets[${this.petCount - 1}][gender]">
+              <option value="male">Macho</option>
+              <option value="female">Fêmea</option>
+            </select>
+            <div class="error-message"></div>
+          </div>
+          <div class="form-group">
+            <label for="pets[${this.petCount - 1}][birth_date]">Data de Nascimento</label>
+            <input type="text" id="pets[${this.petCount - 1}][birth_date]" name="pets[${this.petCount - 1}][birth_date]" placeholder="DD/MM/AAAA"
+              maxlength="10" oninput="ValidacaoFormulario.formatarData(this)" novalidate>
+            <div class="error-message"></div>
+          </div>
+          <div class="form-group">
+            <label for="pets[${this.petCount - 1}][microchip]">Código do Microchip</label>
+            <input type="text" name="pets[${this.petCount - 1}][microchip]" maxlength="15" oninput="formatMicrochip(this)">
+            <small class="form-text">Máximo 15 dígitos</small>
+            <div class="error-message"></div>
+          </div>
+          <div class="form-group full-width">
+            <label for="pets[${this.petCount - 1}][photo]">Foto do Pet</label>
+            <input type="file" name="pets[${this.petCount - 1}][photo]" accept="image/*">
+            <small class="form-text">Formatos aceitos: JPG, PNG, GIF. Tamanho máximo: 5MB</small>
+            <div class="error-message"></div>
+          </div>
+        </div>
+      `;
+    }
+
+    atualizarNumerosPets() {
+      const pets = document.querySelectorAll('.pet-form');
+      pets.forEach((pet, index) => {
+        const titulo = pet.querySelector('.pet-title');
+        titulo.textContent = `Pet #${index + 1}`;
+
+        const inputs = pet.querySelectorAll('input, select');
+        inputs.forEach(input => {
+          const name = input.getAttribute('name');
+          if (name) {
+            input.setAttribute('name', name.replace(/\[\d+\]/, `[${index}]`));
+          }
+        });
+      });
+    }
+  }
+
+  // Gerenciador de Endereços e Mapa
+  class EnderecoManager {
+    constructor() {
+      this.mapa = null;
+      this.marcadorResidencial = null;
+      this.marcadorEntrega = null;
+      this.init();
+    }
+
+    init() {
+      this.initMapa();
+      this.setupResidentialAddress();
+      this.setupDeliveryAddress();
+      this.setupMapaToggles();
+    }
+
+    initMapa() {
+      const defaultLocation = { lat: -23.550520, lng: -46.633308 };
+      this.mapa = new google.maps.Map(DOM.mapaContainer, {
+        zoom: 12,
+        center: defaultLocation,
+        mapTypeControl: false,
+        streetViewControl: false,
+        fullscreenControl: false
+      });
+    }
+
+    setupResidentialAddress() {
+      if (!DOM.residentialAddress) return;
+
+      const autocomplete = new google.maps.places.Autocomplete(DOM.residentialAddress, {
+        componentRestrictions: { country: 'br' }
+      });
+
+      autocomplete.addListener('place_changed', () => {
+        const place = autocomplete.getPlace();
+        if (place.geometry) {
+          this.atualizarEndereco(place, 'residential');
+        }
+      });
+    }
+
+    setupDeliveryAddress() {
+      if (!DOM.deliveryAddress) return;
+
+      const autocomplete = new google.maps.places.Autocomplete(DOM.deliveryAddress, {
+        componentRestrictions: { country: 'br' }
+      });
+
+      autocomplete.addListener('place_changed', () => {
+        const place = autocomplete.getPlace();
+        if (place.geometry) {
+          this.atualizarEndereco(place, 'delivery');
+        }
+      });
+    }
+
+    atualizarEndereco(place, tipo) {
+      // Determina qual elemento de detalhes usar baseado no tipo
+      const enderecoDetails = document.getElementById(`${tipo}Address-details`);
+      if (!enderecoDetails) return;
+
+      // Extrai os componentes do endereço
+      let cidade = '';
+      let estado = '';
+      let pais = '';
+      let cep = '';
+
+      place.address_components.forEach(component => {
+        const types = component.types;
+        if (types.includes('locality')) {
+          cidade = component.long_name;
+        }
+        if (types.includes('administrative_area_level_1')) {
+          estado = component.short_name;
+        }
+        if (types.includes('country')) {
+          pais = component.long_name;
+        }
+        if (types.includes('postal_code')) {
+          cep = component.long_name;
+        }
+      });
+
+      // Atualiza os campos ocultos com as coordenadas e endereço formatado
+      enderecoDetails.innerHTML = `
+        <input type="hidden" name="endereco_${tipo}_lat" value="${place.geometry.location.lat()}">
+        <input type="hidden" name="endereco_${tipo}_lng" value="${place.geometry.location.lng()}">
+        <input type="hidden" name="endereco_${tipo}_formatted" value="${place.formatted_address}">
+        <input type="hidden" name="endereco_${tipo}_cidade" value="${cidade}">
+        <input type="hidden" name="endereco_${tipo}_estado" value="${estado}">
+        <input type="hidden" name="endereco_${tipo}_pais" value="${pais}">
+        <input type="hidden" name="endereco_${tipo}_cep" value="${cep}">
+      `;
+
+      // Atualiza o mapa com as novas coordenadas
+      this.atualizarMapa(place.geometry.location.lat(), place.geometry.location.lng(), tipo);
+
+      // Atualiza o toggle ativo baseado no tipo de endereço
+      DOM.mapaToggles.forEach(toggle => {
+        if (toggle.dataset.type === tipo) {
+          toggle.classList.add('active');
+        } else {
+          toggle.classList.remove('active');
+        }
+      });
+    }
+
+    atualizarMapa(lat, lng, tipo) {
+      const position = { lat: parseFloat(lat), lng: parseFloat(lng) };
+
+      // Centraliza o mapa na posição
+      this.mapa.setCenter(position);
+      this.mapa.setZoom(15);
+
+      // Remove o marcador anterior do mesmo tipo
+      if (tipo === 'residential' && this.marcadorResidencial) {
+        this.marcadorResidencial.setMap(null);
+      } else if (tipo === 'delivery' && this.marcadorEntrega) {
+        this.marcadorEntrega.setMap(null);
+      }
+
+      // Cria um novo marcador
+      const marcador = new google.maps.Marker({
+        position: position,
+        map: this.mapa,
+        title: tipo === 'residential' ? 'Endereço Residencial' : 'Endereço de Entrega',
+        icon: {
+          path: google.maps.SymbolPath.CIRCLE,
+          scale: 8,
+          fillColor: tipo === 'residential' ? '#007bff' : '#28a745',
+          fillOpacity: 1,
+          strokeColor: '#ffffff',
+          strokeWeight: 2
+        }
+      });
+
+      // Armazena a referência do marcador
+      if (tipo === 'residential') {
+        this.marcadorResidencial = marcador;
+      } else {
+        this.marcadorEntrega = marcador;
+      }
+    }
+
+    setupMapaToggles() {
+      DOM.mapaToggles.forEach(toggle => {
+        toggle.addEventListener('click', () => {
+          // Remove a classe active de todos os toggles
+          DOM.mapaToggles.forEach(t => t.classList.remove('active'));
+
+          // Adiciona a classe active ao toggle clicado
+          toggle.classList.add('active');
+
+          const tipo = toggle.dataset.type;
+          let lat, lng;
+
+          // Obtém as coordenadas do endereço selecionado
+          if (tipo === 'residential') {
+            lat = document.querySelector('input[name="endereco_residential_lat"]')?.value;
+            lng = document.querySelector('input[name="endereco_residential_lng"]')?.value;
+          } else {
+            lat = document.querySelector('input[name="endereco_delivery_lat"]')?.value;
+            lng = document.querySelector('input[name="endereco_delivery_lng"]')?.value;
+          }
+
+          // Se tiver coordenadas, atualiza o mapa
+          if (lat && lng) {
+            this.atualizarMapa(lat, lng, tipo);
+          }
+        });
+      });
+    }
+  }
+
+  // Gerenciador de Formulário
+  class FormularioManager {
+    constructor() {
+      this.init();
+    }
+
+    init() {
+      this.setupFormSubmit();
+      this.setupCamposCondicionais();
+      this.setupEnderecos();
+      this.setupPets();
+    }
+
+    setupFormSubmit() {
+      DOM.form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        let hasError = false;
+
+        // Remove todas as classes de erro anteriores
+        DOM.form.querySelectorAll('.form-group').forEach(formGroup => {
+          formGroup.classList.remove('error');
+          const errorMessage = formGroup.querySelector('.error-message');
+          if (errorMessage) {
+            errorMessage.textContent = '';
+          }
+        });
+
+        // Valida campos do formulário principal
+        hasError = this.validarFormularioPrincipal() || hasError;
+
+        // Valida pets
+        hasError = this.validarPets() || hasError;
+
+        // Se houver erros, faz scroll até o primeiro erro
+        if (hasError) {
+          this.scrollToFirstError();
+        } else {
+          // Se não houver erros, submete o formulário via AJAX
+          const formData = new FormData(DOM.form);
+
+          // Adiciona o número de pets ao formData
+          const petCount = document.querySelectorAll('.pet-form').length;
+          formData.append('pet_count', petCount);
+
+          try {
+            const response = await fetch(DOM.form.action, {
+              method: 'POST',
+              body: formData
+            });
+
+            if (response.ok) {
+              // Limpa o formulário
+              DOM.form.reset();
+
+              // Mostra mensagem de sucesso
+              alert('Usuário cadastrado com sucesso!');
+
+              // Limpa os campos condicionais
+              this.atualizarCamposCondicionais();
+
+              // Remove os pets adicionais
+              const petsContainer = document.getElementById('pets-container');
+              while (petsContainer.children.length > 1) {
+                petsContainer.removeChild(petsContainer.lastChild);
+              }
+
+              // Reseta o contador de pets
+              if (window.petManager) {
+                window.petManager.petCount = 1;
+              }
+            } else {
+              const data = await response.json();
+              alert(data.error || 'Erro ao cadastrar usuário');
+            }
+          } catch (error) {
+            console.error('Erro:', error);
+            alert('Erro ao cadastrar usuário');
+          }
+        }
+      });
+    }
+
+    scrollToFirstError() {
+      // Encontra o primeiro elemento com erro
+      const firstError = DOM.form.querySelector('.form-group.error');
+      if (firstError) {
+        // Calcula a posição do elemento
+        const rect = firstError.getBoundingClientRect();
+        const absoluteElementTop = rect.top + window.pageYOffset;
+
+        // Faz o scroll suave até o elemento
+        window.scrollTo({
+          top: absoluteElementTop - 100, // 100px de margem do topo
+          behavior: 'smooth'
+        });
+
+        // Foca no primeiro input com erro
+        const firstErrorInput = firstError.querySelector('input, select, textarea');
+        if (firstErrorInput) {
+          firstErrorInput.focus();
+        }
+      }
+    }
+
+    validarFormularioPrincipal() {
+      let hasError = false;
+
+      // Lista de campos obrigatórios do formulário principal
+      const camposObrigatorios = [
+        'owner_name',
+        'email',
+        'contact_number',
+        'residential_address',
+        'hasCpf',
+        'hasSpecialNeeds'
+      ];
+
+      // Valida campos obrigatórios e formatos
+      DOM.form.querySelectorAll('input, select, textarea').forEach(campo => {
+        const formGroup = campo.closest('.form-group');
+        if (!formGroup) return;
+
+        // Verifica se o campo é obrigatório
+        if (!camposObrigatorios.includes(campo.name)) return;
+
+        let errorMessage = '';
+
+        // Validação de campo vazio
+        if (!campo.value.trim()) {
+          errorMessage = 'Este campo é obrigatório';
+        }
+        // Validação de email
+        else if (campo.name === 'email' && !this.validarEmail(campo.value)) {
+          errorMessage = 'Digite um email válido';
+        }
+
+        if (errorMessage) {
+          formGroup.classList.add('error');
+          const errorElement = formGroup.querySelector('.error-message');
+          if (errorElement) {
+            errorElement.textContent = errorMessage;
+          }
+          hasError = true;
+        }
+      });
+
+      // Valida CPF/Passaporte
+      const hasCpf = document.querySelector('input[name="hasCpf"]')?.value;
+      const cpf = document.querySelector('input[name="cpf"]')?.value;
+      const passport = document.querySelector('input[name="passport_number"]')?.value;
+
+      if (!hasCpf) {
+        const formGroup = document.querySelector('.radio-group[data-name="hasCpf"]').closest('.form-group');
+        formGroup.classList.add('error');
+        const errorMessage = formGroup.querySelector('.error-message');
+        if (errorMessage) {
+          errorMessage.textContent = 'Selecione se possui CPF ou não';
+        }
+        hasError = true;
+      } else if (hasCpf === 'yes' && !cpf) {
+        const formGroup = DOM.cpfGroup;
+        formGroup.classList.add('error');
+        const errorMessage = formGroup.querySelector('.error-message');
+        if (errorMessage) {
+          errorMessage.textContent = 'Digite o CPF';
+        }
+        hasError = true;
+      } else if (hasCpf === 'no' && !passport) {
+        const formGroup = DOM.passportGroup;
+        formGroup.classList.add('error');
+        const errorMessage = formGroup.querySelector('.error-message');
+        if (errorMessage) {
+          errorMessage.textContent = 'Digite o número do passaporte';
+        }
+        hasError = true;
+      }
+
+      // Valida necessidade de adaptação
+      const hasSpecialNeeds = document.querySelector('input[name="hasSpecialNeeds"]')?.value;
+      if (!hasSpecialNeeds) {
+        const formGroup = document.querySelector('.radio-group[data-name="hasSpecialNeeds"]').closest('.form-group');
+        formGroup.classList.add('error');
+        const errorMessage = formGroup.querySelector('.error-message');
+        if (errorMessage) {
+          errorMessage.textContent = 'Selecione se possui necessidade de adaptação';
+        }
+        hasError = true;
+      }
+
+      // Valida endereços
+      const residentialLat = document.querySelector('input[name="endereco_residential_lat"]')?.value;
+      if (!residentialLat) {
+        const formGroup = DOM.residentialAddress.closest('.form-group');
+        formGroup.classList.add('error');
+        const errorMessage = formGroup.querySelector('.error-message');
+        if (errorMessage) {
+          errorMessage.textContent = 'Selecione um endereço residencial válido';
+        }
+        hasError = true;
+      }
+
+      return hasError;
+    }
+
+    validarPets() {
+      let hasError = false;
+
+      // Valida se há pelo menos um pet
+      const pets = document.querySelectorAll('.pet-form');
+      if (pets.length === 0) {
+        const formGroup = document.getElementById('pets-container').closest('.form-section');
+        formGroup.classList.add('error');
+        const errorMessage = formGroup.querySelector('.error-message');
+        if (errorMessage) {
+          errorMessage.textContent = 'Adicione pelo menos um pet';
+        }
+        hasError = true;
+      }
+
+      // Lista de campos obrigatórios dos pets
+      const camposObrigatoriosPet = [
+        'name',
+        'breed',
+        'gender',
+        'birth_date'
+      ];
+
+      // Valida campos de cada pet
+      pets.forEach((pet, index) => {
+        pet.querySelectorAll('input, select').forEach(campo => {
+          // Extrai o nome do campo do formato pets[0][name]
+          const match = campo.name.match(/pets\[\d+\]\[(\w+)\]/);
+          if (!match) return;
+
+          const nomeCampo = match[1];
+
+          // Verifica se o campo é obrigatório
+          if (!camposObrigatoriosPet.includes(nomeCampo)) return;
+
+          if (!campo.value.trim()) {
+            const formGroup = campo.closest('.form-group');
+            if (formGroup) {
+              formGroup.classList.add('error');
+              const errorMessage = formGroup.querySelector('.error-message');
+              if (errorMessage) {
+                errorMessage.textContent = 'Este campo é obrigatório';
+              }
+            }
+            hasError = true;
+          }
+        });
+      });
+
+      return hasError;
+    }
+
+    validarEmail(email) {
+      const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      return re.test(email);
+    }
+
+    validarTelefone(telefone) {
+      const re = /^\(\d{2}\) \d{4,5}-\d{4}$/;
+      return re.test(telefone);
+    }
+
+    validarData(input) {
+      const data = input.value;
+      const formGroup = input.closest('.form-group');
+      const errorMessage = formGroup.querySelector('.error-message');
+
+      // Verifica se o campo está vazio
+      if (!data) {
+        formGroup.classList.add('error');
+        errorMessage.textContent = 'A data é obrigatória';
+        return false;
+      }
+
+      // Verifica o formato da data (DD/MM/AAAA)
+      const regexData = /^(\d{2})\/(\d{2})\/(\d{4})$/;
+      if (!regexData.test(data)) {
+        formGroup.classList.add('error');
+        errorMessage.textContent = 'Formato de data inválido. Use DD/MM/AAAA';
+        return false;
+      }
+
+      // Extrai dia, mês e ano
+      const [, dia, mes, ano] = data.match(regexData);
+
+      // Verifica se os valores são válidos
+      if (mes < 1 || mes > 12) {
+        formGroup.classList.add('error');
+        errorMessage.textContent = 'Mês inválido';
+        return false;
+      }
+
+      if (dia < 1 || dia > 31) {
+        formGroup.classList.add('error');
+        errorMessage.textContent = 'Dia inválido';
+        return false;
+      }
+
+      // Verifica dias por mês
+      const diasPorMes = [0, 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+      if (ano % 4 === 0 && (ano % 100 !== 0 || ano % 400 === 0)) {
+        diasPorMes[2] = 29; // Ano bissexto
+      }
+      if (dia > diasPorMes[mes]) {
+        formGroup.classList.add('error');
+        errorMessage.textContent = 'Dia inválido para este mês';
+        return false;
+      }
+
+      // Verifica se a data está no futuro
+      const hoje = new Date();
+      const dataInput = new Date(ano, mes - 1, dia);
+      if (dataInput > hoje) {
+        formGroup.classList.add('error');
+        errorMessage.textContent = 'A data não pode ser futura';
+        return false;
+      }
+
+      // Verifica se a data é muito antiga
+      const dataMinima = new Date('1900-01-01');
+      if (dataInput < dataMinima) {
+        formGroup.classList.add('error');
+        errorMessage.textContent = 'Data muito antiga';
+        return false;
+      }
+
+      // Remove a classe de erro se tudo estiver ok
+      formGroup.classList.remove('error');
+      errorMessage.textContent = '';
+      return true;
+    }
+
+    setupCamposCondicionais() {
+      const hasCpf = document.querySelector('input[name="hasCpf"]')?.value;
+      const usarMesmoEndereco = !DOM.deliveryAddressGroup.style.display === 'block';
+      const hasSpecialNeeds = document.querySelector('input[name="hasSpecialNeeds"]')?.value;
+
+      if (DOM.cpfGroup) DOM.cpfGroup.style.display = hasCpf === 'yes' ? 'block' : 'none';
+      if (DOM.passportGroup) DOM.passportGroup.style.display = hasCpf === 'no' ? 'block' : 'none';
+      if (DOM.specialNeedsDetailsGroup) DOM.specialNeedsDetailsGroup.style.display = hasSpecialNeeds === 'yes' ? 'block' : 'none';
+    }
+
+    setupEnderecoToggle() {
+      if (!DOM.toggleDeliveryAddress) return;
+
+      DOM.toggleDeliveryAddress.addEventListener('click', () => {
+        const invisibleLabel = DOM.toggleDeliveryAddress.parentElement.querySelector('.invisible-label');
+        const isVisible = DOM.deliveryAddressGroup.style.display === 'block';
+
+        // Alterna a visibilidade do grupo de endereço de entrega
+        DOM.deliveryAddressGroup.style.display = isVisible ? 'none' : 'block';
+        DOM.toggleDeliveryAddress.style.display = isVisible ? 'flex' : 'none';
+        invisibleLabel.style.display = isVisible ? 'block' : 'none';
+        DOM.toggleDeliveryAddress.classList.toggle('active');
+
+        // Mostra/esconde os controles do mapa
+        if (isVisible) {
+          DOM.mapaControls.style.setProperty('display', 'none', 'important');
+        } else {
+          DOM.mapaControls.style.setProperty('display', 'flex', 'important');
+        }
+      });
+    }
+
+    setupPets() {
+      // Inicializa o gerenciador de pets
+      window.petManager = new PetManager();
+    }
+
+    setupEnderecos() {
+      if (DOM.toggleDeliveryAddress) {
+        this.setupEnderecoToggle();
+      }
+    }
+  }
+
+  // Validações do Formulário
+  class ValidacaoFormulario {
+    static formatarCPF(input) {
+      // Remove todos os caracteres não numéricos
+      let valor = input.value.replace(/\D/g, '');
+
+      // Limita a 11 dígitos
+      valor = valor.substring(0, 11);
+
+      // Aplica a formatação
+      if (valor.length > 3) {
+        valor = valor.replace(/(\d{3})(\d)/, '$1.$2');
+      }
+      if (valor.length > 7) {
+        valor = valor.replace(/(\d{3})(\d)/, '$1.$2');
+      }
+      if (valor.length > 11) {
+        valor = valor.replace(/(\d{3})(\d{1,2})$/, '$1-$2');
+      }
+
+      // Atualiza o valor do input
+      input.value = valor;
+    }
+
+    static formatarTelefone(input) {
+      let valor = input.value.replace(/\D/g, '');
+      if (valor.length > 11) valor = valor.slice(0, 11);
+      if (valor.length > 2) {
+        valor = '(' + valor.slice(0, 2) + ') ' + valor.slice(2);
+      }
+      if (valor.length > 10) {
+        valor = valor.slice(0, 10) + '-' + valor.slice(10);
+      }
+      input.value = valor;
+    }
+
+    static formatarMicrochip(input) {
+      let valor = input.value.replace(/\D/g, '');
+      valor = valor.substring(0, 15);
+      let valorFormatado = '';
+      for (let i = 0; i < valor.length; i++) {
+        if (i > 0 && i % 3 === 0) {
+          valorFormatado += '.';
+        }
+        valorFormatado += valor[i];
+      }
+      input.value = valorFormatado;
+    }
+
+    static formatarPassport(input) {
+      let valor = input.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
+      valor = valor.substring(0, 9);
+      input.value = valor;
+      this.validarFormatoPassport(input);
+    }
+
+    static validarFormatoPassport(input) {
+      const errorElement = document.getElementById('passport-error');
+      const valor = input.value;
+
+      if (valor.length < 8) {
+        this.mostrarErro(input, errorElement, 'O número do passaporte deve ter no mínimo 8 caracteres');
+      } else if (valor.length > 9) {
+        this.mostrarErro(input, errorElement, 'O número do passaporte deve ter no máximo 9 caracteres');
+      } else if (!/^[A-Z0-9]{8,9}$/.test(valor)) {
+        this.mostrarErro(input, errorElement, 'Use apenas letras maiúsculas (A-Z) e números (0-9)');
+      } else {
+        this.limparErro(input, errorElement);
+      }
+    }
+
+    static mostrarErro(input, errorElement, mensagem) {
+      errorElement.textContent = mensagem;
+      errorElement.classList.add('visible');
+      input.setCustomValidity(mensagem);
+    }
+
+    static limparErro(input, errorElement) {
+      errorElement.textContent = '';
+      errorElement.classList.remove('visible');
+      input.setCustomValidity('');
+    }
+
+    static formatarData(input) {
+      // Remove caracteres não numéricos
+      let valor = input.value.replace(/\D/g, '');
+
+      // Limita a 8 dígitos (DDMMAAAA)
+      valor = valor.substring(0, 8);
+
+      // Aplica a formatação
+      if (valor.length > 4) {
+        valor = valor.replace(/(\d{2})(\d{2})(\d{4})/, '$1/$2/$3');
+      } else if (valor.length > 2) {
+        valor = valor.replace(/(\d{2})(\d{2})/, '$1/$2/');
+      }
+
+      // Atualiza o valor do input
+      input.value = valor;
+
+      // Valida a data após a formatação
+      this.validarData(input);
+    }
+  }
+
+  // Inicialização
+  document.addEventListener('DOMContentLoaded', function () {
+    DOM.init();
+    window.petManager = new PetManager();
+
+    // Inicializa o gerenciador de formulário
+    window.formularioManager = new FormularioManager();
+
+    // Inicializa o Google Places API após o carregamento da página
+    if (typeof google !== 'undefined' && google.maps) {
+      const enderecoManager = new EnderecoManager();
+    }
+  });
+
+  // Função global para formatar CPF
+  function formatarCPF(input) {
+    ValidacaoFormulario.formatarCPF(input);
+  }
+
+  // Função global para formatar Microchip
+  function formatMicrochip(input) {
+    ValidacaoFormulario.formatarMicrochip(input);
+  }
+
+  // Função global para formatar Passport
+  function formatPassport(input) {
+    ValidacaoFormulario.formatarPassport(input);
+  }
+
+  // Função global para remover pets
+  function removerPet(botao) {
+    // Verifica se existe mais de um pet antes de remover
+    const pets = document.querySelectorAll('.pet-form');
+    if (pets.length <= 1) {
+      alert("Deve haver pelo menos um pet cadastrado.");
+      return;
+    }
+
+    // Encontra o pet-form pai do botão clicado
+    const petForm = botao.closest('.pet-form');
+    if (petForm) {
+      // Remove o pet do DOM
+      petForm.remove();
+
+      // Atualiza os números dos pets restantes
+      const restantePets = document.querySelectorAll('.pet-form');
+      restantePets.forEach((pet, index) => {
+        // Atualiza o título
+        const titulo = pet.querySelector('.pet-title');
+        if (titulo) {
+          titulo.textContent = `Pet #${index + 1}`;
+        }
+
+        // Atualiza os nomes dos campos
+        pet.querySelectorAll('input, select').forEach(input => {
+          const name = input.getAttribute('name');
+          if (name && name.includes('pets[')) {
+            const newName = name.replace(/pets\[\d+\]/, `pets[${index}]`);
+            input.setAttribute('name', newName);
+          }
+        });
+      });
+    }
+  }
+
+  // Adiciona um listener para quando a API do Google Maps for carregada
+  window.initGooglePlaces = function () {
+    const enderecoManager = new EnderecoManager();
+  };
+
+  // Função para ativar botões de rádio
+  function ativarRadioButton(button, name, value) {
+    // Remove a classe active de todos os botões do mesmo grupo
+    document.querySelectorAll(`.radio-button[data-name="${name}"]`).forEach(btn => {
+      btn.classList.remove('active');
+    });
+
+    // Adiciona a classe active ao botão clicado
+    button.classList.add('active');
+
+    // Atualiza o campo oculto correspondente
+    let hiddenInput = document.querySelector(`input[name="${name}"]`);
+    if (!hiddenInput) {
+      hiddenInput = document.createElement('input');
+      hiddenInput.type = 'hidden';
+      hiddenInput.name = name;
+      document.querySelector('.registration-form').appendChild(hiddenInput);
+    }
+    hiddenInput.value = value;
+  }
+</script>
+{% endblock %}

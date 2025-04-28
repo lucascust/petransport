@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block title %}Editar Perfil{% endblock %}
+{% block content %}
+<div class="max-w-3xl mx-auto p-4">
+  <h1 class="text-2xl font-bold mb-4">Editar Perfil</h1>
+  <p>Página em construção. Aqui você poderá editar seus dados pessoais.</p>
+  <a href="{{ url_for('usuario_home', usuario=usuario.username) }}"
+    class="mt-4 inline-block px-4 py-2 bg-blue-600 text-white rounded">Voltar</a>
+</div>
+{% endblock %}

@@ -1,0 +1,77 @@
+{% macro language_selector(current_lang) %}
+<div class="relative inline-block text-left">
+  <button id="language-button"
+    class="flex items-center space-x-2 bg-white px-3 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-primary-500">
+    <span class="text-base">{{ get_flag_emoji(current_lang) }}</span>
+    <span>{{ get_language_name(current_lang) }}</span>
+    <svg class="-mr-1 ml-1 h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"
+      aria-hidden="true">
+      <path fill-rule="evenodd"
+        d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
+        clip-rule="evenodd" />
+    </svg>
+  </button>
+  <div id="language-menu"
+    class="hidden origin-top-right absolute right-0 mt-2 w-40 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 focus:outline-none z-10">
+    <div class="py-1" role="menu" aria-orientation="vertical" aria-labelledby="language-button">
+      {% for lang in get_languages() %}
+      {% if lang != current_lang %}
+      <a href="{{ url_for('alterar_idioma', usuario=usuario.username, lang=lang) }}"
+        class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" role="menuitem">
+        <span class="mr-2 text-base">{{ get_flag_emoji(lang) }}</span>
+        <span>{{ get_language_name(lang) }}</span>
+      </a>
+      {% endif %}
+      {% endfor %}
+    </div>
+  </div>
+</div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    const button = document.getElementById('language-button');
+    const menu = document.getElementById('language-menu');
+
+    function toggleMenu() {
+      menu.classList.toggle('hidden');
+    }
+
+    // Toggle menu on button click
+    button.addEventListener('click', function (e) {
+      e.stopPropagation();
+      toggleMenu();
+    });
+
+    // Close when clicking outside
+    document.addEventListener('click', function (e) {
+      if (!button.contains(e.target) && !menu.contains(e.target)) {
+        menu.classList.add('hidden');
+      }
+    });
+  });
+
+  function get_flag_emoji(lang) {
+    // Map language code to flag emoji
+    const flags = {
+      'pt': '🇧🇷',
+      'en': '🇺🇸',
+      'es': '🇪🇸',
+      'fr': '🇫🇷',
+      'de': '🇩🇪'
+    };
+    return flags[lang] || lang.toUpperCase();
+  }
+
+  function get_language_name(lang) {
+    // Map language code to full name
+    const names = {
+      'pt': 'Português',
+      'en': 'English',
+      'es': 'Español',
+      'fr': 'Français',
+      'de': 'Deutsch'
+    };
+    return names[lang] || lang.toUpperCase();
+  }
+</script>
+{% endmacro %}

@@ -1,0 +1,2744 @@
+{% extends "base.html" %}
+
+{% block title %}{{ t_ui("pages", "owner_registration", "title", current_lang) }}{% endblock %}
+
+{% block head %}
+<!-- Head: Scripts and Styles -->
+<script type="module">
+  import { FaPassport } from "react-icons/fa";
+  window.FaPassport = FaPassport;
+</script>
+<script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+<!-- International Telephone Input -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/18.2.1/css/intlTelInput.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/18.2.1/js/intlTelInput.min.js"></script>
+<style>
+  /* Custom styles for international telephone input to match the site design */
+  .iti {
+    width: 100%;
+    display: block;
+  }
+
+  .iti__flag-container {
+    z-index: 20;
+  }
+
+  .iti--allow-dropdown .iti__flag-container:hover {
+    height: 100%;
+  }
+
+  /* Fixed width container for flag + dial code to prevent layout shifts */
+  .iti__selected-flag {
+    border-top-left-radius: 0.5rem;
+    border-bottom-left-radius: 0.5rem;
+    background-color: rgba(243, 244, 246, 0.5);
+    padding: 0 12px 0 12px;
+    min-width: 80px;
+    /* Fixed minimum width */
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+  }
+
+  /* Uniform spacing regardless of dial code length */
+  .iti--separate-dial-code .iti__selected-flag {
+    min-width: 100px;
+    /* Wider fixed width when showing dial code */
+  }
+
+  /* Only needed for non-separate dial code mode */
+  .iti--allow-dropdown input {
+    padding-left: 90px !important;
+    /* Consistent with min-width of flag container */
+  }
+
+  /* Width for separated dial code mode */
+  .iti--separate-dial-code input {
+    padding-left: 110px !important;
+    /* Consistent with min-width of flag+code container */
+  }
+
+  /* Add space between flag and dial code */
+  .iti__selected-dial-code {
+    margin-left: 8px;
+  }
+
+  /* Ensure text in field doesn't overlap */
+  input#contactNumber {
+    text-indent: 0;
+  }
+
+  /* Estilo para destaque de campo com erro */
+  .error-highlight {
+    animation: pulse-error 1.5s ease-in-out;
+    box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.7);
+  }
+
+  @keyframes pulse-error {
+    0% {
+      box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7);
+    }
+
+    50% {
+      box-shadow: 0 0 0 10px rgba(239, 68, 68, 0);
+    }
+
+    100% {
+      box-shadow: 0 0 0 0 rgba(239, 68, 68, 0);
+    }
+  }
+
+  /* Add custom tooltip styles at the beginning of the file, right after the first <style> tag or create one if it doesn't exist */
+  .info-tooltip {
+    position: relative;
+    display: inline-flex;
+  }
+
+  .info-tooltip .tooltip-text {
+    visibility: hidden;
+    width: 240px;
+    background-color: white;
+    color: #666;
+    text-align: left;
+    border-radius: 6px;
+    padding: 8px 12px;
+    position: absolute;
+    z-index: 100;
+    bottom: 125%;
+    left: 50%;
+    transform: translateX(-50%);
+    opacity: 0;
+    transition: opacity 0.2s;
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
+    border: 1px solid #eee;
+    font-size: 12px;
+    pointer-events: none;
+  }
+
+  .info-tooltip .tooltip-text::after {
+    content: "";
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    margin-left: -5px;
+    border-width: 5px;
+    border-style: solid;
+    border-color: white transparent transparent transparent;
+  }
+
+  .info-tooltip:hover .tooltip-text {
+    visibility: visible;
+    opacity: 1;
+  }
+
+  /* Melhorias para o dropdown do intl-tel-input */
+  .iti__country-list {
+    border-radius: 0.5rem;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.05);
+    border: 1px solid #e5e7eb;
+    font-size: 15px;
+    background: #fff;
+    min-width: 452px;
+    width: auto !important;
+    max-width: 350px;
+    box-sizing: border-box;
+    padding-top: 0.5rem;
+    padding-bottom: 0.5rem;
+    margin-top: 0.25rem;
+    z-index: 9999;
+  }
+
+  .iti__country {
+    border-radius: 0.5rem;
+    margin: 0 0.25rem;
+    padding: 0.5rem 0.75rem;
+    transition: background 0.15s;
+  }
+
+  .iti__country.iti__highlight {
+    background: #e0e7ff !important;
+    color: #1e40af !important;
+  }
+
+  .iti__country:hover {
+    background: #f1f5f9 !important;
+    color: #1e40af !important;
+  }
+
+  .iti__country-list .iti__divider {
+    margin: 0.5rem 0;
+  }
+
+  .iti__country-list .iti__search-input {
+    border-radius: 0.5rem;
+    border: 1px solid #d1d5db;
+    padding: 0.5rem 0.75rem;
+    margin: 0.5rem 0.75rem 0.75rem 0.75rem;
+    width: calc(100% - 1.5rem);
+    font-size: 15px;
+    background: #f9fafb;
+    outline: none;
+    transition: border 0.2s;
+  }
+
+  .iti__country-list .iti__search-input:focus {
+    border: 1.5px solid #3b82f6;
+    background: #fff;
+  }
+
+  @media (max-width: 500px) {
+    .iti__country-list {
+      min-width: 180px;
+      font-size: 13px;
+    }
+
+    .iti__country-list .iti__search-input {
+      font-size: 13px;
+    }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Main Container -->
+<div class="max-w-5xl mx-auto p-4 sm:p-6">
+  <!-- Page Title -->
+  <h1 class="text-2xl sm:text-3xl font-bold text-gray-800 mb-6 text-center">
+    {{ t_ui("pages", "owner_registration", "title", current_lang) }}
+  </h1>
+
+  <!-- Registration Form -->
+  <form action="{{ url_for('criar_usuario') }}" method="POST" class="space-y-8" enctype="multipart/form-data"
+    id="ownerForm">
+    <input type="hidden" name="pet_count" id="pet_count" value="1">
+    <!-- Owner Information Section -->
+    <div class="bg-white rounded-lg shadow-md overflow-visible">
+      <!-- Owner Info Header -->
+      <div class="bg-gradient-to-r from-[#1E40AF] to-[#3B82F6] px-4 py-4 border-b border-[#1E40AF] rounded-t-lg">
+        <h2 class="text-lg font-medium text-white flex items-center">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 24 24" fill="none"
+            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+            <circle cx="12" cy="7" r="4"></circle>
+          </svg>
+          {{ t_ui("pages", "owner_registration", "owner_info", current_lang) }}
+        </h2>
+      </div>
+
+      <div class="p-4 sm:p-6">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <!-- Full Name Field -->
+          <div class="col-span-2 md:col-span-1">
+            <label for="fullName" class="block text-sm font-medium text-gray-700 mb-1">
+              {{ t_field("User", "owner_name", current_lang) }}
+            </label>
+            <div class="relative">
+              <input type="text" id="fullName" name="owner_name"
+                class="block w-full rounded-lg border border-input bg-background px-3 py-2 ps-9 text-sm text-foreground shadow-sm shadow-black/5 transition-shadow placeholder:text-muted-foreground/70 focus-visible:border-ring focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/20 disabled:cursor-not-allowed disabled:opacity-50"
+                placeholder="{{ t_ui('placeholders', 'owner_name', '', current_lang) }}">
+              <div
+                class="pointer-events-none absolute inset-y-0 start-0 flex items-center justify-center ps-3 text-muted-foreground/80 peer-disabled:opacity-50">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                  stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                  aria-hidden="true">
+                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                  <circle cx="12" cy="7" r="4"></circle>
+                </svg>
+              </div>
+            </div>
+            <div class="error-message text-red-600 text-xs mt-1 hidden"></div>
+          </div>
+
+          <div>
+            <label for="password" class="block text-sm font-medium text-gray-700 mb-1">
+              {{ t_field("User", "password", current_lang) }}
+            </label>
+            <div class="relative">
+              <input type="password" id="password" name="password" required
+                class="block w-full rounded-lg border border-input bg-background px-3 py-2 ps-9 text-sm text-foreground shadow-sm shadow-black/5 transition-shadow placeholder:text-muted-foreground/70 focus-visible:border-ring focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/20 disabled:cursor-not-allowed disabled:opacity-50 pr-12"
+                placeholder="{{ t_ui('placeholders', 'password', '', current_lang) }}">
+              <div
+                class="pointer-events-none absolute inset-y-0 start-0 flex items-center justify-center ps-3 text-muted-foreground/80 peer-disabled:opacity-50">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                  stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                  aria-hidden="true">
+                  <rect x="3" y="11" width="18" height="11" rx="2"></rect>
+                  <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                </svg>
+              </div>
+              <button type="button" id="togglePassword" tabindex="0" aria-label="Mostrar senha"
+                class="absolute inset-y-0 right-0 flex items-center px-3 text-gray-400 hover:text-gray-700 focus:outline-none"
+                style="z-index:2;">
+                <svg id="eyeIcon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none"
+                  viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M2.458 12C3.732 7.943 7.523 5 12 5c4.477 0 8.268 2.943 9.542 7-1.274 4.057-5.065 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                </svg>
+              </button>
+            </div>
+            <div class="error-message text-red-600 text-xs mt-1 hidden"></div>
+          </div>
+
+          <!-- Email and Contact Fields -->
+          <div>
+            <label for="email" class="block text-sm font-medium text-gray-700 mb-1">
+              {{ t_field("User", "email", current_lang) }}
+            </label>
+            <div class="relative">
+              <input type="text" id="email" name="email"
+                class="block w-full rounded-lg border border-input bg-background px-3 py-2 ps-9 text-sm text-foreground shadow-sm shadow-black/5 transition-shadow placeholder:text-muted-foreground/70 focus-visible:border-ring focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/20 disabled:cursor-not-allowed disabled:opacity-50"
+                placeholder="{{ t_ui('placeholders', 'email', '', current_lang) }}">
+              <div
+                class="pointer-events-none absolute inset-y-0 start-0 flex items-center justify-center ps-3 text-muted-foreground/80 peer-disabled:opacity-50">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                  stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                  aria-hidden="true">
+                  <circle cx="12" cy="12" r="4"></circle>
+                  <path d="M16 8v5a3 3 0 0 0 6 0v-1a10 10 0 1 0-3.92 7.94"></path>
+                </svg>
+              </div>
+            </div>
+            <div class="error-message text-red-600 text-xs mt-1 hidden"></div>
+          </div>
+
+          <div>
+            <label for="contactNumber" class="block text-sm font-medium text-gray-700 mb-1">
+              {{ t_field("User", "contact_number", current_lang) }}
+            </label>
+            <div class="relative">
+              <input type="tel" id="contactNumber" name="contact_number"
+                class="block w-full rounded-lg border border-input bg-background px-5 py-2 text-sm text-foreground shadow-sm shadow-black/5 transition-shadow placeholder:text-muted-foreground/70 focus-visible:border-ring focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/20 disabled:cursor-not-allowed disabled:opacity-50"
+                placeholder="">
+            </div>
+            <div class="error-message text-red-600 text-xs mt-1 hidden"></div>
+            <input type="hidden" id="fullPhoneWithCode" name="full_phone_with_code">
+          </div>
+
+          <!-- CPF or Passport Section -->
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">
+              {{ t_ui("pages", "owner_registration", "has_cpf", current_lang) }}
+            </label>
+            <div class="relative flex items-center rounded-md bg-gray-50 p-0.5 shadow-inner" data-name="hasCpf">
+              <button type="button"
+                class="toggle-btn radio-button flex-1 py-1.5 px-4 rounded-md text-sm font-medium transition-all duration-200 relative z-10 hover:bg-white"
+                data-value="yes" data-name="hasCpf"
+                onclick="ativarRadioButton(this, 'hasCpf', 'yes'); document.getElementById('cpf-group').classList.remove('hidden'); document.getElementById('passport-group').classList.add('hidden');">
+                {{ t_ui("common", "yes", "", current_lang) }}
+              </button>
+              <button type="button"
+                class="toggle-btn radio-button flex-1 py-1.5 px-4 rounded-md text-sm font-medium transition-all duration-200 relative z-10 hover:bg-white"
+                data-value="no" data-name="hasCpf"
+                onclick="ativarRadioButton(this, 'hasCpf', 'no'); document.getElementById('cpf-group').classList.add('hidden'); document.getElementById('passport-group').classList.remove('hidden');">
+                {{ t_ui("common", "no", "", current_lang) }}
+              </button>
+              <span id="hasCpf-indicator"
+                class="indicator-pill absolute w-[calc(50%-1px)] bg-white rounded-md shadow-sm transition-all duration-200 opacity-0"></span>
+            </div>
+            <div class="error-message text-red-600 text-xs mt-1 hidden"></div>
+          </div>
+
+          <div>
+            <div id="cpf-group" class="hidden">
+              <!-- CPF Field -->
+              <label for="cpf" class="block text-sm font-medium text-gray-700 mb-1">
+                {{ t_field("User", "cpf", current_lang) }}
+              </label>
+              <div class="relative">
+                <input type="text" id="cpf" name="cpf"
+                  class="block w-full rounded-lg border border-input bg-background px-3 py-2 ps-9 text-sm text-foreground shadow-sm shadow-black/5 transition-shadow placeholder:text-muted-foreground/70 focus-visible:border-ring focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/20 disabled:cursor-not-allowed disabled:opacity-50"
+                  oninput="formatarCPF(this)">
+                <div
+                  class="pointer-events-none absolute inset-y-0 start-0 flex items-center justify-center ps-3 text-muted-foreground/80 peer-disabled:opacity-50">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                    aria-hidden="true">
+                    <rect x="3" y="4" width="18" height="16" rx="2"></rect>
+                    <line x1="7" y1="12" x2="17" y2="12"></line>
+                    <line x1="7" y1="8" x2="10" y2="8"></line>
+                    <line x1="7" y1="16" x2="13" y2="16"></line>
+                  </svg>
+                </div>
+              </div>
+              <div class="error-message text-red-600 text-xs mt-1 hidden"></div>
+            </div>
+            <div id="passport-group" class="hidden">
+              <!-- Passport Field -->
+              <label for="passportNumber" class="block text-sm font-medium text-gray-700 mb-1">
+                {{ t_field("User", "passport_number", current_lang) }}
+              </label>
+              <div class="relative">
+                <input type="text" id="passportNumber" name="passport_number" maxlength="9"
+                  class="block w-full rounded-lg border border-input bg-background px-3 py-2 ps-9 text-sm text-foreground shadow-sm shadow-black/5 transition-shadow placeholder:text-muted-foreground/70 focus-visible:border-ring focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/20 disabled:cursor-not-allowed disabled:opacity-50"
+                  oninput="formatPassport(this)">
+                <div
+                  class="pointer-events-none absolute inset-y-0 start-0 flex items-center justify-center ps-3 text-muted-foreground/80 peer-disabled:opacity-50">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 448 512"
+                    fill="currentColor" aria-hidden="true">
+                    <path
+                      d="M129.62 176h39.09c1.49-27.03 6.54-51.35 14.21-70.41-27.71 13.24-48.02 39.19-53.3 70.41zm0 32c5.29 31.22 25.59 57.17 53.3 70.41-7.68-19.06-12.72-43.38-14.21-70.41h-39.09zM224 286.69c7.69-7.45 20.77-34.42 23.43-78.69h-46.87c2.67 44.26 15.75 71.24 23.44 78.69zM200.57 176h46.87c-2.66-44.26-15.74-71.24-23.43-78.69-7.7 7.45-20.78 34.43-23.44 78.69zm64.51 102.41c27.71-13.24 48.02-39.19 53.3-70.41h-39.09c-1.49 27.03-6.53 51.35-14.21 70.41zM416 0H64C28.65 0 0 28.65 0 64v384c0 35.35 28.65 64 64 64h352c17.67 0 32-14.33 32-32V32c0-17.67-14.33-32-32-32zm-80 416H112c-8.8 0-16-7.2-16-16s7.2-16 16-16h224c8.8 0 16 7.2 16 16s-7.2 16-16 16zm-112-96c-70.69 0-128-57.31-128-128S153.31 64 224 64s128 57.31 128 128-57.31 128-128 128zm41.08-214.41c7.68 19.06 12.72 43.38 14.21 70.41h39.09c-5.28-31.22-25.59-57.17-53.3-70.41z">
+                    </path>
+                  </svg>
+                </div>
+              </div>
+              <div class="error-message text-red-600 text-xs mt-1 hidden"></div>
+            </div>
+          </div>
+
+          <!-- Address Fields Section -->
+          <div>
+            <label for="residentialAddress" class="block text-sm font-medium text-gray-700 mb-1">
+              {{ t_field("User", "residential_address", current_lang) }}
+            </label>
+
+            <!-- Hidden field for browser autofill -->
+            <input type="text" id="nativeAddressField" name="native_address" autocomplete="street-address"
+              class="hidden" oninput="handleAddressAutofill(this, 'residentialAddress')">
+
+            <div class="relative">
+              <input type="text" id="residentialAddress" name="residential_address" autocomplete="off"
+                class="block w-full rounded-lg border border-input bg-background px-3 py-2 ps-9 text-sm text-foreground shadow-sm shadow-black/5 transition-shadow placeholder:text-muted-foreground/70 focus-visible:border-ring focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/20 disabled:cursor-not-allowed disabled:opacity-50">
+              <div
+                class="pointer-events-none absolute inset-y-0 start-0 flex items-center justify-center ps-3 text-muted-foreground/80 peer-disabled:opacity-50">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                  stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                  class="lucide lucide-map-pin-house-icon lucide-map-pin-house">
+                  <path
+                    d="M15 22a1 1 0 0 1-1-1v-4a1 1 0 0 1 .445-.832l3-2a1 1 0 0 1 1.11 0l3 2A1 1 0 0 1 22 17v4a1 1 0 0 1-1 1z" />
+                  <path d="M18 10a8 8 0 0 0-16 0c0 4.993 5.539 10.193 7.399 11.799a1 1 0 0 0 .601.2" />
+                  <path d="M18 22v-3" />
+                  <circle cx="10" cy="10" r="3" />
+                </svg>
+              </div>
+
+              <!-- Manual address validation button -->
+              <button type="button" id="validateAddressBtn"
+                class="absolute inset-y-0 right-0 flex items-center px-3 text-blue-600 hover:text-blue-800 opacity-0 transition-opacity"
+                onclick="validateManualAddress('residentialAddress')">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                  stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="20 6 9 17 4 12"></polyline>
+                </svg>
+              </button>
+            </div>
+            <div class="error-message text-red-600 text-xs mt-1 hidden"></div>
+            <div id="residentialAddress-details" class="address-details text-sm text-gray-500 mt-1"></div>
+          </div>
+
+          <div>
+            <div id="toggleDeliveryAddressContainer" class="pt-8">
+              <!-- Button to Use Different Delivery Address -->
+              <button type="button" id="toggleDeliveryAddress"
+                class="text-blue-600 hover:text-blue-900 text-sm font-medium focus:outline-none"
+                onclick="document.getElementById('toggleDeliveryAddressContainer').classList.add('hidden'); document.getElementById('deliveryAddress-group').classList.remove('hidden'); toggleMapControls();">
+                {{ t_ui("pages", "owner_registration", "use_different_address", current_lang) }}
+              </button>
+            </div>
+            <div id="deliveryAddress-group" class="hidden">
+              <!-- Delivery Address Field -->
+              <label for="deliveryAddress" class="block text-sm font-medium text-gray-700 mb-1">
+                {{ t_field("User", "delivery_address", current_lang) }}
+              </label>
+
+              <!-- Hidden field for browser autofill -->
+              <input type="text" id="nativeDeliveryField" name="native_delivery_address"
+                autocomplete="shipping street-address" class="hidden"
+                oninput="handleAddressAutofill(this, 'deliveryAddress')">
+
+              <div class="relative">
+                <input type="text" id="deliveryAddress" name="delivery_address" autocomplete="off"
+                  class="block w-full rounded-lg border border-input bg-background px-3 py-2 ps-9 text-sm text-foreground shadow-sm shadow-black/5 transition-shadow placeholder:text-muted-foreground/70 focus-visible:border-ring focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/20 disabled:cursor-not-allowed disabled:opacity-50">
+                <div
+                  class="pointer-events-none absolute inset-y-0 start-0 flex items-center justify-center ps-3 text-muted-foreground/80 peer-disabled:opacity-50">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                    class="lucide lucide-map-pin-plus-icon lucide-map-pin-plus">
+                    <path
+                      d="M19.914 11.105A7.298 7.298 0 0 0 20 10a8 8 0 0 0-16 0c0 4.993 5.539 10.193 7.399 11.799a1 1 0 0 0 1.202 0 32 32 0 0 0 .824-.738" />
+                    <circle cx="12" cy="10" r="3" />
+                    <path d="M16 18h6" />
+                    <path d="M19 15v6" />
+                  </svg>
+                </div>
+
+                <!-- Manual address validation button -->
+                <button type="button" id="validateDeliveryAddressBtn"
+                  class="absolute inset-y-0 right-0 flex items-center px-3 text-blue-600 hover:text-blue-800 opacity-0 transition-opacity"
+                  onclick="validateManualAddress('deliveryAddress')">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="20 6 9 17 4 12"></polyline>
+                  </svg>
+                </button>
+              </div>
+              <div class="error-message text-red-600 text-xs mt-1 hidden"></div>
+              <div id="deliveryAddress-details" class="address-details text-sm text-gray-500 mt-1"></div>
+            </div>
+          </div>
+
+          <!-- Map Section for Address Visualization -->
+          <div class="col-span-2">
+            <div class="bg-gray-50 border border-gray-200 rounded-lg overflow-hidden">
+              <div class="p-4 flex justify-between items-center border-b border-gray-200">
+                <h3 class="text-sm font-medium text-gray-700">
+                  {{ t_ui("pages", "owner_registration", "address_map", current_lang) }}
+                </h3>
+                <div id="map-controls" class="flex space-x-2 hidden">
+                  <button type="button" class="map-toggle bg-blue-600 text-white px-3 py-1 rounded text-sm font-medium"
+                    data-type="residential">
+                    {{ t_ui("pages", "owner_registration", "residential", current_lang) }}
+                  </button>
+                  <button type="button"
+                    class="map-toggle bg-white border border-gray-300 text-gray-700 px-3 py-1 rounded text-sm font-medium"
+                    data-type="delivery">
+                    {{ t_ui("pages", "owner_registration", "delivery", current_lang) }}
+                  </button>
+                </div>
+              </div>
+              <div id="mapContainer" class="h-48 sm:h-64 w-full"></div>
+            </div>
+          </div>
+
+          <!-- Refferal Section -->
+          <div>
+            <label for="howDidYouKnow" class="block text-sm font-medium text-gray-700 mb-1">
+              {{ t_field("User", "how_did_you_know", current_lang) }}
+            </label>
+            <div class="relative" x-data="{ open: false, selected: '' }">
+              <button type="button" @click="open = !open" @keydown.escape.window="open = false"
+                @click.outside="open = false"
+                class="flex w-full items-center justify-between rounded-lg border border-gray-300 bg-white px-3 py-2 ps-9 text-sm shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                aria-haspopup="listbox" aria-expanded="false">
+                <span x-text="selected || '{{ t_ui('common', 'select_referral' , '' , current_lang) }}'"
+                  :class="selected ? 'block truncate text-gray-700' : 'block truncate text-gray-400'"></span>
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                  stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                  class="-me-1 ms-2 opacity-60">
+                  <polyline points="6 9 12 15 18 9"></polyline>
+                </svg>
+              </button>
+
+              <div x-show="open" class="absolute z-50 mt-1 w-full rounded-lg bg-white shadow-lg overflow-visible"
+                style="display: none;">
+                <ul class="py-1 text-sm max-h-60 overflow-auto" role="listbox">
+                  <!-- Referral Options -->
+                  <li class="cursor-pointer px-3 py-2 hover:bg-blue-50" role="option"
+                    @click="selected = 'Instagram'; open = false; document.getElementById('howDidYouKnow').value = 'instagram';">
+                    <div class="flex items-center">
+                      <svg viewBox="0 0 24 24" height="20" width="20" xmlns="http://www.w3.org/2000/svg" class="mr-2">
+                        <linearGradient id="instagramGradient" x1="0%" y1="100%" x2="100%" y2="0%">
+                          <stop offset="0%" style="stop-color:#FFDC80" />
+                          <stop offset="20%" style="stop-color:#FCAF45" />
+                          <stop offset="40%" style="stop-color:#F77737" />
+                          <stop offset="60%" style="stop-color:#F56040" />
+                          <stop offset="80%" style="stop-color:#FD1D1D" />
+                          <stop offset="100%" style="stop-color:#C13584" />
+                        </linearGradient>
+                        <path fill="url(#instagramGradient)"
+                          d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z" />
+                      </svg>
+                      Instagram
+                    </div>
+                  </li>
+                  <li class="cursor-pointer px-3 py-2 hover:bg-blue-50" role="option"
+                    @click="selected = 'Facebook'; open = false; document.getElementById('howDidYouKnow').value = 'facebook';">
+                    <div class="flex items-center">
+                      <svg stroke="none" fill="#1877F2" viewBox="0 0 24 24" height="20" width="20"
+                        xmlns="http://www.w3.org/2000/svg" class="mr-2">
+                        <path
+                          d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
+                      </svg>
+                      Facebook
+                    </div>
+                  </li>
+                  <li class="cursor-pointer px-3 py-2 hover:bg-blue-50" role="option"
+                    @click="selected = 'Google'; open = false; document.getElementById('howDidYouKnow').value = 'google';">
+                    <div class="flex items-center">
+                      <svg stroke="currentColor" fill="currentColor" stroke-width="0" version="1.1" x="0px" y="0px"
+                        viewBox="0 0 48 48" enable-background="new 0 0 48 48" height="20" width="20"
+                        xmlns="http://www.w3.org/2000/svg" class="mr-2">
+                        <path fill="#FFC107"
+                          d="M43.611,20.083H42V20H24v8h11.303c-1.649,4.657-6.08,8-11.303,8c-6.627,0-12-5.373-12-12c0-6.627,5.373-12,12-12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C12.955,4,4,12.955,4,24c0,11.045,8.955,20,20,20c11.045,0,20-8.955,20-20C44,22.659,43.862,21.35,43.611,20.083z">
+                        </path>
+                        <path fill="#FF3D00"
+                          d="M6.306,14.691l6.571,4.819C14.655,15.108,18.961,12,24,12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C16.318,4,9.656,8.337,6.306,14.691z">
+                        </path>
+                        <path fill="#4CAF50"
+                          d="M24,44c5.166,0,9.86-1.977,13.409-5.192l-6.19-5.238C29.211,35.091,26.715,36,24,36c-5.202,0-9.619-3.317-11.283-7.946l-6.522,5.025C9.505,39.556,16.227,44,24,44z">
+                        </path>
+                        <path fill="#1976D2"
+                          d="M43.611,20.083H42V20H24v8h11.303c-0.792,2.237-2.231,4.166-4.087,5.571c0.001-0.001,0.002-0.001,0.003-0.002l6.19,5.238C36.971,39.205,44,34,44,24C44,22.659,43.862,21.35,43.611,20.083z">
+                        </path>
+                      </svg>
+                      Google
+                    </div>
+                  </li>
+                  <li class="cursor-pointer px-3 py-2 hover:bg-blue-50" role="option"
+                    @click="selected = 'Youtube'; open = false; document.getElementById('howDidYouKnow').value = 'youtube';">
+                    <div class="flex items-center">
+                      <svg viewBox="0 0 24 24" height="20" width="20" xmlns="http://www.w3.org/2000/svg" class="mr-2">
+                        <path fill="#FF0000"
+                          d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z" />
+                      </svg>
+                      Youtube
+                    </div>
+                  </li>
+                  <li class="cursor-pointer px-3 py-2 hover:bg-blue-50" role="option"
+                    @click="selected = '{{ t_enum('User', 'how_did_you_know', 'recommendation', current_lang) }}'; open = false; this.closest('div').querySelector('select').value = 'recommendation';">
+                    <div class="flex items-center">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                        class="mr-2">
+                        <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path>
+                        <circle cx="9" cy="7" r="4"></circle>
+                        <path d="M22 21v-2a4 4 0 0 0-3-3.87"></path>
+                        <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                      </svg>
+                      {{ t_enum("User", "how_did_you_know", "recommendation", current_lang) }}
+                    </div>
+                  </li>
+                  <li class="cursor-pointer px-3 py-2 hover:bg-blue-50" role="option"
+                    @click="selected = '{{ t_enum('User', 'how_did_you_know', 'other', current_lang) }}'; open = false; this.closest('div').querySelector('select').value = 'other';">
+                    <div class="flex items-center">
+                      <svg stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"
+                        height="20" width="20" xmlns="http://www.w3.org/2000/svg" class="mr-2">
+                        <path stroke-linecap="round" stroke-linejoin="round"
+                          d="M5 12h.01M12 12h.01M19 12h.01M6 12a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0z">
+                        </path>
+                      </svg>
+                      {{ t_enum("User", "how_did_you_know", "other", current_lang) }}
+                    </div>
+                  </li>
+                </ul>
+              </div>
+
+              <div
+                class="pointer-events-none absolute inset-y-0 start-0 flex items-center justify-center ps-3 text-muted-foreground/80">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                  stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                  aria-hidden="true">
+                  <path d="m3 11 18-5v12L3 14v-3z" />
+                  <path d="M11.6 16.8a3 3 0 1 1-5.8-1.6" />
+                </svg>
+              </div>
+
+            </div>
+            <div class="error-message text-red-600 text-xs mt-1 hidden"></div>
+          </div>
+
+          <!-- Invisible fill to second column -->
+          <div class="hidden md:block md:col-span-1"></div>
+
+          <!-- Has Special Needs Section -->
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">
+              {{ t_ui("pages", "owner_registration", "has_special_needs", current_lang) }}
+            </label>
+            <p class="text-xs text-gray-500 mb-2">{{ t_ui("pages", "owner_registration", "for_disabled", current_lang)
+              }}</p>
+            <div class="relative flex items-center rounded-md bg-gray-50 p-0.5 shadow-inner"
+              data-name="hasSpecialNeeds">
+              <button type="button"
+                class="toggle-btn radio-button flex-1 py-1.5 px-4 rounded-md text-sm font-medium transition-all duration-200 relative z-10 hover:bg-white"
+                data-value="yes" data-name="hasSpecialNeeds"
+                onclick="ativarRadioButton(this, 'hasSpecialNeeds', 'yes'); document.getElementById('specialNeedsDetails-group').classList.remove('hidden');">
+                {{ t_ui("common", "yes", "", current_lang) }}
+              </button>
+              <button type="button"
+                class="toggle-btn radio-button flex-1 py-1.5 px-4 rounded-md text-sm font-medium transition-all duration-200 relative z-10 hover:bg-white"
+                data-value="no" data-name="hasSpecialNeeds"
+                onclick="ativarRadioButton(this, 'hasSpecialNeeds', 'no'); document.getElementById('specialNeedsDetails-group').classList.add('hidden');">
+                {{ t_ui("common", "no", "", current_lang) }}
+              </button>
+              <span id="hasSpecialNeeds-indicator"
+                class="indicator-pill absolute w-[calc(50%-1px)] bg-white rounded-md shadow-sm transition-all duration-200 opacity-0"></span>
+            </div>
+            <div class="error-message text-red-600 text-xs mt-1 hidden"></div>
+          </div>
+
+          <div id="specialNeedsDetails-group" class="hidden col-span-1">
+            <label for="specialNeedsDetails" class="block text-sm font-medium text-gray-700 mb-1">
+              {{ t_ui("pages", "owner_registration", "special_needs_details", current_lang) }}
+            </label>
+            <div class="relative">
+              <textarea id="specialNeedsDetails" name="special_needs_details" rows="2"
+                class="block w-full rounded-lg border border-input bg-background px-3 py-2 ps-9 text-sm text-foreground shadow-sm shadow-black/5 transition-shadow placeholder:text-muted-foreground/70 focus-visible:border-ring focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/20 disabled:cursor-not-allowed disabled:opacity-50"
+                style="resize: none;"></textarea>
+              <div
+                class="pointer-events-none absolute top-2 start-0 flex items-start justify-center ps-3 text-muted-foreground/80 peer-disabled:opacity-50">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                  stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                  class="lucide lucide-person-standing-icon lucide-person-standing">
+                  <circle cx="12" cy="5" r="1" />
+                  <path d="m9 20 3-6 3 6" />
+                  <path d="m6 8 6 2 6-2" />
+                  <path d="M12 10v4" />
+                </svg>
+              </div>
+            </div>
+            <div class="error-message text-red-600 text-xs mt-1 hidden"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Pets -->
+    <div class="bg-white rounded-lg shadow-md overflow-hidden">
+      <div class="bg-gradient-to-r from-green-600 to-green-500 px-4 py-4 border-b border-green-600">
+        <h2 class="text-lg font-medium text-white flex items-center">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 512 512" fill="currentColor"
+            stroke="currentColor" stroke-width="0">
+            <path
+              d="M442.8 361.82c-8.8-25.1-29.31-37.82-49.11-50.12-17.23-10.71-33.5-20.83-44.14-39-29.33-50.33-45.44-80.7-93.49-80.7s-64.21 30.38-93.61 80.69c-10.65 18.21-27 28.35-44.25 39.08-19.8 12.31-40.27 25-49.1 50.05a78.06 78.06 0 0 0-5.1 28.29C64 430.85 96.45 464 132.4 464s83.31-18.13 123.76-18.13S343.31 464 379.71 464 448 430.85 448 390.11a78.3 78.3 0 0 0-5.2-28.29z">
+            </path>
+            <ellipse cx="72" cy="216" rx="56" ry="72"></ellipse>
+            <ellipse cx="184" cy="120" rx="56" ry="72"></ellipse>
+            <ellipse cx="328" cy="120" rx="56" ry="72"></ellipse>
+            <ellipse cx="440" cy="216" rx="56" ry="72"></ellipse>
+          </svg>
+          {{ t_ui("pages", "owner_registration", "pets", current_lang) }}
+        </h2>
+      </div>
+
+      <div class="p-4 sm:p-6">
+        <div id="pets-container" class="space-y-6">
+          <!-- Template do primeiro pet -->
+          <div class="pet-form bg-gray-50 rounded-lg border border-gray-200 overflow-hidden">
+            <div
+              class="bg-gradient-to-r from-blue-500 to-blue-400 px-4 py-3 border-b border-blue-600 flex justify-between items-center">
+              <h3 class="pet-title text-sm font-medium text-white">{{ t_ui("pages", "owner_registration",
+                "pet_number", current_lang) }} #1</h3>
+              <!-- Primeiro pet não tem botão de remover -->
+            </div>
+            <div class="p-4">
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-1">{{ t_field("Pet", "name", current_lang)
+                    }}</label>
+                  <div class="relative">
+                    <input type="text" name="pets[0][name]"
+                      class="block w-full rounded-lg border border-input bg-background px-3 py-2 ps-9 text-sm text-foreground shadow-sm shadow-black/5 transition-shadow placeholder:text-muted-foreground/70 focus-visible:border-ring focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/20 disabled:cursor-not-allowed disabled:opacity-50"
+                      placeholder="{{ t_ui('placeholders', 'pet_name', '', current_lang) or 'Nome do Pet' }}">
+                    <div
+                      class="pointer-events-none absolute inset-y-0 start-0 flex items-center justify-center ps-3 text-muted-foreground/80 peer-disabled:opacity-50">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                        class="lucide lucide-tag-icon lucide-tag">
+                        <path
+                          d="M12.586 2.586A2 2 0 0 0 11.172 2H4a2 2 0 0 0-2 2v7.172a2 2 0 0 0 .586 1.414l8.704 8.704a2.426 2.426 0 0 0 3.42 0l6.58-6.58a2.426 2.426 0 0 0 0-3.42z" />
+                        <circle cx="7.5" cy="7.5" r=".5" fill="currentColor" />
+                      </svg>
+                    </div>
+                  </div>
+                  <div class="error-message text-red-600 text-xs mt-1 hidden"></div>
+                </div>
+
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-1">{{ t_field("Pet", "species", current_lang)
+                    }}</label>
+                  <div class="relative" x-data="{ open: false, selected: '' }">
+                    <button type="button" @click="open = !open" @keydown.escape.window="open = false"
+                      @click.outside="open = false"
+                      class="flex w-full items-center justify-between rounded-lg border border-gray-300 bg-white px-3 py-2 ps-9 text-sm shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      aria-haspopup="listbox" aria-expanded="false">
+                      <span x-text="selected || '{{ t_ui('common', 'select_species' , '' , current_lang) }}'"
+                        :class="selected ? 'block truncate text-gray-700' : 'block truncate text-gray-400'"></span>
+                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                        class="-me-1 ms-2 opacity-60">
+                        <polyline points="6 9 12 15 18 9"></polyline>
+                      </svg>
+                    </button>
+
+                    <div x-show="open" class="absolute z-10 mt-1 w-full rounded-lg bg-white shadow-lg"
+                      style="display: none;">
+                      <ul class="py-1 text-sm max-h-60 overflow-auto" role="listbox">
+                        <li class="cursor-pointer px-3 py-2 hover:bg-blue-50" role="option"
+                          @click="selected = '{{ t_enum('Pet', 'species', 'canine', current_lang) }}'; open = false; this.closest('div').querySelector('select').value = 'canine';">
+                          {{ t_enum('Pet', 'species', 'canine', current_lang) }}
+                        </li>
+                        <li class="cursor-pointer px-3 py-2 hover:bg-blue-50" role="option"
+                          @click="selected = '{{ t_enum('Pet', 'species', 'feline', current_lang) }}'; open = false; this.closest('div').querySelector('select').value = 'feline';">
+                          {{ t_enum('Pet', 'species', 'feline', current_lang) }}
+                        </li>
+                        <li class="cursor-pointer px-3 py-2 hover:bg-blue-50" role="option"
+                          @click="selected = '{{ t_enum('Pet', 'species', 'bird', current_lang) }}'; open = false; this.closest('div').querySelector('select').value = 'bird';">
+                          {{ t_enum('Pet', 'species', 'bird', current_lang) }}
+                        </li>
+                        <li class="cursor-pointer px-3 py-2 hover:bg-blue-50" role="option"
+                          @click="selected = '{{ t_enum('Pet', 'species', 'rodent', current_lang) }}'; open = false; this.closest('div').querySelector('select').value = 'rodent';">
+                          {{ t_enum('Pet', 'species', 'rodent', current_lang) }}
+                        </li>
+                        <li class="cursor-pointer px-3 py-2 hover:bg-blue-50" role="option"
+                          @click="selected = '{{ t_enum('Pet', 'species', 'other', current_lang) }}'; open = false; this.closest('div').querySelector('select').value = 'other';">
+                          {{ t_enum('Pet', 'species', 'other', current_lang) }}
+                        </li>
+                      </ul>
+                    </div>
+
+                    <div
+                      class="pointer-events-none absolute inset-y-0 start-0 flex items-center justify-center ps-3 text-muted-foreground/80">
+                      <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 512 512" height="16"
+                        width="16" xmlns="http://www.w3.org/2000/svg">
+                        <path
+                          d="M256 224c-79.41 0-192 122.76-192 200.25 0 34.9 26.81 55.75 71.74 55.75 48.84 0 81.45-25.08 120.26-25.08 38.79 0 71.42 25.08 120.26 25.08 44.93 0 71.74-20.85 71.74-55.75C448 346.76 335.41 224 256 224zm-147.28-12.61c-10.4-34.65-42.44-57.09-71.56-50.13-29.12 6.96-44.29 40.69-33.89 75.34 10.4 34.65 42.44 57.09 71.56 50.13 29.12-6.96 44.29-40.69 33.89-75.34zm84.72-20.78c30.94-8.14 46.42-49.94 34.58-93.36s-46.52-72.01-77.46-63.87-46.42 49.94-34.58 93.36c11.84 43.42 46.53 72.02 77.46 63.87zm281.39-29.34c-29.12-6.96-61.15 15.48-71.56 50.13-10.4 34.65 4.77 68.38 33.89 75.34 29.12 6.96 61.15-15.48 71.56-50.13 10.4-34.65-4.77-68.38-33.89-75.34zm-156.27 29.34c30.94 8.14 65.62-20.45 77.46-63.87 11.84-43.42-3.64-85.21-34.58-93.36s-65.62 20.45-77.46 63.87c-11.84 43.42 3.64 85.22 34.58 93.36z">
+                        </path>
+                      </svg>
+                    </div>
+
+                    <select name="pets[0][species]" class="hidden">
+                      <option value="canine" selected>{{ t_enum("Pet", "species", "canine", current_lang) }}</option>
+                      <option value="feline">{{ t_enum("Pet", "species", "feline", current_lang) }}</option>
+                      <option value="bird">{{ t_enum("Pet", "species", "bird", current_lang) }}</option>
+                      <option value="rodent">{{ t_enum("Pet", "species", "rodent", current_lang) }}</option>
+                      <option value="other">{{ t_enum("Pet", "species", "other", current_lang) }}</option>
+                    </select>
+                  </div>
+                  <div class="error-message text-red-600 text-xs mt-1 hidden"></div>
+                </div>
+
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-1">{{ t_field("Pet", "breed", current_lang)
+                    }}</label>
+                  <div class="relative">
+                    <input type="text" name="pets[0][breed]"
+                      class="block w-full rounded-lg border border-input bg-background px-3 py-2 ps-9 text-sm text-foreground shadow-sm shadow-black/5 transition-shadow placeholder:text-muted-foreground/70 focus-visible:border-ring focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/20 disabled:cursor-not-allowed disabled:opacity-50"
+                      placeholder="{{ t_ui('placeholders', 'pet_breed', '', current_lang) or 'Raça do Pet' }}">
+                    <div
+                      class="pointer-events-none absolute inset-y-0 start-0 flex items-center justify-center ps-3 text-muted-foreground/80 peer-disabled:opacity-50">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                        class="lucide lucide-paw-print-icon lucide-paw-print">
+                        <circle cx="11" cy="4" r="2" />
+                        <circle cx="18" cy="8" r="2" />
+                        <circle cx="20" cy="16" r="2" />
+                        <path
+                          d="M9 10a5 5 0 0 1 5 5v3.5a3.5 3.5 0 0 1-6.84 1.045Q6.52 17.48 4.46 16.84A3.5 3.5 0 0 1 5.5 10Z" />
+                      </svg>
+                    </div>
+                  </div>
+                  <div class="error-message text-red-600 text-xs mt-1 hidden"></div>
+                </div>
+
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-1">{{ t_field("Pet", "gender", current_lang)
+                    }}</label>
+                  <div class="relative" x-data="{ open: false, selected: '' }">
+                    <button type="button" @click="open = !open" @keydown.escape.window="open = false"
+                      @click.outside="open = false"
+                      class="flex w-full items-center justify-between rounded-lg border border-gray-300 bg-white px-3 py-2 ps-9 text-sm shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      aria-haspopup="listbox" aria-expanded="false">
+                      <span x-text="selected || '{{ t_ui('common', 'select_gender' , '' , current_lang) }}'"
+                        :class="selected ? 'block truncate text-gray-700' : 'block truncate text-gray-400'"></span>
+                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                        class="-me-1 ms-2 opacity-60">
+                        <polyline points="6 9 12 15 18 9"></polyline>
+                      </svg>
+                    </button>
+
+                    <div x-show="open" class="absolute z-10 mt-1 w-full rounded-lg bg-white shadow-lg"
+                      style="display: none;">
+                      <ul class="py-1 text-sm max-h-60 overflow-auto" role="listbox">
+                        <li class="cursor-pointer px-3 py-2 hover:bg-blue-50" role="option"
+                          @click="selected = '{{ t_enum('Pet', 'gender', 'male', current_lang) }}'; open = false; this.closest('div').querySelector('select').value = 'male';">
+                          {{ t_enum("Pet", "gender", "male", current_lang) }}
+                        </li>
+                        <li class="cursor-pointer px-3 py-2 hover:bg-blue-50" role="option"
+                          @click="selected = '{{ t_enum('Pet', 'gender', 'female', current_lang) }}'; open = false; this.closest('div').querySelector('select').value = 'female';">
+                          {{ t_enum("Pet", "gender", "female", current_lang) }}
+                        </li>
+                      </ul>
+                    </div>
+
+                    <div
+                      class="pointer-events-none absolute inset-y-0 start-0 flex items-center justify-center ps-3 text-muted-foreground/80">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                        aria-hidden="true">
+                        <path d="m14 6 4 4" />
+                        <path d="M17 3h4v4" />
+                        <path d="m21 3-7.75 7.75" />
+                        <circle cx="9" cy="15" r="6" />
+                      </svg>
+                    </div>
+
+                    <select name="pets[0][gender]" class="hidden">
+                      <option value="male" selected>{{ t_enum("Pet", "gender", "male", current_lang) }}</option>
+                      <option value="female">{{ t_enum("Pet", "gender", "female", current_lang) }}</option>
+                    </select>
+                  </div>
+                  <div class="error-message text-red-600 text-xs mt-1 hidden"></div>
+                </div>
+
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-1">{{ t_field("Pet", "birth_date",
+                    current_lang) }}</label>
+                  <div class="relative">
+                    <input type="text" name="pets[0][birth_date]" placeholder="DD/MM/AAAA" maxlength="10"
+                      class="block w-full rounded-lg border border-input bg-background px-3 py-2 ps-9 text-sm text-foreground shadow-sm shadow-black/5 transition-shadow placeholder:text-muted-foreground/70 focus-visible:border-ring focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/20 disabled:cursor-not-allowed disabled:opacity-50"
+                      oninput="ValidacaoFormulario.formatarData(this)">
+                    <div
+                      class="pointer-events-none absolute inset-y-0 start-0 flex items-center justify-center ps-3 text-muted-foreground/80 peer-disabled:opacity-50">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                        aria-hidden="true">
+                        <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                        <line x1="16" y1="2" x2="16" y2="6"></line>
+                        <line x1="8" y1="2" x2="8" y2="6"></line>
+                        <line x1="3" y1="10" x2="21" y2="10"></line>
+                      </svg>
+                    </div>
+                  </div>
+                  <div class="error-message text-red-600 text-xs mt-1 hidden"></div>
+                </div>
+
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-1">
+                    {{ t_field("Pet", "weight", current_lang) }} <span class="text-gray-400">(Opcional)</span>
+                  </label>
+                  <div class="relative">
+                    <input type="text" name="pets[0][weight]" placeholder="Ex: 10.5" step="0.1" min="0" max="100"
+                      class="block w-full rounded-lg border border-input bg-background px-3 py-2 ps-9 text-sm text-foreground shadow-sm shadow-black/5 transition-shadow placeholder:text-muted-foreground/70 focus-visible:border-ring focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/20 disabled:cursor-not-allowed disabled:opacity-50">
+                    <div
+                      class="pointer-events-none absolute inset-y-0 start-0 flex items-center justify-center ps-3 text-muted-foreground/80 peer-disabled:opacity-50">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                        class="lucide lucide-weight-icon lucide-weight">
+                        <circle cx="12" cy="5" r="3" />
+                        <path
+                          d="M6.5 8a2 2 0 0 0-1.905 1.46L2.1 18.5A2 2 0 0 0 4 21h16a2 2 0 0 0 1.925-2.54L19.4 9.5A2 2 0 0 0 17.48 8Z" />
+                      </svg>
+                    </div>
+                  </div>
+                  <div class="error-message text-red-600 text-xs mt-1 hidden"></div>
+                </div>
+
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-1">
+                    {{ t_field("Pet", "microchip", current_lang) }} <span class="text-gray-400">(Opcional)</span>
+                  </label>
+                  <div class="relative">
+                    <input type="text" name="pets[0][microchip]" maxlength="19"
+                      class="block w-full rounded-lg border border-input bg-background px-3 py-2 ps-9 text-sm text-foreground shadow-sm shadow-black/5 transition-shadow placeholder:text-muted-foreground/70 focus-visible:border-ring focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/20 disabled:cursor-not-allowed disabled:opacity-50"
+                      oninput="formatMicrochip(this)" placeholder="913.456.789.123.456" data-microchip-index="0">
+                    <input type="hidden" name="pets[0][microchip_raw]" class="microchip-hidden"
+                      data-microchip-index="0">
+                    <div
+                      class="pointer-events-none absolute inset-y-0 start-0 flex items-center justify-center ps-3 text-muted-foreground/80 peer-disabled:opacity-50">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                        class="lucide lucide-cpu-icon lucide-cpu">
+                        <rect width="16" height="16" x="4" y="4" rx="2" />
+                        <rect width="6" height="6" x="9" y="9" rx="1" />
+                        <path d="M15 2v2" />
+                        <path d="M15 20v2" />
+                        <path d="M2 15h2" />
+                        <path d="M2 9h2" />
+                        <path d="M20 15h2" />
+                        <path d="M20 9h2" />
+                        <path d="M9 2v2" />
+                        <path d="M9 20v2" />
+                      </svg>
+                    </div>
+                  </div>
+                  <p class="mt-1 text-xs text-gray-500">{{ t_ui("pages", "owner_registration", "max_15_digits",
+                    current_lang) }}</p>
+                  <div class="error-message text-red-600 text-xs mt-1 hidden"></div>
+                </div>
+
+                <!-- Cor do Pelo do pet -->
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-1 flex items-center">
+                    {{ t_field("Pet", "fur_color", current_lang) }}
+                    <span class="ml-1 inline-flex items-center info-tooltip">
+                      <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 1024 1024"
+                        height="16px" width="16px" xmlns="http://www.w3.org/2000/svg">
+                        <path
+                          d="M512 64C264.6 64 64 264.6 64 512s200.6 448 448 448 448-200.6 448-448S759.4 64 512 64zm0 820c-205.4 0-372-166.6-372-372s166.6-372 372-372 372 166.6 372 372-166.6 372-372 372z">
+                        </path>
+                        <path
+                          d="M464 336a48 48 0 1 0 96 0 48 48 0 1 0-96 0zm72 112h-48c-4.4 0-8 3.6-8 8v272c0 4.4 3.6 8 8 8h48c4.4 0 8-3.6 8-8V456c0-4.4-3.6-8-8-8z">
+                        </path>
+                      </svg>
+                      <span class="tooltip-text">Caso possua a carteira de vacinação, utilize a mesma cor escrita
+                        nela.</span>
+                    </span>
+                  </label>
+                  <div class="relative">
+                    <input type="text" name="pets[0][fur_color]"
+                      class="block w-full rounded-lg border border-input bg-background px-3 py-2 ps-9 text-sm text-foreground shadow-sm shadow-black/5 transition-shadow placeholder:text-muted-foreground/70 focus-visible:border-ring focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/20 disabled:cursor-not-allowed disabled:opacity-50"
+                      placeholder="{{ t_ui('placeholders', 'pet_fur_color', '', current_lang) or 'Cor da pelagem' }}">
+                    <div
+                      class="pointer-events-none absolute inset-y-0 start-0 flex items-center justify-center ps-3 text-muted-foreground/80 peer-disabled:opacity-50">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 781 752" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                        class="lucide lucide-droplet-icon">
+                        <path fill="currentColor"
+                          d="M467 479q-2-7 2-13l-3-3-6 1q0-7-5-3-2-3-4-2 4 1 1 4l3 3q-3 1 0 2l-11 2q-3 3 0 2 6 2 0 5-11 5-22 3l-2-2 20-35q8-19 13-38l-1-1q-9 6-18 7 12-96-29-183-21-40-56-67 0 8 5 15 20 60 26 125 7 104-41 197-1-6 2-9l-2-4v-5l-4-1q-2 2 1 4-4 2-1 5 1-4 2-1l-3 5v-3l-6-1 1-4 5-3-5-2 2-2q-2-4-5-6 4-3 4-9 28-63 28-132-2-73-24-142-15-40-39-73-2-5-1-8 89 24 132 108a341 341 0 0 1 34 150q5-6 12-11 2-1 3 3 4 46-15 89 3 1 8-2h7q-2 18-8 35" />
+                        <path fill="currentColor"
+                          d="M444 477q6-3 0-5-3 1 0-2l11-2q-3-1 0-2l-3-3q3-3-1-4 2-1 4 2 5-4 5 3l6-1 3 3q-4 6-2 13l-8 23 1 2q23-31 36-66 19-45 26-91 14-84-27-157-4-7 3-8 86 41 107 135a280 280 0 0 1 3 76h3l12-11h3l-2 37q-5 23-17 42l1 2 17-8v11q-9 42-35 76l1 1q11-3 21-10l3 3-21 39q-15 19-33 34l18-2h5v4q-31 33-75 42l-29 1q-4-3-3-6 54-27 89-75l3-7-27 3-1-2q37-30 52-75l1-6-16 2-10-1v-3q22-25 31-58l-1-2-18 2q16-69-8-134-11-26-29-46l5 40a369 369 0 0 1-100 264q8 0 15-4 3-1 5 2-8 15-19 28l-34 32h23l-1 4q-39 37-91 43l-8-1q-7-6 1-10 54-31 88-84l-29-3-2-2q33-34 51-78zm106-213 2 10q1-6-2-10M330 462q0 6-4 9 3 2 5 6l-2 2 5 2-5 3-1 4 6 1v3l3-5q-1-3-2 1-3-3 1-5-3-2-1-4l4 1v5l2 4q-3 3-2 9l-15 27-54 77q-14 27-25 56-6 6-9-1-2-25 7-48 5-12 11-21 24-34 39-72 32-117-24-223-15-25-38-40 38 108 2 218l-30 70q-18 45-24 94-3 7-8 1-6-25-4-49 4-28 14-54 21-42 35-87 20-71 6-142-10-48-40-84l-12-12q-2-4-1-7 97 18 136 109 29 76 21 158z" />
+                      </svg>
+                    </div>
+                  </div>
+                  <div class="error-message text-red-600 text-xs mt-1 hidden"></div>
+                </div>
+
+                <!-- Componente de Upload de Foto do Pet -->
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-1">{{ t_field("Pet", "photo", current_lang)
+                    }}</label>
+                  <div class="relative">
+                    <button type="button" id="openPetPhotoModal"
+                      class="flex items-center gap-2 rounded-lg border border-input bg-background px-3 py-2 ps-9 text-sm text-foreground shadow-sm shadow-black/5 w-full transition-shadow justify-between hover:bg-muted">
+                      <span id="selectedPhotoText"
+                        class="truncate max-w-[200px] overflow-hidden whitespace-nowrap text-gray-400">Selecione uma
+                        foto do seu
+                        pet</span>
+                    </button>
+                    <div
+                      class="pointer-events-none absolute inset-y-0 start-0 flex items-center justify-center ps-3 text-muted-foreground/80">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                        aria-hidden="true">
+                        <path
+                          d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z" />
+                        <circle cx="12" cy="13" r="3" />
+                      </svg>
+                    </div>
+                    <input type="file" id="petPhotoInput" name="pets[0][photo]" accept="image/*" class="hidden" />
+                  </div>
+                  <div class="error-message text-red-600 text-xs mt-1 hidden"></div>
+                </div>
+
+                <!-- Modal de Upload de Foto -->
+                <div id="petPhotoModal" class="fixed inset-0 z-50 bg-black/50 flex items-center justify-center hidden">
+                  <div class="bg-white rounded-lg shadow-lg max-w-3xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+                    <div class="p-4 border-b">
+                      <div class="flex items-center justify-between">
+                        <h3 class="text-lg font-medium">Foto do seu pet</h3>
+                        <button type="button" id="closePetPhotoModal" class="text-gray-400 hover:text-gray-500">
+                          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M18 6 6 18" />
+                            <path d="m6 6 12 12" />
+                          </svg>
+                        </button>
+                      </div>
+                      <p class="text-sm text-gray-500 mt-1">Adicione uma foto clara do seu pet para facilitar a
+                        identificação</p>
+                    </div>
+
+                    <div class="p-4 space-y-4 h">
+                      <!-- Área de upload e dica lado a lado usando flexbox -->
+                      <div class="flex flex-col md:flex-row gap-6">
+                        <!-- Área de upload -->
+                        <div id="dropArea"
+                          class="flex-1 flex flex-col items-center justify-center h-80 border-2 border-dashed border-gray-300 rounded-lg bg-gray-50 hover:bg-gray-100 cursor-pointer">
+                          <div id="uploadIcon" class="rounded-full bg-white p-4 shadow-sm">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"
+                              fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                              stroke-linejoin="round" class="text-gray-400">
+                              <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h7" />
+                              <line x1="16" x2="22" y1="5" y2="5" />
+                              <line x1="19" x2="19" y1="2" y2="8" />
+                              <circle cx="9" cy="9" r="2" />
+                              <path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21" />
+                            </svg>
+                          </div>
+                          <div id="uploadText" class="text-center mt-3">
+                            <p class="text-sm font-medium">Clique para selecionar</p>
+                            <p class="text-xs text-gray-500">ou arraste e solte a imagem aqui</p>
+                          </div>
+
+                          <!-- Área de preview -->
+                          <div id="previewArea" class="hidden relative w-full h-full overflow-hidden rounded-lg">
+                            <img id="imagePreview" src="" alt="Preview da foto" class="w-full h-full object-cover" />
+                            <div
+                              class="absolute inset-0 bg-black bg-opacity-40 opacity-0 hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                              <button type="button" id="changePhoto"
+                                class="bg-white h-10 w-10 rounded-md p-2 text-gray-700 hover:bg-gray-100">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
+                                  fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                  stroke-linejoin="round">
+                                  <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h7" />
+                                  <line x1="16" x2="22" y1="5" y2="5" />
+                                  <line x1="19" x2="19" y1="2" y2="8" />
+                                </svg>
+                              </button>
+                              <button type="button" id="removePhoto"
+                                class="bg-red-50 h-10 w-10 rounded-md p-2 text-red-500 hover:bg-red-100">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
+                                  fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                  stroke-linejoin="round">
+                                  <path d="M18 6 6 18" />
+                                  <path d="m6 6 12 12" />
+                                </svg>
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+
+                        <!-- Guia para boas fotos (agora à direita) -->
+                        <div class="flex-1 rounded-lg border bg-gray-50 p-5 flex flex-col justify-between h-80">
+                          <div class="flex items-start gap-3">
+                            <div
+                              class="flex h-9 w-9 items-center justify-center rounded-full bg-blue-50 text-blue-500 shrink-0">
+                              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24"
+                                fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                stroke-linejoin="round">
+                                <circle cx="12" cy="12" r="10" />
+                                <path d="M12 16v-4" />
+                                <path d="M12 8h.01" />
+                              </svg>
+                            </div>
+                            <div class="space-y-2">
+                              <h4 class="text-base font-medium">Como deve ser a foto do pet</h4>
+                              <ul class="text-sm text-gray-500 space-y-2">
+                                <li>• Foto clara e bem iluminada</li>
+                                <li>• Pet deve estar de frente para a câmera</li>
+                                <li>• Evite fotos com outros animais ou pessoas</li>
+                              </ul>
+                            </div>
+                          </div>
+                          <div class="grid grid-cols-2 gap-4 mt-4">
+                            <div class="overflow-hidden rounded-md border">
+                              <img
+                                src="https://images.unsplash.com/photo-1583511655857-d19b40a7a54e?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=300&h=300&q=80"
+                                alt="Exemplo de boa foto de pet" class="h-28 w-full object-cover">
+                              <div class="bg-green-50 p-2 text-center text-sm text-green-600">
+                                Bom exemplo
+                              </div>
+                            </div>
+                            <div class="overflow-hidden rounded-md border">
+                              <img
+                                src="https://images.unsplash.com/photo-1561037404-61cd46aa615b?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=300&h=300&q=80"
+                                alt="Exemplo de foto ruim de pet" class="h-28 w-full object-cover">
+                              <div class="bg-red-50 p-2 text-center text-sm text-red-500">
+                                Evite
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div id="fileNameDisplay"
+                        class="text-sm text-gray-500 hidden truncate max-w-full overflow-hidden whitespace-nowrap">
+                      </div>
+                    </div>
+
+                    <div class="p-4 border-t flex justify-end gap-2">
+                      <button type="button" id="cancelPhotoButton"
+                        class="rounded-lg border border-gray-300 bg-white px-5 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">
+                        Cancelar
+                      </button>
+                      <button type="button" id="confirmPhotoButton"
+                        class="rounded-lg bg-blue-600 px-5 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed">
+                        Confirmar foto
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Botão para adicionar mais pets -->
+        <button type="button" id="add-pet"
+          class="mt-4 inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
+          <svg class="-ml-1 mr-2 h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+            <path fill-rule="evenodd"
+              d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z"
+              clip-rule="evenodd" />
+          </svg>
+          {{ t_ui("pages", "owner_registration", "add_pet", current_lang) }}
+        </button>
+      </div>
+    </div>
+
+    <!-- Botão de submissão -->
+    <div class="flex justify-center mt-8">
+      <button type="submit"
+        class="inline-flex justify-center py-3 px-12 sm:px-16 md:px-20 border border-transparent shadow-sm text-base font-medium rounded-md text-white bg-gradient-to-r from-blue-500 to-blue-400 hover:from-blue-600 hover:to-blue-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 w-full sm:w-auto">
+        {{ t_ui("pages", "owner_registration", "register", current_lang) }}
+      </button>
+    </div>
+  </form>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<!-- Google Places API -->
+<script>
+  const GOOGLE_MAPS_API_KEY = "{{ google_maps_api_key }}";
+</script>
+<script
+  src="https://maps.googleapis.com/maps/api/js?key={{ google_maps_api_key }}&libraries=places&callback=initGooglePlaces"
+  async defer></script>
+
+<!-- Script principal da aplicação -->
+<script src="{{ url_for('static', filename='js/main.js') }}"></script>
+
+<script>
+  // FLUXO DE TRADUÇÃO:
+  // As traduções são carregadas do servidor
+
+  // Incluir as traduções para validação - definidas diretamente
+  const validationMessages = {
+    required_field: "Campo obrigatório",
+    invalid_email: "Por favor, digite um email válido",
+    invalid_cpf: "Por favor, digite um CPF válido (11 dígitos)",
+    invalid_date_format: "Por favor, digite uma data válida no formato DD/MM/AAAA",
+    invalid_date: "Por favor, digite uma data válida",
+    future_date: "A data não pode ser no futuro",
+    invalid_weight: "Por favor, digite um peso válido",
+    weight_range: "O peso deve estar entre 0 e 100 kg",
+    invalid_phone: "Por favor, digite um número de telefone válido"
+  };
+
+  // Cache de elementos DOM
+  const DOM = {
+    init() {
+      this.form = document.getElementById('ownerForm');
+      this.petsContainer = document.getElementById('pets-container');
+      this.addPetBtn = document.getElementById('add-pet');
+      this.residentialAddress = document.getElementById('residentialAddress');
+      this.deliveryAddress = document.getElementById('deliveryAddress');
+      this.toggleDeliveryAddress = document.getElementById('toggleDeliveryAddress');
+      this.mapContainer = document.getElementById('mapContainer');
+      this.radioButtons = document.querySelectorAll('.radio-button');
+      this.mapToggles = document.querySelectorAll('.map-toggle');
+      this.deliveryAddressGroup = document.getElementById('deliveryAddress-group');
+      this.mapControls = document.getElementById('map-controls');
+      this.cpfGroup = document.getElementById('cpf-group');
+      this.passportGroup = document.getElementById('passport-group');
+      this.specialNeedsDetailsGroup = document.getElementById('specialNeedsDetails-group');
+      // Removemos a referência ao seletor de idioma aqui, pois já está sendo tratado no bloco head
+    }
+  };
+
+  // Mostrar/ocultar controles do mapa
+  function toggleMapControls() {
+    if (DOM.deliveryAddressGroup.classList.contains('hidden')) {
+      DOM.mapControls.classList.add('hidden');
+    } else {
+      DOM.mapControls.classList.remove('hidden');
+    }
+  }
+
+  // Gerenciador de Pets
+  class PetManager {
+    constructor() {
+      this.petCount = 1;
+      this.handleAddPet = this.adicionarPet.bind(this);
+      this.init();
+    }
+
+    init() {
+      // Só adiciona o listener se ainda não foi adicionado
+      if (!window.petAddListenerAdded) {
+        DOM.addPetBtn.addEventListener('click', this.handleAddPet);
+        window.petAddListenerAdded = true;
+      }
+    }
+
+    adicionarPet() {
+      this.petCount = document.querySelectorAll('.pet-form').length + 1;
+      const newPetForm = this.criarPetForm();
+      DOM.petsContainer.appendChild(newPetForm);
+      this.atualizarNumerosPets();
+    }
+
+    criarPetForm() {
+      const form = document.createElement('div');
+      form.className = 'pet-form bg-gray-50 rounded-lg border border-gray-200 overflow-hidden';
+      form.innerHTML = this.getPetFormTemplate();
+      return form;
+    }
+
+    getPetFormTemplate() {
+      return `
+          <div class="bg-gradient-to-r from-blue-500 to-blue-400 px-4 py-3 border-b border-blue-600 flex justify-between items-center">
+            <h3 class="pet-title text-sm font-medium text-white">{{ t_ui("pages", "owner_registration", "pet_number", current_lang) }} #${this.petCount}</h3>
+            <button type="button" class="text-white hover:text-red-100" onclick="removerPet(this)">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24"
+                stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+          <div class="p-4">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">{{ t_field("Pet", "name", current_lang) }}</label>
+                <div class="relative">
+                  <input type="text" name="pets[${this.petCount - 1}][name]"
+                    class="block w-full rounded-lg border border-input bg-background px-3 py-2 ps-9 text-sm text-foreground shadow-sm shadow-black/5 transition-shadow placeholder:text-muted-foreground/70 focus-visible:border-ring focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/20 disabled:cursor-not-allowed disabled:opacity-50"
+                    placeholder="{{ t_ui('placeholders', 'pet_name', '', current_lang) or 'Nome do Pet' }}">
+                    <div
+                    class="pointer-events-none absolute inset-y-0 start-0 flex items-center justify-center ps-3 text-muted-foreground/80 peer-disabled:opacity-50">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                      stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                      class="lucide lucide-tag-icon lucide-tag">
+                      <path
+                        d="M12.586 2.586A2 2 0 0 0 11.172 2H4a2 2 0 0 0-2 2v7.172a2 2 0 0 0 .586 1.414l8.704 8.704a2.426 2.426 0 0 0 3.42 0l6.58-6.58a2.426 2.426 0 0 0 0-3.42z" />
+                      <circle cx="7.5" cy="7.5" r=".5" fill="currentColor" />
+                    </svg>
+                  </div>
+                </div>
+                <div class="error-message text-red-600 text-xs mt-1 hidden"></div>
+              </div>
+              
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">{{ t_field("Pet", "species", current_lang) }}</label>
+                <div class="relative" x-data="{ open: false, selected: '' }">
+                  <button type="button" @click="open = !open" @keydown.escape.window="open = false" @click.outside="open = false"
+                    class="flex w-full items-center justify-between rounded-lg border border-gray-300 bg-white px-3 py-2 ps-9 text-sm shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    aria-haspopup="listbox" aria-expanded="false">
+                    <span x-text="selected || '{{ t_ui('common', 'select_species', '', current_lang) }}'" 
+                      :class="selected ? 'block truncate text-gray-700' : 'block truncate text-gray-400'"></span>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" 
+                      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="-me-1 ms-2 opacity-60">
+                      <polyline points="6 9 12 15 18 9"></polyline>
+                    </svg>
+                  </button>
+                  
+                  <div x-show="open" class="absolute z-10 mt-1 w-full rounded-lg bg-white shadow-lg" style="display: none;">
+                    <ul class="py-1 text-sm max-h-60 overflow-auto" role="listbox">
+                      <li class="cursor-pointer px-3 py-2 hover:bg-blue-50" role="option"
+                        @click="selected = '{{ t_enum('Pet', 'species', 'canine', current_lang) }}'; open = false; this.closest('div').querySelector('select').value = 'canine';">
+                        {{ t_enum('Pet', 'species', 'canine', current_lang) }}
+                      </li>
+                      <li class="cursor-pointer px-3 py-2 hover:bg-blue-50" role="option"
+                        @click="selected = '{{ t_enum('Pet', 'species', 'feline', current_lang) }}'; open = false; this.closest('div').querySelector('select').value = 'feline';">
+                        {{ t_enum('Pet', 'species', 'feline', current_lang) }}
+                      </li>
+                      <li class="cursor-pointer px-3 py-2 hover:bg-blue-50" role="option"
+                        @click="selected = '{{ t_enum('Pet', 'species', 'bird', current_lang) }}'; open = false; this.closest('div').querySelector('select').value = 'bird';">
+                        {{ t_enum('Pet', 'species', 'bird', current_lang) }}
+                      </li>
+                      <li class="cursor-pointer px-3 py-2 hover:bg-blue-50" role="option"
+                        @click="selected = '{{ t_enum('Pet', 'species', 'rodent', current_lang) }}'; open = false; this.closest('div').querySelector('select').value = 'rodent';">
+                        {{ t_enum('Pet', 'species', 'rodent', current_lang) }}
+                      </li>
+                      <li class="cursor-pointer px-3 py-2 hover:bg-blue-50" role="option"
+                        @click="selected = '{{ t_enum('Pet', 'species', 'other', current_lang) }}'; open = false; this.closest('div').querySelector('select').value = 'other';">
+                        {{ t_enum('Pet', 'species', 'other', current_lang) }}
+                      </li>
+                    </ul>
+                  </div>
+                  
+                  <div class="pointer-events-none absolute inset-y-0 start-0 flex items-center justify-center ps-3 text-muted-foreground/80">
+                    <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 512 512" height="16" width="16"
+                      xmlns="http://www.w3.org/2000/svg">
+                      <path d="M256 224c-79.41 0-192 122.76-192 200.25 0 34.9 26.81 55.75 71.74 55.75 48.84 0 81.45-25.08 120.26-25.08 38.79 0 71.42 25.08 120.26 25.08 44.93 0 71.74-20.85 71.74-55.75C448 346.76 335.41 224 256 224zm-147.28-12.61c-10.4-34.65-42.44-57.09-71.56-50.13-29.12 6.96-44.29 40.69-33.89 75.34 10.4 34.65 42.44 57.09 71.56 50.13 29.12-6.96 44.29-40.69 33.89-75.34zm84.72-20.78c30.94-8.14 46.42-49.94 34.58-93.36s-46.52-72.01-77.46-63.87-46.42 49.94-34.58 93.36c11.84 43.42 46.53 72.02 77.46 63.87zm281.39-29.34c-29.12-6.96-61.15 15.48-71.56 50.13-10.4 34.65 4.77 68.38 33.89 75.34 29.12 6.96 61.15-15.48 71.56-50.13 10.4-34.65-4.77-68.38-33.89-75.34zm-156.27 29.34c30.94 8.14 65.62-20.45 77.46-63.87 11.84-43.42-3.64-85.21-34.58-93.36s-65.62 20.45-77.46 63.87c-11.84 43.42 3.64 85.22 34.58 93.36z"></path>
+                    </svg>
+                  </div>
+                  
+                  <select name="pets[${this.petCount - 1}][species]" class="hidden">
+                    <option value="canine" selected>{{ t_enum("Pet", "species", "canine", current_lang) }}</option>
+                    <option value="feline">{{ t_enum("Pet", "species", "feline", current_lang) }}</option>
+                    <option value="bird">{{ t_enum("Pet", "species", "bird", current_lang) }}</option>
+                    <option value="rodent">{{ t_enum("Pet", "species", "rodent", current_lang) }}</option>
+                    <option value="other">{{ t_enum("Pet", "species", "other", current_lang) }}</option>
+                  </select>
+                </div>
+                <div class="error-message text-red-600 text-xs mt-1 hidden"></div>
+              </div>
+              
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">{{ t_field("Pet", "breed", current_lang) }}</label>
+                <div class="relative">
+                  <input type="text" name="pets[${this.petCount - 1}][breed]" 
+                    class="block w-full rounded-lg border border-input bg-background px-3 py-2 ps-9 text-sm text-foreground shadow-sm shadow-black/5 transition-shadow placeholder:text-muted-foreground/70 focus-visible:border-ring focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/20 disabled:cursor-not-allowed disabled:opacity-50"
+                    placeholder="{{ t_ui('placeholders', 'pet_breed', '', current_lang) or 'Raça do Pet' }}">
+                  <div class="pointer-events-none absolute inset-y-0 start-0 flex items-center justify-center ps-3 text-muted-foreground/80 peer-disabled:opacity-50">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-paw-print-icon lucide-paw-print">
+                      <circle cx="11" cy="4" r="2"/>
+                      <circle cx="18" cy="8" r="2"/>
+                      <circle cx="20" cy="16" r="2"/>
+                      <path d="M9 10a5 5 0 0 1 5 5v3.5a3.5 3.5 0 0 1-6.84 1.045Q6.52 17.48 4.46 16.84A3.5 3.5 0 0 1 5.5 10Z"/>
+                    </svg>
+                  </div>
+                </div>
+                <div class="error-message text-red-600 text-xs mt-1 hidden"></div>
+              </div>
+              
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">{{ t_field("Pet", "gender", current_lang) }}</label>
+                <div class="relative" x-data="{ open: false, selected: '' }">
+                  <button type="button" @click="open = !open" @keydown.escape.window="open = false" @click.outside="open = false"
+                    class="flex w-full items-center justify-between rounded-lg border border-gray-300 bg-white px-3 py-2 ps-9 text-sm shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    aria-haspopup="listbox" aria-expanded="false">
+                    <span x-text="selected || '{{ t_ui('common', 'select_gender', '', current_lang) }}'" 
+                      :class="selected ? 'block truncate text-gray-700' : 'block truncate text-gray-400'"></span>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" 
+                      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="-me-1 ms-2 opacity-60">
+                      <polyline points="6 9 12 15 18 9"></polyline>
+                    </svg>
+                  </button>
+                  
+                  <div x-show="open" class="absolute z-10 mt-1 w-full rounded-lg bg-white shadow-lg" style="display: none;">
+                    <ul class="py-1 text-sm max-h-60 overflow-auto" role="listbox">
+                      <li class="cursor-pointer px-3 py-2 hover:bg-blue-50" role="option" @click="selected = '{{ t_enum('Pet', 'gender', 'male', current_lang) }}'; open = false; this.closest('div').querySelector('select').value = 'male';">
+                        {{ t_enum("Pet", "gender", "male", current_lang) }}
+                      </li>
+                      <li class="cursor-pointer px-3 py-2 hover:bg-blue-50" role="option" @click="selected = '{{ t_enum('Pet', 'gender', 'female', current_lang) }}'; open = false; this.closest('div').querySelector('select').value = 'female';">
+                        {{ t_enum("Pet", "gender", "female", current_lang) }}
+                      </li>
+                    </ul>
+                  </div>
+                  
+                  <div class="pointer-events-none absolute inset-y-0 start-0 flex items-center justify-center ps-3 text-muted-foreground/80">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" 
+                      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                      <path d="m14 6 4 4"/>
+                      <path d="M17 3h4v4"/>
+                      <path d="m21 3-7.75 7.75"/>
+                      <circle cx="9" cy="15" r="6"/>
+                    </svg>
+                  </div>
+                  
+                  <select name="pets[${this.petCount - 1}][gender]" class="hidden">
+                    <option value="male" selected>{{ t_enum("Pet", "gender", "male", current_lang) }}</option>
+                    <option value="female">{{ t_enum("Pet", "gender", "female", current_lang) }}</option>
+                  </select>
+                </div>
+                <div class="error-message text-red-600 text-xs mt-1 hidden"></div>
+              </div>
+              
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">{{ t_field("Pet", "birth_date", current_lang) }}</label>
+                <div class="relative">
+                  <input type="text" name="pets[${this.petCount - 1}][birth_date]" placeholder="DD/MM/AAAA" maxlength="10" 
+                    class="block w-full rounded-lg border border-input bg-background px-3 py-2 ps-9 text-sm text-foreground shadow-sm shadow-black/5 transition-shadow placeholder:text-muted-foreground/70 focus-visible:border-ring focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/20 disabled:cursor-not-allowed disabled:opacity-50"
+                    oninput="ValidacaoFormulario.formatarData(this)">
+                  <div class="pointer-events-none absolute inset-y-0 start-0 flex items-center justify-center ps-3 text-muted-foreground/80 peer-disabled:opacity-50">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                      <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                      <line x1="16" y1="2" x2="16" y2="6"></line>
+                      <line x1="8" y1="2" x2="8" y2="6"></line>
+                      <line x1="3" y1="10" x2="21" y2="10"></line>
+                    </svg>
+                  </div>
+                </div>
+                <div class="error-message text-red-600 text-xs mt-1 hidden"></div>
+              </div>
+              
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">
+                  {{ t_field("Pet", "weight", current_lang) }} <span class="text-gray-400">(Opcional)</span>
+                </label>
+                <div class="relative">
+                  <input type="text" name="pets[${this.petCount - 1}][weight]" placeholder="Ex: 10.5" 
+                    class="block w-full rounded-lg border border-input bg-background px-3 py-2 ps-9 text-sm text-foreground shadow-sm shadow-black/5 transition-shadow placeholder:text-muted-foreground/70 focus-visible:border-ring focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/20 disabled:cursor-not-allowed disabled:opacity-50">
+                  <div class="pointer-events-none absolute inset-y-0 start-0 flex items-center justify-center ps-3 text-muted-foreground/80 peer-disabled:opacity-50">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-weight-icon lucide-weight">
+                      <circle cx="12" cy="5" r="3"/>
+                      <path d="M6.5 8a2 2 0 0 0-1.905 1.46L2.1 18.5A2 2 0 0 0 4 21h16a2 2 0 0 0 1.925-2.54L19.4 9.5A2 2 0 0 0 17.48 8Z"/>
+                    </svg>
+                  </div>
+                </div>
+                <div class="error-message text-red-600 text-xs mt-1 hidden"></div>
+              </div>
+              
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">{{ t_field("Pet", "microchip", current_lang) }} <span class="text-gray-400">(Opcional)</span></label>
+                <div class="relative">
+                  <input type="text" name="pets[${this.petCount - 1}][microchip]" maxlength="19"
+                    class="block w-full rounded-lg border border-input bg-background px-3 py-2 ps-9 text-sm text-foreground shadow-sm shadow-black/5 transition-shadow placeholder:text-muted-foreground/70 focus-visible:border-ring focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/20 disabled:cursor-not-allowed disabled:opacity-50"
+                    oninput="formatMicrochip(this)" placeholder="913.456.789.123.456" data-microchip-index="${this.petCount - 1}">
+                  <input type="hidden" name="pets[${this.petCount - 1}][microchip_raw]" class="microchip-hidden" data-microchip-index="${this.petCount - 1}">
+                  <div
+                    class="pointer-events-none absolute inset-y-0 start-0 flex items-center justify-center ps-3 text-muted-foreground/80 peer-disabled:opacity-50">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-cpu-icon lucide-cpu">
+                      <rect width="16" height="16" x="4" y="4" rx="2"/>
+                      <rect width="6" height="6" x="9" y="9" rx="1"/>
+                      <path d="M15 2v2"/>
+                      <path d="M15 20v2"/>
+                      <path d="M2 15h2"/>
+                      <path d="M2 9h2"/>
+                      <path d="M20 15h2"/>
+                      <path d="M20 9h2"/>
+                      <path d="M9 2v2"/>
+                      <path d="M9 20v2"/>
+                    </svg>
+                  </div>
+                </div>
+                <p class="mt-1 text-xs text-gray-500">{{ t_ui("pages", "owner_registration", "max_15_digits",
+                  current_lang) }}</p>
+                <div class="error-message text-red-600 text-xs mt-1 hidden"></div>
+              </div>
+              <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-1 flex items-center">
+                    {{ t_field("Pet", "fur_color", current_lang) }}
+                    <span class="ml-1 inline-flex items-center info-tooltip">
+                      <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 1024 1024"
+                        height="16px" width="16px" xmlns="http://www.w3.org/2000/svg">
+                        <path
+                          d="M512 64C264.6 64 64 264.6 64 512s200.6 448 448 448 448-200.6 448-448S759.4 64 512 64zm0 820c-205.4 0-372-166.6-372-372s166.6-372 372-372 372 166.6 372 372-166.6 372-372 372z">
+                        </path>
+                        <path
+                          d="M464 336a48 48 0 1 0 96 0 48 48 0 1 0-96 0zm72 112h-48c-4.4 0-8 3.6-8 8v272c0 4.4 3.6 8 8 8h48c4.4 0 8-3.6 8-8V456c0-4.4-3.6-8-8-8z">
+                        </path>
+                      </svg>
+                      <span class="tooltip-text">Caso possua a carteira de vacinação, utilize a mesma cor escrita
+                        nela.</span>
+                    </span>
+                  </label>
+                  <div class="relative">
+                    <input type="text" name="pets[${this.petCount - 1}][fur_color]"
+                      class="block w-full rounded-lg border border-input bg-background px-3 py-2 ps-9 text-sm text-foreground shadow-sm shadow-black/5 transition-shadow placeholder:text-muted-foreground/70 focus-visible:border-ring focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/20 disabled:cursor-not-allowed disabled:opacity-50"
+                      placeholder="{{ t_ui('placeholders', 'pet_fur_color', '', current_lang) or 'Cor da pelagem' }}">
+                    <div class="pointer-events-none absolute inset-y-0 start-0 flex items-center justify-center ps-3 text-muted-foreground/80 peer-disabled:opacity-50">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 781 752" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                        class="lucide lucide-droplet-icon">
+                        <path fill="currentColor"
+                          d="M467 479q-2-7 2-13l-3-3-6 1q0-7-5-3-2-3-4-2 4 1 1 4l3 3q-3 1 0 2l-11 2q-3 3 0 2 6 2 0 5-11 5-22 3l-2-2 20-35q8-19 13-38l-1-1q-9 6-18 7 12-96-29-183-21-40-56-67 0 8 5 15 20 60 26 125 7 104-41 197-1-6 2-9l-2-4v-5l-4-1q-2 2 1 4-4 2-1 5 1-4 2-1l-3 5v-3l-6-1 1-4 5-3-5-2 2-2q-2-4-5-6 4-3 4-9 28-63 28-132-2-73-24-142-15-40-39-73-2-5-1-8 89 24 132 108a341 341 0 0 1 34 150q5-6 12-11 2-1 3 3 4 46-15 89 3 1 8-2h7q-2 18-8 35" />
+                        <path fill="currentColor"
+                          d="M444 477q6-3 0-5-3 1 0-2l11-2q-3-1 0-2l-3-3q3-3-1-4 2-1 4 2 5-4 5 3l6-1 3 3q-4 6-2 13l-8 23 1 2q23-31 36-66 19-45 26-91 14-84-27-157-4-7 3-8 86 41 107 135a280 280 0 0 1 3 76h3l12-11h3l-2 37q-5 23-17 42l1 2 17-8v11q-9 42-35 76l1 1q11-3 21-10l3 3-21 39q-15 19-33 34l18-2h5v4q-31 33-75 42l-29 1q-4-3-3-6 54-27 89-75l3-7-27 3-1-2q37-30 52-75l1-6-16 2-10-1v-3q22-25 31-58l-1-2-18 2q16-69-8-134-11-26-29-46l5 40a369 369 0 0 1-100 264q8 0 15-4 3-1 5 2-8 15-19 28l-34 32h23l-1 4q-39 37-91 43l-8-1q-7-6 1-10 54-31 88-84l-29-3-2-2q33-34 51-78zm106-213 2 10q1-6-2-10M330 462q0 6-4 9 3 2 5 6l-2 2 5 2-5 3-1 4 6 1v3l3-5q-1-3-2 1-3-3 1-5-3-2-1-4l4 1v5l2 4q-3 3-2 9l-15 27-54 77q-14 27-25 56-6 6-9-1-2-25 7-48 5-12 11-21 24-34 39-72 32-117-24-223-15-25-38-40 38 108 2 218l-30 70q-18 45-24 94-3 7-8 1-6-25-4-49 4-28 14-54 21-42 35-87 20-71 6-142-10-48-40-84l-12-12q-2-4-1-7 97 18 136 109 29 76 21 158z" />
+                      </svg>
+                    </div>
+                  </div>
+                  <div class="error-message text-red-600 text-xs mt-1 hidden"></div>
+                </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">{{ t_field("Pet", "photo", current_lang) }}</label>
+                <div class="relative">
+                  <button type="button" class="openPetPhotoModal flex items-center gap-2 rounded-lg border border-input bg-background px-3 py-2 ps-9 text-sm text-foreground shadow-sm shadow-black/5 w-full transition-shadow justify-between hover:bg-muted">
+                    <span class="selectedPhotoText truncate max-w-[200px] overflow-hidden whitespace-nowrap text-gray-400">Selecione uma foto do seu pet</span>
+                  </button>
+                  <div class="pointer-events-none absolute inset-y-0 start-0 flex items-center justify-center ps-3 text-muted-foreground/80">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                      stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                      aria-hidden="true">
+                      <path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z" />
+                      <circle cx="12" cy="13" r="3" />
+                    </svg>
+                  </div>
+                  <input type="file" class="petPhotoInput hidden" name="pets[${this.petCount - 1}][photo]" accept="image/*" />
+                </div>
+                <div class="error-message text-red-600 text-xs mt-1 hidden"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    atualizarNumerosPets() {
+      const pets = document.querySelectorAll('.pet-form');
+      pets.forEach((pet, index) => {
+        const titulo = pet.querySelector('.pet-title');
+        if (titulo) {
+          // Usando t_ui para traduzir o título do pet
+          titulo.innerHTML = `{{ t_ui("pages", "owner_registration", "pet_number", current_lang) }} #${index + 1}`;
+        }
+
+        const inputs = pet.querySelectorAll('input, select');
+        inputs.forEach(input => {
+          const name = input.getAttribute('name');
+          if (name && name.includes('pets[')) {
+            input.setAttribute('name', name.replace(/pets\[\d+\]/, `pets[${index}]`));
+          }
+        });
+      });
+    }
+  }
+
+  // Gerenciador de Endereços e Mapa
+  class EnderecoManager {
+    constructor() {
+      this.mapa = null;
+      this.marcadorResidencial = null;
+      this.marcadorEntrega = null;
+      this.init();
+    }
+
+    init() {
+      this.initMapa();
+      this.setupResidentialAddress();
+      this.setupDeliveryAddress();
+      this.setupMapaToggles();
+      this.setupManualInputHandlers();
+    }
+
+    initMapa() {
+      const defaultLocation = { lat: -23.550520, lng: -46.633308 }; // São Paulo
+      this.mapa = new google.maps.Map(DOM.mapContainer, {
+        zoom: 12,
+        center: defaultLocation,
+        mapTypeControl: false,
+        streetViewControl: false,
+        fullscreenControl: false
+      });
+    }
+
+    setupResidentialAddress() {
+      if (!DOM.residentialAddress) return;
+
+      const autocomplete = new google.maps.places.Autocomplete(DOM.residentialAddress);
+
+      autocomplete.addListener('place_changed', () => {
+        const place = autocomplete.getPlace();
+        if (place.geometry) {
+          this.atualizarEndereco(place, 'residential');
+
+          // Hide the validate button after place is selected
+          document.getElementById('validateAddressBtn').style.opacity = '0';
+        }
+      });
+    }
+
+    setupDeliveryAddress() {
+      if (!DOM.deliveryAddress) return;
+
+      const autocomplete = new google.maps.places.Autocomplete(DOM.deliveryAddress);
+
+      autocomplete.addListener('place_changed', () => {
+        const place = autocomplete.getPlace();
+        if (place.geometry) {
+          this.atualizarEndereco(place, 'delivery');
+
+          // Hide the validate button after place is selected
+          document.getElementById('validateDeliveryAddressBtn').style.opacity = '0';
+        }
+      });
+    }
+
+    setupManualInputHandlers() {
+      // Create debounced version of address validation
+      const debouncedValidateAddress = debounce((fieldId) => {
+        validateManualAddress(fieldId, true);
+      }, 800);
+
+      // Get address fields
+      const residentialAddress = document.getElementById('residentialAddress');
+      const deliveryAddress = document.getElementById('deliveryAddress');
+
+      // For residential address
+      if (residentialAddress) {
+        residentialAddress.addEventListener('input', () => {
+          // Always make sure the validation button is visible while typing
+          const validateBtn = document.getElementById('validateAddressBtn');
+          if (residentialAddress.value && residentialAddress.value.trim() !== '') {
+            validateBtn.style.opacity = '0.3'; // Less prominent but visible
+
+            // Auto-validate after typing stops (debounced)
+            debouncedValidateAddress('residentialAddress');
+          } else {
+            validateBtn.style.opacity = '0';
+          }
+        });
+      }
+
+      // For delivery address
+      if (deliveryAddress) {
+        deliveryAddress.addEventListener('input', () => {
+          // Always make sure the validation button is visible while typing
+          const validateBtn = document.getElementById('validateDeliveryAddressBtn');
+          if (deliveryAddress.value && deliveryAddress.value.trim() !== '') {
+            validateBtn.style.opacity = '0.3'; // Less prominent but visible
+
+            // Auto-validate after typing stops (debounced)
+            debouncedValidateAddress('deliveryAddress');
+          } else {
+            validateBtn.style.opacity = '0';
+          }
+        });
+      }
+    }
+
+    atualizarEndereco(place, tipo) {
+      // Determina qual elemento de detalhes usar baseado no tipo
+      const enderecoDetails = document.getElementById(`${tipo}Address-details`);
+      if (!enderecoDetails) return;
+
+      // Extrai os componentes do endereço
+      let cidade = '';
+      let estado = '';
+      let pais = '';
+      let cep = '';
+
+      place.address_components.forEach(component => {
+        const types = component.types;
+        if (types.includes('locality')) {
+          cidade = component.long_name;
+        }
+        if (types.includes('administrative_area_level_1')) {
+          estado = component.short_name;
+        }
+        if (types.includes('country')) {
+          pais = component.long_name;
+        }
+        if (types.includes('postal_code')) {
+          cep = component.long_name;
+        }
+      });
+
+      // Atualiza os campos ocultos com as coordenadas e endereço formatado
+      enderecoDetails.innerHTML = `
+        <input type="hidden" name="endereco_${tipo}_lat" value="${place.geometry.location.lat()}">
+        <input type="hidden" name="endereco_${tipo}_lng" value="${place.geometry.location.lng()}">
+        <input type="hidden" name="endereco_${tipo}_formatted" value="${place.formatted_address}">
+        <input type="hidden" name="endereco_${tipo}_cidade" value="${cidade}">
+        <input type="hidden" name="endereco_${tipo}_estado" value="${estado}">
+        <input type="hidden" name="endereco_${tipo}_pais" value="${pais}">
+        <input type="hidden" name="endereco_${tipo}_cep" value="${cep}">
+      `;
+
+      // Atualiza o mapa com as novas coordenadas
+      this.atualizarMapa(place.geometry.location.lat(), place.geometry.location.lng(), tipo);
+
+      // Atualiza o toggle ativo baseado no tipo de endereço
+      document.querySelectorAll('.map-toggle').forEach(toggle => {
+        if (toggle.dataset.type === tipo) {
+          toggle.classList.add('bg-blue-600');
+          toggle.classList.add('text-white');
+          toggle.classList.remove('bg-white');
+          toggle.classList.remove('text-gray-700');
+        } else {
+          toggle.classList.remove('bg-blue-600');
+          toggle.classList.remove('text-white');
+          toggle.classList.add('bg-white');
+          toggle.classList.add('text-gray-700');
+        }
+      });
+
+      // Adiciona feedback visual de sucesso
+      const addressField = document.getElementById(`${tipo}Address`);
+      if (addressField) {
+        addressField.classList.add('border-green-500');
+        setTimeout(() => addressField.classList.remove('border-green-500'), 1500);
+      }
+    }
+
+    atualizarMapa(lat, lng, tipo) {
+      const position = { lat: parseFloat(lat), lng: parseFloat(lng) };
+
+      // Centraliza o mapa na posição
+      this.mapa.setCenter(position);
+      this.mapa.setZoom(15);
+
+      // Remove o marcador anterior do mesmo tipo
+      if (tipo === 'residential' && this.marcadorResidencial) {
+        this.marcadorResidencial.setMap(null);
+      } else if (tipo === 'delivery' && this.marcadorEntrega) {
+        this.marcadorEntrega.setMap(null);
+      }
+
+      // Cria um novo marcador
+      const marcador = new google.maps.Marker({
+        position: position,
+        map: this.mapa,
+        title: tipo === 'residential' ? 'Endereço Residencial' : 'Endereço de Entrega',
+        icon: {
+          path: google.maps.SymbolPath.CIRCLE,
+          scale: 8,
+          fillColor: tipo === 'residential' ? '#4f46e5' : '#16a34a',
+          fillOpacity: 1,
+          strokeColor: '#ffffff',
+          strokeWeight: 2
+        }
+      });
+
+      // Armazena a referência do marcador
+      if (tipo === 'residential') {
+        this.marcadorResidencial = marcador;
+      } else {
+        this.marcadorEntrega = marcador;
+      }
+    }
+
+    setupMapaToggles() {
+      document.querySelectorAll('.map-toggle').forEach(toggle => {
+        toggle.addEventListener('click', () => {
+          // Remove a classe active de todos os toggles
+          document.querySelectorAll('.map-toggle').forEach(t => {
+            t.classList.remove('bg-blue-600');
+            t.classList.remove('text-white');
+            t.classList.add('bg-white');
+            t.classList.add('text-gray-700');
+          });
+
+          // Adiciona a classe active ao toggle clicado
+          toggle.classList.add('bg-blue-600');
+          toggle.classList.add('text-white');
+          toggle.classList.remove('bg-white');
+          toggle.classList.remove('text-gray-700');
+
+          const tipo = toggle.dataset.type;
+          let lat, lng;
+
+          // Obtém as coordenadas do endereço selecionado
+          if (tipo === 'residential') {
+            lat = document.querySelector('input[name="endereco_residential_lat"]')?.value;
+            lng = document.querySelector('input[name="endereco_residential_lng"]')?.value;
+          } else {
+            lat = document.querySelector('input[name="endereco_delivery_lat"]')?.value;
+            lng = document.querySelector('input[name="endereco_delivery_lng"]')?.value;
+          }
+
+          // Se tiver coordenadas, atualiza o mapa
+          if (lat && lng) {
+            this.atualizarMapa(lat, lng, tipo);
+          }
+        });
+      });
+    }
+  }
+
+  // Validações do Formulário
+  class ValidacaoFormulario {
+    static formatarCPF(input) {
+      // Remove todos os caracteres não numéricos
+      let valor = input.value.replace(/\D/g, '');
+
+      // Limita a 11 dígitos
+      valor = valor.substring(0, 11);
+
+      // Aplica a formatação
+      if (valor.length > 3) {
+        valor = valor.replace(/(\d{3})(\d)/, '$1.$2');
+      }
+      if (valor.length > 7) {
+        valor = valor.replace(/(\d{3})(\d)/, '$1.$2');
+      }
+      if (valor.length > 11) {
+        valor = valor.replace(/(\d{3})(\d{1,2})$/, '$1-$2');
+      }
+
+      // Atualiza o valor do input
+      input.value = valor;
+    }
+
+    static formatarData(input) {
+      // Remove caracteres não numéricos
+      let valor = input.value.replace(/\D/g, '');
+
+      // Limita a 8 dígitos (DDMMAAAA)
+      valor = valor.substring(0, 8);
+
+      // Aplica a formatação
+      if (valor.length > 4) {
+        valor = valor.replace(/(\d{2})(\d{2})(\d{4})/, '$1/$2/$3');
+      } else if (valor.length > 2) {
+        valor = valor.replace(/(\d{2})(\d{2})/, '$1/$2/');
+      }
+
+      // Atualiza o valor do input
+      input.value = valor;
+    }
+  }
+
+  // Novo sistema de validação
+  class ValidadorFormulario {
+    constructor(formSelector) {
+      this.form = document.querySelector(formSelector);
+      this.inicializar();
+    }
+
+    inicializar() {
+      // Adicionar listener para validar no submit
+      if (this.form) {
+        this.form.addEventListener('submit', this.validarFormulario.bind(this));
+
+        // Adicionar listeners para remover mensagens de erro ao editar campos
+        const inputs = this.form.querySelectorAll('input, select, textarea');
+        inputs.forEach(input => {
+          input.addEventListener('input', () => this.limparErro(input));
+          input.addEventListener('change', () => this.limparErro(input));
+        });
+      }
+    }
+
+    validarFormulario(event) {
+      event.preventDefault();
+
+      let formularioValido = true;
+
+      // Validar dados do proprietário
+      formularioValido = this.validarCamposDoProprietario() && formularioValido;
+
+      // Validar pets
+      formularioValido = this.validarCamposDePets() && formularioValido;
+
+      // Atualizar o contador de pets
+      const petCount = document.querySelectorAll('.pet-form').length;
+      document.getElementById('pet_count').value = petCount;
+
+      // Validar telefone com código internacional usando a instância global
+      const phoneElement = document.querySelector("#contactNumber");
+      if (phoneElement && phoneElement.value.trim()) {
+        if (window.phoneInputInstance && !window.phoneInputInstance.isValidNumber()) {
+          this.mostrarErro(phoneElement, "{{ t_ui('validations', 'invalid_phone', '', current_lang) or 'Por favor, insira um número de telefone válido' }}");
+          formularioValido = false;
+        } else if (window.phoneInputInstance) {
+          document.getElementById('fullPhoneWithCode').value = window.phoneInputInstance.getNumber();
+        }
+      }
+
+      // Se há erros, rolar até o primeiro erro
+      if (!formularioValido) {
+        this.scrollToFirstError();
+      }
+
+      // Enviar o formulário se estiver válido
+      if (formularioValido) {
+        this.form.submit();
+      }
+    }
+
+    validarCamposDoProprietario() {
+      let valido = true;
+
+      // Nome completo
+      const nomeCompleto = document.getElementById('fullName');
+      if (!this.validarCampoObrigatorio(nomeCompleto)) {
+        valido = false;
+      }
+
+      // Email
+      const email = document.getElementById('email');
+      if (!this.validarEmail(email)) {
+        valido = false;
+      }
+
+      // Telefone (já validado pelo intlTelInput)
+
+      // Validar se o radiobutton "Possui CPF?" foi selecionado
+      const radioHasCpf = document.querySelector('input[name="hasCpf"]');
+      if (!radioHasCpf || !radioHasCpf.value) {
+        // Mostrar erro se nenhuma opção foi selecionada
+        const radioGroup = document.querySelector('div[data-name="hasCpf"]');
+        if (radioGroup) {
+          const errorDiv = radioGroup.nextElementSibling;
+          if (errorDiv && errorDiv.classList.contains('error-message')) {
+            errorDiv.textContent = validationMessages.required_field;
+            errorDiv.classList.remove('hidden');
+            valido = false;
+          }
+        }
+      } else {
+        // CPF ou Passaporte (dependendo da opção selecionada)
+        const temCPF = radioHasCpf.value === 'yes';
+
+        if (temCPF) {
+          // Só valida o CPF se o campo estiver visível
+          if (!document.getElementById('cpf-group').classList.contains('hidden')) {
+            const cpf = document.getElementById('cpf');
+            if (!this.validarCPF(cpf)) {
+              valido = false;
+            }
+          }
+        } else {
+          // Só valida o passaporte se o campo estiver visível
+          if (!document.getElementById('passport-group').classList.contains('hidden')) {
+            const passport = document.getElementById('passportNumber');
+            if (!this.validarCampoObrigatorio(passport)) {
+              valido = false;
+            }
+          }
+        }
+      }
+
+      // Endereço residencial
+      const enderecoResidencial = document.getElementById('residentialAddress');
+      if (!this.validarCampoObrigatorio(enderecoResidencial)) {
+        valido = false;
+      }
+
+      // Se endereço de entrega está visível, validar
+      const enderecoEntrega = document.getElementById('deliveryAddress');
+      if (enderecoEntrega && !document.getElementById('deliveryAddress-group').classList.contains('hidden')) {
+        if (!this.validarCampoObrigatorio(enderecoEntrega)) {
+          valido = false;
+        }
+      }
+
+      // Como você conheceu (howDidYouKnow)
+      const comoConheceu = document.getElementById('howDidYouKnow');
+      if (comoConheceu && !this.validarCampoObrigatorio(comoConheceu)) {
+        valido = false;
+      }
+
+      // Se tem necessidades especiais, validar detalhes
+      const temNecessidadesEspeciais = document.querySelector('input[name="hasSpecialNeeds"]')?.value === 'yes';
+      if (temNecessidadesEspeciais) {
+        const detalhesNecessidades = document.getElementById('specialNeedsDetails');
+        if (!this.validarCampoObrigatorio(detalhesNecessidades)) {
+          valido = false;
+        }
+      }
+
+      return valido;
+    }
+
+    validarCamposDePets() {
+      let valido = true;
+
+      // Obter todos os formulários de pet
+      const petForms = document.querySelectorAll('.pet-form');
+
+      petForms.forEach((petForm, index) => {
+        // Nome do pet
+        const nomePet = petForm.querySelector(`input[name="pets[${index}][name]"]`);
+        if (!this.validarCampoObrigatorio(nomePet)) {
+          valido = false;
+        }
+
+        // Espécie
+        const especiePet = petForm.querySelector(`select[name="pets[${index}][species]"]`);
+        if (!this.validarCampoObrigatorio(especiePet)) {
+          valido = false;
+        }
+
+        // Raça
+        const racaPet = petForm.querySelector(`input[name="pets[${index}][breed]"]`);
+        if (!this.validarCampoObrigatorio(racaPet)) {
+          valido = false;
+        }
+
+        // Gênero
+        const generoPet = petForm.querySelector(`select[name="pets[${index}][gender]"]`);
+        if (!this.validarCampoObrigatorio(generoPet)) {
+          valido = false;
+        }
+
+        // Data de nascimento
+        const dataNascimentoPet = petForm.querySelector(`input[name="pets[${index}][birth_date]"]`);
+        if (!this.validarData(dataNascimentoPet)) {
+          valido = false;
+        }
+
+        // Peso
+        const pesoPet = petForm.querySelector(`input[name="pets[${index}][weight]"]`);
+        if (pesoPet && pesoPet.value.trim() !== '') {
+          if (!this.validarPeso(pesoPet)) {
+            valido = false;
+          }
+        }
+
+        // Microchip é opcional, não precisa validar
+
+        // Foto do pet - opcional por enquanto
+      });
+
+      return valido;
+    }
+
+    validarCampoObrigatorio(campo) {
+      if (!campo) return true; // Se o campo não existe, consideramos válido
+
+      if (!campo.value || campo.value.trim() === '') {
+        this.mostrarErro(campo, validationMessages.required_field);
+        return false;
+      }
+
+      return true;
+    }
+
+    validarEmail(campo) {
+      if (!campo) return true;
+
+      if (!this.validarCampoObrigatorio(campo)) {
+        return false;
+      }
+
+      const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!regex.test(campo.value)) {
+        this.mostrarErro(campo, validationMessages.invalid_email);
+        return false;
+      }
+
+      return true;
+    }
+
+    validarCPF(campo) {
+      if (!campo) return true;
+
+      if (!this.validarCampoObrigatorio(campo)) {
+        return false;
+      }
+
+      // Extrair apenas os números do CPF
+      const cpf = campo.value.replace(/\D/g, '');
+
+      // Verificar se o CPF tem 11 dígitos
+      if (cpf.length !== 11) {
+        this.mostrarErro(campo, validationMessages.invalid_cpf);
+        return false;
+      }
+
+      // Verificar se todos os dígitos são iguais
+      if (/^(\d)\1+$/.test(cpf)) {
+        this.mostrarErro(campo, validationMessages.invalid_cpf);
+        return false;
+      }
+
+      // Validação do dígito verificador
+      let soma = 0;
+      let resto;
+
+      for (let i = 1; i <= 9; i++) {
+        soma = soma + parseInt(cpf.substring(i - 1, i)) * (11 - i);
+      }
+
+      resto = (soma * 10) % 11;
+
+      if ((resto === 10) || (resto === 11)) {
+        resto = 0;
+      }
+
+      if (resto !== parseInt(cpf.substring(9, 10))) {
+        this.mostrarErro(campo, validationMessages.invalid_cpf);
+        return false;
+      }
+
+      soma = 0;
+
+      for (let i = 1; i <= 10; i++) {
+        soma = soma + parseInt(cpf.substring(i - 1, i)) * (12 - i);
+      }
+
+      resto = (soma * 10) % 11;
+
+      if ((resto === 10) || (resto === 11)) {
+        resto = 0;
+      }
+
+      if (resto !== parseInt(cpf.substring(10, 11))) {
+        this.mostrarErro(campo, validationMessages.invalid_cpf);
+        return false;
+      }
+
+      return true;
+    }
+
+    validarData(campo) {
+      if (!campo) return true;
+
+      if (!this.validarCampoObrigatorio(campo)) {
+        return false;
+      }
+
+      // Verifica formato DD/MM/AAAA
+      const regex = /^(\d{2})\/(\d{2})\/(\d{4})$/;
+      const match = campo.value.match(regex);
+
+      if (!match) {
+        this.mostrarErro(campo, validationMessages.invalid_date_format);
+        return false;
+      }
+
+      const dia = parseInt(match[1], 10);
+      const mes = parseInt(match[2], 10);
+      const ano = parseInt(match[3], 10);
+
+      // Verificar validade da data
+      if (mes < 1 || mes > 12) {
+        this.mostrarErro(campo, validationMessages.invalid_date);
+        return false;
+      }
+
+      const diasNoMes = [0, 31, this.isAnoBissexto(ano) ? 29 : 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+
+      if (dia < 1 || dia > diasNoMes[mes]) {
+        this.mostrarErro(campo, validationMessages.invalid_date);
+        return false;
+      }
+
+      // Verificar se a data não é no futuro
+      const dataAtual = new Date();
+      const dataInformada = new Date(ano, mes - 1, dia);
+
+      if (dataInformada > dataAtual) {
+        this.mostrarErro(campo, validationMessages.future_date);
+        return false;
+      }
+
+      return true;
+    }
+
+    isAnoBissexto(ano) {
+      return ((ano % 4 === 0) && (ano % 100 !== 0)) || (ano % 400 === 0);
+    }
+
+    validarPeso(campo) {
+      if (!campo) return true;
+
+      if (!this.validarCampoObrigatorio(campo)) {
+        return false;
+      }
+
+      // Remover vírgulas e substituir por pontos
+      const peso = campo.value.replace(',', '.');
+
+      // Verificar se é um número
+      if (isNaN(peso)) {
+        this.mostrarErro(campo, validationMessages.invalid_weight);
+        return false;
+      }
+
+      // Verificar se está no intervalo aceitável
+      const pesoNum = parseFloat(peso);
+      if (pesoNum <= 0 || pesoNum > 100) {
+        this.mostrarErro(campo, validationMessages.weight_range);
+        return false;
+      }
+
+      return true;
+    }
+
+    mostrarErro(campo, mensagem) {
+      // Adicionar borda vermelha
+      campo.classList.add('border-red-500');
+      campo.classList.remove('border-green-500');
+
+      // Encontrar o elemento de mensagem de erro correspondente
+      const errorDiv = campo.closest('div').nextElementSibling;
+      if (errorDiv && errorDiv.classList.contains('error-message')) {
+        errorDiv.textContent = mensagem;
+        errorDiv.classList.remove('hidden');
+      }
+    }
+
+    limparErro(campo) {
+      // Remover borda vermelha
+      campo.classList.remove('border-red-500');
+
+      // Encontrar o elemento de mensagem de erro correspondente
+      const errorDiv = campo.closest('div').nextElementSibling;
+      if (errorDiv && errorDiv.classList.contains('error-message')) {
+        errorDiv.classList.add('hidden');
+        errorDiv.textContent = '';
+      }
+
+      // Tratamento especial para o campo de telefone
+      if (campo.id === 'contactNumber' && window.phoneInputInstance) {
+        // Adicionar uma classe verde se o número for válido
+        if (window.phoneInputInstance.isValidNumber()) {
+          campo.classList.add('border-green-500');
+        }
+      }
+    }
+
+    scrollToFirstError() {
+      // Encontrar o primeiro elemento de erro visível
+      const firstError = document.querySelector('.error-message:not(.hidden)');
+      if (firstError) {
+        // Scroll suave até o erro, considerando um espaço no topo para melhor visualização
+        const yOffset = -100; // 100px acima do elemento para melhor visualização
+        const y = firstError.getBoundingClientRect().top + window.pageYOffset + yOffset;
+
+        window.scrollTo({
+          top: y,
+          behavior: 'smooth'
+        });
+
+        // Opcional: destacar visualmente o campo com erro
+        const relatedField = firstError.previousElementSibling.querySelector('input, select, textarea') ||
+          firstError.previousElementSibling;
+        if (relatedField) {
+          // Adiciona uma classe para destaque momentâneo
+          relatedField.classList.add('error-highlight');
+
+          // Remove a classe após um curto período
+          setTimeout(() => {
+            relatedField.classList.remove('error-highlight');
+          }, 1500);
+        }
+      }
+    }
+  }
+
+  // Função global para formatar CPF
+  function formatarCPF(input) {
+    ValidacaoFormulario.formatarCPF(input);
+  }
+
+  // Função global para formatar Microchip
+  function formatMicrochip(input) {
+    let valor = input.value.replace(/\D/g, '');
+    valor = valor.substring(0, 15); // Limite de 15 dígitos numéricos
+    let valorFormatado = '';
+    for (let i = 0; i < valor.length; i++) {
+      if (i > 0 && i % 3 === 0) {
+        valorFormatado += '.';
+      }
+      valorFormatado += valor[i];
+    }
+    input.value = valorFormatado;
+    // Atualiza o campo hidden correspondente
+    const idx = input.getAttribute('data-microchip-index');
+    const hidden = document.querySelector(`input.microchip-hidden[data-microchip-index="${idx}"]`);
+    if (hidden) {
+      hidden.value = valor;
+    }
+  }
+
+  // Função global para formatar Passport
+  function formatPassport(input) {
+    let valor = input.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
+    valor = valor.substring(0, 9);
+    input.value = valor;
+  }
+
+  // Função global para remover pets
+  function removerPet(botao) {
+    // Verifica se existe mais de um pet antes de remover
+    const pets = document.querySelectorAll('.pet-form');
+    if (pets.length <= 1) {
+      alert("Deve haver pelo menos um pet cadastrado.");
+      return;
+    }
+
+    // Encontra o pet-form pai do botão clicado
+    const petForm = botao.closest('.pet-form');
+    if (petForm) {
+      // Remove o pet do DOM
+      petForm.remove();
+
+      // Atualiza os números dos pets restantes
+      if (window.petManager) {
+        // Atualiza o contador para refletir a remoção
+        window.petManager.petCount = document.querySelectorAll('.pet-form').length;
+        window.petManager.atualizarNumerosPets();
+      }
+    }
+  }
+
+  // Função para ativar botões de rádio
+  function ativarRadioButton(button, name, value) {
+    // Remove a classe active de todos os botões do mesmo grupo
+    document.querySelectorAll(`.radio-button[data-name="${name}"]`).forEach(btn => {
+      btn.classList.remove('bg-blue-500');
+      btn.classList.remove('text-white');
+      btn.classList.add('text-gray-700');
+
+      // Remove qualquer background que tenha sido adicionado por hover
+      if (btn.classList.contains('toggle-btn')) {
+        btn.style.backgroundColor = '';
+      }
+    });
+
+    // Adiciona a classe active ao botão clicado
+    button.classList.add('bg-blue-500');
+    button.classList.add('text-white');
+    button.classList.remove('text-gray-700');
+
+    // Remove hover de fundo branco para o botão selecionado
+    if (button.classList.contains('toggle-btn')) {
+      button.style.backgroundColor = '#3b82f6'; // Cor blue-500 do Tailwind
+      button.style.pointerEvents = 'none';
+
+      // Reativa os pointer events para os outros botões
+      setTimeout(() => {
+        button.style.pointerEvents = 'auto';
+
+        // Configura os outros botões para terem hover
+        document.querySelectorAll(`.toggle-btn[data-name="${name}"]:not(.bg-blue-500)`).forEach(btn => {
+          btn.style.backgroundColor = '';
+        });
+      }, 200);
+    }
+
+    // Atualiza o campo oculto correspondente
+    let hiddenInput = document.querySelector(`input[name="${name}"]`);
+    if (!hiddenInput) {
+      hiddenInput = document.createElement('input');
+      hiddenInput.type = 'hidden';
+      hiddenInput.name = name;
+      document.querySelector('#ownerForm').appendChild(hiddenInput);
+    }
+    hiddenInput.value = value;
+
+    // Move o pill indicator para os grupos personalizados
+    const indicator = document.getElementById(`${name}-indicator`);
+    if (indicator) {
+      indicator.style.opacity = "1";
+      if (value === "yes") {
+        indicator.style.left = "0.5px";
+        indicator.style.right = "auto";
+        indicator.style.top = "0.5px";
+        indicator.style.bottom = "0.5px";
+      } else {
+        indicator.style.left = "auto";
+        indicator.style.right = "0.5px";
+        indicator.style.top = "0.5px";
+        indicator.style.bottom = "0.5px";
+      }
+    }
+
+    // Limpar qualquer mensagem de erro ao selecionar um radiobutton
+    if (name === 'hasCpf') {
+      const radioGroup = document.querySelector('div[data-name="hasCpf"]');
+      if (radioGroup) {
+        const errorDiv = radioGroup.nextElementSibling;
+        if (errorDiv && errorDiv.classList.contains('error-message')) {
+          errorDiv.classList.add('hidden');
+        }
+      }
+    }
+  }
+
+  // Inicialização para o Google Places API
+  window.initGooglePlaces = function () {
+    DOM.init();
+    // Removido initLanguageSelector pois já está implementado no head
+    window.petManager = new PetManager();
+    window.enderecoManager = new EnderecoManager();
+
+    // Inicializa o validador do formulário
+    window.validadorFormulario = new ValidadorFormulario('#ownerForm');
+
+    // Inicializa os campos padrão para CPF e necessidades especiais
+    document.addEventListener('DOMContentLoaded', function () {
+      // CPF é necessário por padrão, então mostra este campo
+      document.getElementById('cpf-group').classList.remove('hidden');
+      document.getElementById('passport-group').classList.add('hidden');
+
+      // Por padrão, não tem necessidades especiais
+      document.getElementById('specialNeedsDetails-group').classList.add('hidden');
+    });
+  };
+</script>
+
+<!-- Script para inicializar o upload de foto do pet -->
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    // A inicialização do upload de foto deve acontecer depois que o DOM estiver carregado
+    console.log('DOM carregado, inicializando upload de foto...');
+    inicializarUploadFoto();
+  });
+</script>
+
+<!-- Script para inicializar o telefone internacional -->
+<script>
+  // Armazenar a instância do intlTelInput globalmente para reutilização
+  window.phoneInputInstance = null;
+
+  document.addEventListener('DOMContentLoaded', function () {
+    // Inicializar o campo de telefone
+    const input = document.querySelector("#contactNumber");
+
+    // Primeiro, garanta que intl-tel-input está carregado corretamente
+    if (!window.intlTelInput) {
+      console.error("intlTelInput não está disponível. Verifique se o script está carregado corretamente.");
+      return;
+    }
+
+    // Inicializar com as opções necessárias
+    window.phoneInputInstance = window.intlTelInput(input, {
+      utilsScript: "https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/18.2.1/js/utils.js",
+      initialCountry: "auto",
+      geoIpLookup: function (callback) {
+        const userLang = navigator.language || navigator.userLanguage;
+        const userCountry = userLang.split('-')[1] ? userLang.split('-')[1].toLowerCase() : 'br';
+        callback(userCountry);
+      },
+      preferredCountries: ["br", "us", "gb", "es", "fr", "de", "pt"],
+      separateDialCode: true,
+      autoPlaceholder: "aggressive",
+      allowDropdown: true,
+      dropdownContainer: document.body, // Garante que o dropdown não fique cortado
+      customContainer: "custom-intl-tel-input",
+      // Ativa o search embutido do plugin
+      search: true
+    });
+    // Força o foco no search ao abrir o dropdown
+    input.addEventListener('open:countrydropdown', function () {
+      setTimeout(() => {
+        const searchInput = document.querySelector('.iti__search-input');
+        if (searchInput) searchInput.focus();
+        // Ajusta a largura do dropdown para igualar ao input
+        const dropdown = document.querySelector('.iti__country-list');
+        if (dropdown && input) {
+          const inputRect = input.getBoundingClientRect();
+          dropdown.style.width = inputRect.width + 'px';
+        }
+      }, 50);
+    });
+
+    // Formatação manual diretamente no input
+    input.addEventListener('input', formatarTelefone);
+
+    // Também formatar quando mudar o país
+    input.addEventListener('countrychange', function () {
+      setTimeout(formatarTelefone, 50);
+    });
+
+    // Função principal de formatação
+    function formatarTelefone() {
+      if (!input.value) return;
+
+      // Obter informações do país selecionado
+      const countryData = window.phoneInputInstance.getSelectedCountryData();
+      if (!countryData) return;
+
+      // Limpar o valor para ter apenas números
+      const numeroLimpo = input.value.replace(/\D/g, '');
+      if (!numeroLimpo) return;
+
+      // Definir limite máximo de dígitos com base no país
+      let maxDigitos = 15; // Limite padrão global
+      const iso2 = countryData.iso2.toLowerCase();
+
+      // Ajustar limite por país
+      if (iso2 === 'br') {
+        maxDigitos = 11; // Brasil: máximo para celular com 9 dígitos
+      } else if (iso2 === 'us' || iso2 === 'ca') {
+        maxDigitos = 10; // EUA/Canadá: padrão de 10 dígitos
+      } else if (iso2 === 'gb') {
+        maxDigitos = 11; // Reino Unido: até 11 dígitos
+      } else if (iso2 === 'es' || iso2 === 'pt') {
+        maxDigitos = 9; // Espanha/Portugal: geralmente 9 dígitos
+      } else if (iso2 === 'de') {
+        maxDigitos = 11; // Alemanha: varia, mas limitando a 11
+      }
+
+      // Aplicar o limite de dígitos
+      const numeroLimitado = numeroLimpo.substring(0, maxDigitos);
+
+      // Se o usuário tentou digitar mais que o limite, atualizamos para mostrar 
+      // o feedback visual sem processar os dígitos extras
+      if (numeroLimitado.length < numeroLimpo.length) {
+        // Mostrar feedback visual quando o limite é atingido
+        input.classList.add('error-highlight');
+        setTimeout(() => {
+          input.classList.remove('error-highlight');
+        }, 800);
+      }
+
+      // Formatar baseado no país
+      let numeroFormatado = numeroLimitado;
+
+      // Preservar posição do cursor
+      const cursorPos = input.selectionStart;
+      const digitosAntesCursor = input.value.substring(0, cursorPos).replace(/\D/g, '').length;
+
+      // Formatar com base no país
+      if (iso2 === 'br') {
+        // Formato brasileiro: (XX) XXXXX-XXXX ou (XX) XXXX-XXXX
+        if (numeroLimitado.length <= 10) {
+          // Formato para telefone fixo com 8 dígitos: (XX) XXXX-XXXX
+          if (numeroLimitado.length > 2) {
+            numeroFormatado = '(' + numeroLimitado.substring(0, 2) + ') ' + numeroLimitado.substring(2);
+          }
+          if (numeroLimitado.length > 6) {
+            numeroFormatado = numeroFormatado.substring(0, 9) + '-' + numeroFormatado.substring(9);
+          }
+        } else {
+          // Formato para celular com 9 dígitos: (XX) XXXXX-XXXX
+          if (numeroLimitado.length > 2) {
+            numeroFormatado = '(' + numeroLimitado.substring(0, 2) + ') ' + numeroLimitado.substring(2);
+          }
+          if (numeroLimitado.length > 7) {
+            numeroFormatado = numeroFormatado.substring(0, 10) + '-' + numeroFormatado.substring(10);
+          }
+        }
+      } else if (iso2 === 'us' || iso2 === 'ca') {
+        // Formato norte-americano: (XXX) XXX-XXXX
+        if (numeroLimitado.length > 3) {
+          numeroFormatado = '(' + numeroLimitado.substring(0, 3) + ') ' + numeroLimitado.substring(3);
+        }
+        if (numeroLimitado.length > 6) {
+          numeroFormatado = numeroFormatado.substring(0, 9) + '-' + numeroFormatado.substring(9);
+        }
+      } else if (iso2 === 'gb') {
+        // Reino Unido: Vários formatos, simplificando para XX XXXX XXXX
+        if (numeroLimitado.length > 2) {
+          numeroFormatado = numeroLimitado.substring(0, 2) + ' ' + numeroLimitado.substring(2);
+        }
+        if (numeroLimitado.length > 6) {
+          numeroFormatado = numeroFormatado.substring(0, 7) + ' ' + numeroFormatado.substring(7);
+        }
+      } else {
+        // Formato genérico para outros países: XXXX XXX XXX
+        if (numeroLimitado.length > 4) {
+          numeroFormatado = numeroLimitado.substring(0, 4) + ' ' + numeroLimitado.substring(4);
+        }
+        if (numeroLimitado.length > 7) {
+          numeroFormatado = numeroFormatado.substring(0, 8) + ' ' + numeroFormatado.substring(8);
+        }
+      }
+
+      // Atualizar o valor só se for diferente para evitar loop
+      if (input.value !== numeroFormatado) {
+        input.value = numeroFormatado;
+
+        // Recalcular a posição do cursor
+        let novaPosicaoCursor = 0;
+        let digitosContados = 0;
+
+        for (let i = 0; i < numeroFormatado.length && digitosContados < digitosAntesCursor; i++) {
+          if (/\d/.test(numeroFormatado[i])) {
+            digitosContados++;
+          }
+          novaPosicaoCursor = i + 1;
+        }
+
+        // Definir a nova posição do cursor
+        setTimeout(() => {
+          input.setSelectionRange(novaPosicaoCursor, novaPosicaoCursor);
+        }, 0);
+      }
+
+      // Atualizar o campo oculto com o número completo (incluindo código do país)
+      if (window.phoneInputInstance.isValidNumber()) {
+        document.getElementById('fullPhoneWithCode').value = window.phoneInputInstance.getNumber();
+        input.classList.remove('border-red-500');
+        input.classList.add('border-green-500');
+
+        const errorDiv = input.closest('div').nextElementSibling;
+        if (errorDiv && errorDiv.classList.contains('error-message')) {
+          errorDiv.classList.add('hidden');
+        }
+      } else {
+        input.classList.remove('border-green-500');
+      }
+    }
+
+    // Limpar feedback de erro ao focar
+    input.addEventListener('focus', function () {
+      this.classList.remove('border-red-500');
+      const errorDiv = this.closest('div').nextElementSibling;
+      if (errorDiv && errorDiv.classList.contains('error-message')) {
+        errorDiv.classList.add('hidden');
+      }
+    });
+
+    // Lidar com colagem (paste)
+    input.addEventListener('paste', function () {
+      setTimeout(formatarTelefone, 100);
+    });
+  });
+</script>
+
+<script>
+  // Handle address autofill from browser
+  function handleAddressAutofill(nativeField, targetFieldId) {
+    const targetField = document.getElementById(targetFieldId);
+
+    // Copy value from autofilled field to visible field
+    if (nativeField.value && nativeField.value.trim() !== '') {
+      targetField.value = nativeField.value;
+
+      // Automatically validate the address after autofill without requiring button click
+      setTimeout(() => validateManualAddress(targetFieldId, true), 300);
+    }
+  }
+
+  // Debounce function to prevent excessive API calls
+  function debounce(func, wait) {
+    let timeout;
+    return function (...args) {
+      clearTimeout(timeout);
+      timeout = setTimeout(() => func.apply(this, args), wait);
+    };
+  }
+
+  // Validate manually entered or autofilled address
+  function validateManualAddress(addressFieldId, isAutomatic = false) {
+    const addressField = document.getElementById(addressFieldId);
+    const validateBtn = addressFieldId === 'residentialAddress' ?
+      document.getElementById('validateAddressBtn') :
+      document.getElementById('validateDeliveryAddressBtn');
+
+    // Only proceed if there's an address entered
+    if (!addressField.value || addressField.value.trim() === '') {
+      return;
+    }
+
+    // Show loading indicator 
+    if (validateBtn) {
+      validateBtn.innerHTML = '<svg class="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>';
+      validateBtn.style.opacity = '1';
+    }
+
+    // Use Google's Geocoding API to validate and get coordinates
+    const geocoder = new google.maps.Geocoder();
+    geocoder.geocode({ 'address': addressField.value }, function (results, status) {
+      if (status === google.maps.GeocoderStatus.OK && results[0]) {
+        // Get the first result
+        const place = results[0];
+
+        // Update the address field with formatted address
+        addressField.value = place.formatted_address;
+
+        // Manually trigger the address update function
+        if (addressFieldId === 'residentialAddress') {
+          window.enderecoManager.atualizarEndereco(place, 'residential');
+        } else if (addressFieldId === 'deliveryAddress') {
+          window.enderecoManager.atualizarEndereco(place, 'delivery');
+        }
+
+        // Reset button and hide it if validation was automatic
+        if (validateBtn) {
+          validateBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>';
+          if (isAutomatic) {
+            setTimeout(() => {
+              validateBtn.style.opacity = '0';
+            }, 1000);
+          }
+        }
+      } else {
+        // Address validation failed
+        if (validateBtn) {
+          validateBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>';
+        }
+
+        // Only show error for manual validation, skip for automatic
+        if (!isAutomatic) {
+          addressField.classList.add('border-red-500');
+          const errorDiv = addressField.closest('div').nextElementSibling;
+          if (errorDiv && errorDiv.classList.contains('error-message')) {
+            errorDiv.textContent = "Não foi possível validar este endereço. Por favor, verifique e tente novamente.";
+            errorDiv.classList.remove('hidden');
+          }
+        }
+
+        setTimeout(() => {
+          if (validateBtn) {
+            validateBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>';
+            if (isAutomatic) {
+              validateBtn.style.opacity = '0';
+            }
+          }
+        }, 2000);
+      }
+    });
+  }
+</script>
+<script
+  src="https://maps.googleapis.com/maps/api/js?key={{ google_maps_api_key }}&libraries=places&callback=initGooglePlaces"
+  async defer></script>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    const passwordInput = document.getElementById('password');
+    const togglePassword = document.getElementById('togglePassword');
+    const eyeIcon = document.getElementById('eyeIcon');
+    let passwordVisible = false;
+    if (togglePassword && passwordInput && eyeIcon) {
+      togglePassword.addEventListener('click', function () {
+        passwordVisible = !passwordVisible;
+        passwordInput.type = passwordVisible ? 'text' : 'password';
+        // Toggle icon
+        if (passwordVisible) {
+          eyeIcon.innerHTML = `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.477 0-8.268-2.943-9.542-7a9.956 9.956 0 012.042-3.338m3.087-2.685A9.956 9.956 0 0112 5c4.477 0 8.268 2.943 9.542 7-1.274 4.057-5.065 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3l18 18" />`;
+          togglePassword.setAttribute('aria-label', 'Ocultar senha');
+        } else {
+          eyeIcon.innerHTML = `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />\n<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.477 0 8.268 2.943 9.542 7-1.274 4.057-5.065 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />`;
+          togglePassword.setAttribute('aria-label', 'Mostrar senha');
+        }
+      });
+    }
+  });
+</script>
+{% endblock %}

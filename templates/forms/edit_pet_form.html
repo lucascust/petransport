@@ -1,0 +1,410 @@
+<!-- Modal de Edição do Pet -->
+<div id="modal-editar-pet"
+  class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center p-4">
+  <div class="bg-white rounded-lg shadow-xl max-w-3xl w-full max-h-[90vh] overflow-hidden flex flex-col">
+    <div
+      class="px-4 py-3 border-b border-gray-200 flex justify-between items-center bg-gradient-to-r from-green-600 to-green-500">
+      <h2 class="text-lg font-semibold text-white flex items-center">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 512 512" fill="currentColor"
+          stroke="currentColor" stroke-width="0">
+          <path
+            d="M442.8 361.82c-8.8-25.1-29.31-37.82-49.11-50.12-17.23-10.71-33.5-20.83-44.14-39-29.33-50.33-45.44-80.7-93.49-80.7s-64.21 30.38-93.61 80.69c-10.65 18.21-27 28.35-44.25 39.08-19.8 12.31-40.27 25-49.1 50.05a78.06 78.06 0 0 0-5.1 28.29C64 430.85 96.45 464 132.4 464s83.31-18.13 123.76-18.13S343.31 464 379.71 464 448 430.85 448 390.11a78.3 78.3 0 0 0-5.2-28.29z">
+          </path>
+          <ellipse cx="72" cy="216" rx="56" ry="72"></ellipse>
+          <ellipse cx="184" cy="120" rx="56" ry="72"></ellipse>
+          <ellipse cx="328" cy="120" rx="56" ry="72"></ellipse>
+          <ellipse cx="440" cy="216" rx="56" ry="72"></ellipse>
+        </svg>
+        Editar Informações do Pet
+      </h2>
+      <button onclick="fecharModal('modal-editar-pet')" class="text-white hover:text-gray-200">
+        <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </button>
+    </div>
+    <!-- Pet Edit Form -->
+    <div class="bg-white rounded-lg shadow-md overflow-hidden">
+      <div class="p-4 sm:p-6">
+        <form id="form-editar-pet" method="POST" enctype="multipart/form-data">
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <!-- Nome do Pet -->
+            <div>
+              <label for="pet_name" class="block text-sm font-medium text-gray-700 mb-1">Nome do Pet</label>
+              <div class="relative">
+                <input type="text" id="pet_name" name="name"
+                  class="block w-full rounded-lg border border-input bg-background px-3 py-2 ps-9 text-sm text-foreground shadow-sm shadow-black/5 transition-shadow placeholder:text-muted-foreground/70 focus-visible:border-ring focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/20 disabled:cursor-not-allowed disabled:opacity-50">
+                <div
+                  class="pointer-events-none absolute inset-y-0 start-0 flex items-center justify-center ps-3 text-muted-foreground/80 peer-disabled:opacity-50">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                    class="lucide lucide-tag-icon lucide-tag">
+                    <path
+                      d="M12.586 2.586A2 2 0 0 0 11.172 2H4a2 2 0 0 0-2 2v7.172a2 2 0 0 0 .586 1.414l8.704 8.704a2.426 2.426 0 0 0 3.42 0l6.58-6.58a2.426 2.426 0 0 0 0-3.42z" />
+                    <circle cx="7.5" cy="7.5" r=".5" fill="currentColor" />
+                  </svg>
+                </div>
+              </div>
+              <div class="error-message text-red-600 text-xs mt-1 hidden"></div>
+            </div>
+
+            <!-- Espécie -->
+            <div>
+              <label for="species" class="block text-sm font-medium text-gray-700 mb-1">Espécie</label>
+              <div class="relative" x-data="{ open: false, selected: '' }">
+                <button type="button" @click="open = !open" @keydown.escape.window="open = false"
+                  @click.outside="open = false"
+                  class="flex w-full items-center justify-between rounded-lg border border-gray-300 bg-white px-3 py-2 ps-9 text-sm shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  aria-haspopup="listbox" aria-expanded="false">
+                  <span x-text="selected || 'Selecione a espécie'"
+                    :class="selected ? 'block truncate text-gray-700' : 'block truncate text-gray-400'"></span>
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                    class="-me-1 ms-2 opacity-60">
+                    <polyline points="6 9 12 15 18 9"></polyline>
+                  </svg>
+                </button>
+
+                <div x-show="open" class="absolute z-10 mt-1 w-full rounded-lg bg-white shadow-lg"
+                  style="display: none;">
+                  <ul class="py-1 text-sm max-h-60 overflow-auto" role="listbox">
+                    <li class="cursor-pointer px-3 py-2 hover:bg-blue-50" role="option"
+                      @click="selected = 'Canino'; open = false; document.getElementById('species').value = 'canine';">
+                      Canino
+                    </li>
+                    <li class="cursor-pointer px-3 py-2 hover:bg-blue-50" role="option"
+                      @click="selected = 'Felino'; open = false; document.getElementById('species').value = 'feline';">
+                      Felino
+                    </li>
+                    <li class="cursor-pointer px-3 py-2 hover:bg-blue-50" role="option"
+                      @click="selected = 'Pássaro'; open = false; document.getElementById('species').value = 'bird';">
+                      Pássaro
+                    </li>
+                    <li class="cursor-pointer px-3 py-2 hover:bg-blue-50" role="option"
+                      @click="selected = 'Roedor'; open = false; document.getElementById('species').value = 'rodent';">
+                      Roedor
+                    </li>
+                    <li class="cursor-pointer px-3 py-2 hover:bg-blue-50" role="option"
+                      @click="selected = 'Outros'; open = false; document.getElementById('species').value = 'other';">
+                      Outros
+                    </li>
+                  </ul>
+                </div>
+
+                <div
+                  class="pointer-events-none absolute inset-y-0 start-0 flex items-center justify-center ps-3 text-muted-foreground/80">
+                  <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 512 512" height="16"
+                    width="16" xmlns="http://www.w3.org/2000/svg">
+                    <path
+                      d="M256 224c-79.41 0-192 122.76-192 200.25 0 34.9 26.81 55.75 71.74 55.75 48.84 0 81.45-25.08 120.26-25.08 38.79 0 71.42 25.08 120.26 25.08 44.93 0 71.74-20.85 71.74-55.75C448 346.76 335.41 224 256 224zm-147.28-12.61c-10.4-34.65-42.44-57.09-71.56-50.13-29.12 6.96-44.29 40.69-33.89 75.34 10.4 34.65 42.44 57.09 71.56 50.13 29.12-6.96 44.29-40.69 33.89-75.34zm84.72-20.78c30.94-8.14 46.42-49.94 34.58-93.36s-46.52-72.01-77.46-63.87-46.42 49.94-34.58 93.36c11.84 43.42 46.53 72.02 77.46 63.87zm281.39-29.34c-29.12-6.96-61.15 15.48-71.56 50.13-10.4 34.65 4.77 68.38 33.89 75.34 29.12 6.96 61.15-15.48 71.56-50.13 10.4-34.65-4.77-68.38-33.89-75.34zm-156.27 29.34c30.94 8.14 65.62-20.45 77.46-63.87 11.84-43.42-3.64-85.21-34.58-93.36s-65.62 20.45-77.46 63.87c-11.84 43.42 3.64 85.22 34.58 93.36z">
+                    </path>
+                  </svg>
+                </div>
+
+                <select id="species" name="species" class="hidden">
+                  <option value="canine">Canino</option>
+                  <option value="feline">Felino</option>
+                  <option value="bird">Pássaro</option>
+                  <option value="rodent">Roedor</option>
+                  <option value="other">Outros</option>
+                </select>
+              </div>
+              <div class="error-message text-red-600 text-xs mt-1 hidden"></div>
+            </div>
+
+            <!-- Raça -->
+            <div>
+              <label for="breed" class="block text-sm font-medium text-gray-700 mb-1">Raça</label>
+              <div class="relative">
+                <input type="text" id="breed" name="breed"
+                  class="block w-full rounded-lg border border-input bg-background px-3 py-2 ps-9 text-sm text-foreground shadow-sm shadow-black/5 transition-shadow placeholder:text-muted-foreground/70 focus-visible:border-ring focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/20 disabled:cursor-not-allowed disabled:opacity-50">
+                <div
+                  class="pointer-events-none absolute inset-y-0 start-0 flex items-center justify-center ps-3 text-muted-foreground/80 peer-disabled:opacity-50">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                    class="lucide lucide-paw-print-icon lucide-paw-print">
+                    <circle cx="11" cy="4" r="2" />
+                    <circle cx="18" cy="8" r="2" />
+                    <circle cx="20" cy="16" r="2" />
+                    <path
+                      d="M9 10a5 5 0 0 1 5 5v3.5a3.5 3.5 0 0 1-6.84 1.045Q6.52 17.48 4.46 16.84A3.5 3.5 0 0 1 5.5 10Z" />
+                  </svg>
+                </div>
+              </div>
+              <div class="error-message text-red-600 text-xs mt-1 hidden"></div>
+            </div>
+
+            <!-- Cor da pelagem -->
+            <div>
+              <label for="fur_color" class="block text-sm font-medium text-gray-700 mb-1">Cor da pelagem</label>
+              <div class="relative">
+                <input type="text" id="fur_color" name="fur_color"
+                  class="block w-full rounded-lg border border-input bg-background px-3 py-2 ps-9 text-sm text-foreground shadow-sm shadow-black/5 transition-shadow placeholder:text-muted-foreground/70 focus-visible:border-ring focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/20 disabled:cursor-not-allowed disabled:opacity-50">
+                <div
+                  class="pointer-events-none absolute inset-y-0 start-0 flex items-center justify-center ps-3 text-muted-foreground/80 peer-disabled:opacity-50">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 781 752" fill="none"
+                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                    class="lucide lucide-droplet-icon">
+                    <path fill="currentColor"
+                      d="M467 479q-2-7 2-13l-3-3-6 1q0-7-5-3-2-3-4-2 4 1 1 4l3 3q-3 1 0 2l-11 2q-3 3 0 2 6 2 0 5-11 5-22 3l-2-2 20-35q8-19 13-38l-1-1q-9 6-18 7 12-96-29-183-21-40-56-67 0 8 5 15 20 60 26 125 7 104-41 197-1-6 2-9l-2-4v-5l-4-1q-2 2 1 4-4 2-1 5 1-4 2-1l-3 5v-3l-6-1 1-4 5-3-5-2 2-2q-2-4-5-6 4-3 4-9 28-63 28-132-2-73-24-142-15-40-39-73-2-5-1-8 89 24 132 108a341 341 0 0 1 34 150q5-6 12-11 2-1 3 3 4 46-15 89 3 1 8-2h7q-2 18-8 35" />
+                    <path fill="currentColor"
+                      d="M444 477q6-3 0-5-3 1 0-2l11-2q-3-1 0-2l-3-3q3-3-1-4 2-1 4 2 5-4 5 3l6-1 3 3q-4 6-2 13l-8 23 1 2q23-31 36-66 19-45 26-91 14-84-27-157-4-7 3-8 86 41 107 135a280 280 0 0 1 3 76h3l12-11h3l-2 37q-5 23-17 42l1 2 17-8v11q-9 42-35 76l1 1q11-3 21-10l3 3-21 39q-15 19-33 34l18-2h5v4q-31 33-75 42l-29 1q-4-3-3-6 54-27 89-75l3-7-27 3-1-2q37-30 52-75l1-6-16 2-10-1v-3q22-25 31-58l-1-2-18 2q16-69-8-134-11-26-29-46l5 40a369 369 0 0 1-100 264q8 0 15-4 3-1 5 2-8 15-19 28l-34 32h23l-1 4q-39 37-91 43l-8-1q-7-6 1-10 54-31 88-84l-29-3-2-2q33-34 51-78zm106-213 2 10q1-6-2-10M330 462q0 6-4 9 3 2 5 6l-2 2 5 2-5 3-1 4 6 1v3l3-5q-1-3-2 1-3-3 1-5-3-2-1-4l4 1v5l2 4q-3 3-2 9l-15 27-54 77q-14 27-25 56-6 6-9-1-2-25 7-48 5-12 11-21 24-34 39-72 32-117-24-223-15-25-38-40 38 108 2 218l-30 70q-18 45-24 94-3 7-8 1-6-25-4-49 4-28 14-54 21-42 35-87 20-71 6-142-10-48-40-84l-12-12q-2-4-1-7 97 18 136 109 29 76 21 158z" />
+                  </svg>
+                </div>
+              </div>
+              <div class="error-message text-red-600 text-xs mt-1 hidden"></div>
+            </div>
+
+            <!-- Sexo -->
+            <div>
+              <label for="gender" class="block text-sm font-medium text-gray-700 mb-1">Sexo</label>
+              <div class="relative" x-data="{ open: false, selected: '' }">
+                <button type="button" @click="open = !open" @keydown.escape.window="open = false"
+                  @click.outside="open = false"
+                  class="flex w-full items-center justify-between rounded-lg border border-gray-300 bg-white px-3 py-2 ps-9 text-sm shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  aria-haspopup="listbox" aria-expanded="false">
+                  <span x-text="selected || 'Selecione o sexo'"
+                    :class="selected ? 'block truncate text-gray-700' : 'block truncate text-gray-400'"></span>
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                    class="-me-1 ms-2 opacity-60">
+                    <polyline points="6 9 12 15 18 9"></polyline>
+                  </svg>
+                </button>
+
+                <div x-show="open" class="absolute z-10 mt-1 w-full rounded-lg bg-white shadow-lg"
+                  style="display: none;">
+                  <ul class="py-1 text-sm max-h-60 overflow-auto" role="listbox">
+                    <li class="cursor-pointer px-3 py-2 hover:bg-blue-50" role="option"
+                      @click="selected = 'Macho'; open = false; document.getElementById('gender').value = 'male';">
+                      Macho
+                    </li>
+                    <li class="cursor-pointer px-3 py-2 hover:bg-blue-50" role="option"
+                      @click="selected = 'Fêmea'; open = false; document.getElementById('gender').value = 'female';">
+                      Fêmea
+                    </li>
+                  </ul>
+                </div>
+
+                <div
+                  class="pointer-events-none absolute inset-y-0 start-0 flex items-center justify-center ps-3 text-muted-foreground/80">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                    aria-hidden="true">
+                    <path d="m14 6 4 4" />
+                    <path d="M17 3h4v4" />
+                    <path d="m21 3-7.75 7.75" />
+                    <circle cx="9" cy="15" r="6" />
+                  </svg>
+                </div>
+
+                <select id="gender" name="gender" class="hidden">
+                  <option value="male">Macho</option>
+                  <option value="female">Fêmea</option>
+                </select>
+              </div>
+              <div class="error-message text-red-600 text-xs mt-1 hidden"></div>
+            </div>
+
+            <!-- Data de Nascimento -->
+            <div>
+              <label for="birth_date" class="block text-sm font-medium text-gray-700 mb-1">Data de Nascimento</label>
+              <div class="relative">
+                <input type="text" id="birth_date" name="birth_date" placeholder="DD/MM/AAAA" maxlength="10"
+                  class="block w-full rounded-lg border border-input bg-background px-3 py-2 ps-9 text-sm text-foreground shadow-sm shadow-black/5 transition-shadow placeholder:text-muted-foreground/70 focus-visible:border-ring focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/20 disabled:cursor-not-allowed disabled:opacity-50"
+                  oninput="ValidacaoFormulario.formatarData(this)">
+                <div
+                  class="pointer-events-none absolute inset-y-0 start-0 flex items-center justify-center ps-3 text-muted-foreground/80 peer-disabled:opacity-50">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                    aria-hidden="true">
+                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                    <line x1="16" y1="2" x2="16" y2="6"></line>
+                    <line x1="8" y1="2" x2="8" y2="6"></line>
+                    <line x1="3" y1="10" x2="21" y2="10"></line>
+                  </svg>
+                </div>
+              </div>
+              <div class="error-message text-red-600 text-xs mt-1 hidden"></div>
+            </div>
+
+            <!-- Peso -->
+            <div>
+              <label for="weight" class="block text-sm font-medium text-gray-700 mb-1">
+                Peso <span class="text-gray-400">(Opcional)</span>
+              </label>
+              <div class="relative">
+                <input type="text" id="weight" name="weight" placeholder="Ex: 10.5" step="0.1" min="0" max="100"
+                  class="block w-full rounded-lg border border-input bg-background px-3 py-2 ps-9 text-sm text-foreground shadow-sm shadow-black/5 transition-shadow placeholder:text-muted-foreground/70 focus-visible:border-ring focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/20 disabled:cursor-not-allowed disabled:opacity-50">
+                <div
+                  class="pointer-events-none absolute inset-y-0 start-0 flex items-center justify-center ps-3 text-muted-foreground/80 peer-disabled:opacity-50">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                    class="lucide lucide-weight-icon lucide-weight">
+                    <circle cx="12" cy="5" r="3" />
+                    <path
+                      d="M6.5 8a2 2 0 0 0-1.905 1.46L2.1 18.5A2 2 0 0 0 4 21h16a2 2 0 0 0 1.925-2.54L19.4 9.5A2 2 0 0 0 17.48 8Z" />
+                  </svg>
+                </div>
+              </div>
+              <div class="error-message text-red-600 text-xs mt-1 hidden"></div>
+            </div>
+
+            <!-- Código do Microchip -->
+            <div>
+              <label for="microchip" class="block text-sm font-medium text-gray-700 mb-1">Código do Microchip</label>
+              <div class="relative">
+                <input type="text" id="microchip" name="microchip" maxlength="19" oninput="formatMicrochip(this)"
+                  placeholder="913.456.789.123.456"
+                  class="block w-full rounded-lg border border-input bg-background px-3 py-2 ps-9 text-sm text-foreground shadow-sm shadow-black/5 transition-shadow placeholder:text-muted-foreground/70 focus-visible:border-ring focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/20 disabled:cursor-not-allowed disabled:opacity-50">
+                <div
+                  class="pointer-events-none absolute inset-y-0 start-0 flex items-center justify-center ps-3 text-muted-foreground/80 peer-disabled:opacity-50">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                    class="lucide lucide-cpu-icon lucide-cpu">
+                    <rect width="16" height="16" x="4" y="4" rx="2" />
+                    <rect width="6" height="6" x="9" y="9" rx="1" />
+                    <path d="M15 2v2" />
+                    <path d="M15 20v2" />
+                    <path d="M2 15h2" />
+                    <path d="M2 9h2" />
+                    <path d="M20 15h2" />
+                    <path d="M20 9h2" />
+                    <path d="M9 2v2" />
+                    <path d="M9 20v2" />
+                  </svg>
+                </div>
+              </div>
+              <p class="mt-1 text-sm text-gray-500">Máximo 15 dígitos</p>
+              <div class="error-message text-red-600 text-xs mt-1 hidden"></div>
+            </div>
+
+            <!-- Nova Foto do Pet -->
+            <div>
+              <label for="pet_photo" class="block text-sm font-medium text-gray-700 mb-1">Nova Foto do Pet</label>
+              <div class="relative">
+                <input type="file" id="pet_photo" name="photo" accept="image/*"
+                  class="block w-full rounded-lg border border-input bg-background px-3 py-2 ps-9 text-sm text-foreground shadow-sm shadow-black/5 transition-shadow placeholder:text-muted-foreground/70 focus-visible:border-ring focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/20 disabled:cursor-not-allowed disabled:opacity-50">
+                <div
+                  class="pointer-events-none absolute inset-y-0 start-0 flex items-center justify-center ps-3 text-muted-foreground/80 peer-disabled:opacity-50">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                    aria-hidden="true">
+                    <path
+                      d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z" />
+                    <circle cx="12" cy="13" r="3" />
+                  </svg>
+                </div>
+              </div>
+              <p class="mt-1 text-sm text-gray-500">Deixe em branco para manter a foto atual</p>
+              <div class="error-message text-red-600 text-xs mt-1 hidden"></div>
+            </div>
+
+            <!-- Foto Atual -->
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Foto Atual</label>
+              <div class="w-24 h-24 bg-gray-100 border border-gray-200 rounded overflow-hidden">
+                <img id="foto_atual" src="" alt="Foto atual do pet" class="w-full h-full object-cover">
+              </div>
+              <div class="error-message text-red-600 text-xs mt-1 hidden"></div>
+            </div>
+          </div>
+          <input type="hidden" id="username_pet" name="username">
+          <input type="hidden" id="nome_original_pet" name="nome_original">
+
+          <!-- Submit button -->
+          <div class="mt-6 flex justify-end">
+            <button type="submit"
+              class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
+              Salvar Alterações
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- Script para validação do formulário -->
+<script>
+  // Classe de validação do formulário
+  class ValidacaoFormulario {
+    static formatarData(input) {
+      // Remove caracteres não numéricos
+      let valor = input.value.replace(/\D/g, '');
+
+      // Limita a 8 dígitos (DDMMAAAA)
+      valor = valor.substring(0, 8);
+
+      // Aplica a formatação
+      if (valor.length > 4) {
+        valor = valor.replace(/(\d{2})(\d{2})(\d{4})/, '$1/$2/$3');
+      } else if (valor.length > 2) {
+        valor = valor.replace(/(\d{2})(\d{2})/, '$1/$2/');
+      }
+
+      // Atualiza o valor do input
+      input.value = valor;
+    }
+  }
+
+  // Função para formatar o microchip
+  function formatMicrochip(input) {
+    let valor = input.value.replace(/\D/g, '');
+    valor = valor.substring(0, 15); // Limite de 15 dígitos numéricos
+    let valorFormatado = '';
+    for (let i = 0; i < valor.length; i++) {
+      if (i > 0 && i % 3 === 0) {
+        valorFormatado += '.';
+      }
+      valorFormatado += valor[i];
+    }
+    input.value = valorFormatado;
+  }
+
+  // Inicialização do formulário quando o DOM estiver carregado
+  document.addEventListener('DOMContentLoaded', function () {
+    const form = document.getElementById('form-editar-pet');
+    if (form) {
+      form.addEventListener('submit', async function (event) {
+        event.preventDefault();
+        // Get username and original pet name from hidden fields
+        const username = document.getElementById('username_pet').value;
+        const originalName = document.getElementById('nome_original_pet').value;
+        if (!username || !originalName) {
+          alert('Erro: usuário ou nome original do pet não encontrado.');
+          return;
+        }
+        // Build endpoint
+        const endpoint = `/api/usuario/${encodeURIComponent(username)}/pet/${encodeURIComponent(originalName)}`;
+        // Build FormData
+        const formData = new FormData(form);
+        try {
+          const response = await fetch(endpoint, {
+            method: 'PUT',
+            body: formData,
+          });
+          const result = await response.json();
+          if (result.success) {
+            alert('Pet atualizado com sucesso!');
+            fecharModal('modal-editar-pet');
+            window.location.reload(); // Optionally reload to update UI
+          } else {
+            alert(result.error || 'Erro ao atualizar pet.');
+          }
+        } catch (err) {
+          alert('Erro ao enviar requisição: ' + err);
+        }
+      });
+    }
+
+    // Inicialize o AlpineJS se necessário
+    if (typeof Alpine === 'undefined') {
+      const script = document.createElement('script');
+      script.src = 'https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js';
+      script.defer = true;
+      document.head.appendChild(script);
+    }
+  });
+</script>

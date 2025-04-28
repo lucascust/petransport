@@ -1,0 +1,1268 @@
+{% extends "base.html" %}
+{% block title %}Editar Viagem{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/plugins/monthSelect/style.css">
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/pt.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/plugins/monthSelect/index.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+<!-- Carregando a API do Google Maps com a chave correta -->
+<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyC6eYp_ITSnAixqf3ZMSekPOM_gQCIlOGs&libraries=places"
+  defer></script>
+<style>
+  [x-cloak] {
+    display: none !important;
+  }
+
+  /* Estilos para o flatpickr */
+  .flatpickr-calendar {
+    margin-top: 8px;
+    margin-bottom: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    border-radius: 8px;
+  }
+
+  .flatpickr-current-month {
+    display: flex;
+    align-items: center;
+    justify-content: space-around;
+    padding: 8px 0;
+  }
+
+  .flatpickr-current-month .flatpickr-monthDropdown-months,
+  .flatpickr-current-month input.cur-year {
+    font-weight: 500;
+    height: auto;
+    padding: 2px 6px;
+    border-radius: 4px;
+  }
+
+  .flatpickr-day.selected {
+    background: #3B82F6;
+    border-color: #3B82F6;
+  }
+
+  .flatpickr-time input:hover,
+  .flatpickr-time .flatpickr-am-pm:hover,
+  .flatpickr-time input:focus,
+  .flatpickr-time .flatpickr-am-pm:focus {
+    background: #f0f7ff;
+  }
+
+  /* Estilos para o segmented control */
+  .segmented {
+    display: flex;
+    background-color: #f5f5f5;
+    border-radius: 0.5rem;
+    padding: 4px;
+    width: 100%;
+    position: relative;
+    height: 35px;
+  }
+
+  .segmented-item {
+    flex: 1;
+    text-align: center;
+    cursor: pointer;
+    border-radius: 0.375rem;
+    transition: color 0.2s ease;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.875rem;
+    color: rgba(0, 0, 0, 0.65);
+    z-index: 2;
+    height: 100%;
+    user-select: none;
+  }
+
+  .segmented-item:hover:not(.segmented-item-selected) {
+    color: rgba(0, 0, 0, 0.88);
+  }
+
+  .segmented-item-selected {
+    color: rgba(0, 0, 0, 0.88);
+    font-weight: 500;
+  }
+
+  .segmented-item svg {
+    margin-right: 0.375rem;
+    transition: transform 0.2s ease;
+  }
+
+  .segmented-item:hover svg {
+    transform: scale(1.1);
+  }
+
+  .segmented-thumb {
+    position: absolute;
+    background-color: white;
+    border-radius: 0.375rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    top: 4px;
+    bottom: 4px;
+    z-index: 1;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    width: calc(25% - 4px);
+    height: calc(100% - 8px);
+    transform: translateX(0);
+  }
+
+  /* Estilos para os botões de rádio */
+  .radio-button {
+    flex: 1;
+    min-width: 0;
+    padding: 6px 12px;
+    border: none;
+    background: transparent;
+    transition: all 0.2s ease;
+    cursor: pointer;
+    font-size: 0.875rem;
+    color: #666;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    z-index: 10;
+  }
+
+  .radio-button:not(.active):hover {
+    color: #333;
+  }
+
+  .radio-button.active {
+    color: #ffffff !important;
+    font-weight: 500;
+    background-color: #3B82F6 !important;
+    border-radius: 0.375rem;
+  }
+
+  /* Ensure hover doesn't change background when active */
+  .radio-button.active:hover {
+    background-color: #3B82F6 !important;
+    color: #ffffff !important;
+  }
+
+  .indicator-pill {
+    position: absolute;
+    background-color: #3B82F6;
+    border-radius: 0.375rem;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    top: 2px;
+    bottom: 2px;
+    height: calc(100% - 4px);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="max-w-3xl mx-auto p-4 sm:p-6">
+  <div class="flex items-center mb-6">
+    <a href="{{ url_for('viagem_detalhes', usuario=usuario.username, viagem_id=travel._id) }}"
+      class="text-blue-600 hover:text-blue-800 mr-2">
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+      </svg>
+    </a>
+    <h1 class="text-2xl font-bold text-gray-900">Editar Viagem</h1>
+  </div>
+
+  <form method="post" class="space-y-6" enctype="multipart/form-data">
+    <div class="space-y-6">
+
+      <!-- Informações Básicas -->
+      <div class="bg-white shadow-md rounded-lg overflow-hidden">
+        <div class="bg-gradient-to-r from-[#1E40AF] to-[#3B82F6] px-4 py-4 border-b border-[#1E40AF] rounded-t-lg">
+          <h2 class="text-lg font-medium text-white flex items-center">
+            <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 24 24" class="h-5 w-5 mr-2"
+              xmlns="http://www.w3.org/2000/svg">
+              <path fill="none" d="M0 0h24v24H0z"></path>
+              <path
+                d="M20 6h-3V4c0-1.11-.89-2-2-2H9c-1.11 0-2 .89-2 2v2H4c-1.11 0-2 .89-2 2v11c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V8c0-1.11-.89-2-2-2zM9 4h6v2H9V4zm11 15H4v-2h16v2zm0-5H4V8h3v2h2V8h6v2h2V8h3v6z">
+              </path>
+            </svg>
+            Informações da Viagem
+          </h2>
+        </div>
+
+
+        <div class="p-4 sm:p-6">
+          <div class="grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6"
+            x-data="{ hasTicket: {{ 'true' if travel.travelTicketDate else 'false' }}, travelMethod: '{{ travel.travelMethod }}' }">
+            <div class="sm:col-span-3">
+              <label for="travelMethod" class="block text-sm font-medium text-gray-700 mb-1">Método de Viagem</label>
+              <div class="bg-gray-50 rounded-lg p-3 flex items-center">
+                {% if travel.travelMethod == 'plane' %}
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                  stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                  class="text-blue-600 mr-2">
+                  <path
+                    d="M17.8 19.2 16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.5 5.3c.3.4.8.5 1.3.3l.5-.2c.4-.3.6-.7.5-1.2z" />
+                </svg>
+                <span class="font-medium text-gray-700">Avião</span>
+                {% elif travel.travelMethod == 'bus' %}
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                  stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                  class="text-blue-600 mr-2">
+                  <path d="M8 6v6"></path>
+                  <path d="M15 6v6"></path>
+                  <path d="M2 12h19.6"></path>
+                  <path
+                    d="M18 18h3s.5-1.7.8-2.8c.1-.4.2-.8.2-1.2 0-.4-.1-.8-.2-1.2l-1.4-5C20.1 6.8 19.1 6 18 6H4a2 2 0 0 0-2 2v10h3">
+                  </path>
+                  <circle cx="7" cy="18" r="2"></circle>
+                  <path d="M9 18h5"></path>
+                  <circle cx="16" cy="18" r="2"></circle>
+                </svg>
+                <span class="font-medium text-gray-700">Ônibus</span>
+                {% elif travel.travelMethod == 'car' %}
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                  stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                  class="text-blue-600 mr-2">
+                  <path
+                    d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.5-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9l-1.4 2.9A3.7 3.7 0 0 0 2 12v4c0 .6.4 1 1 1h2">
+                  </path>
+                  <circle cx="7" cy="17" r="2"></circle>
+                  <circle cx="17" cy="17" r="2"></circle>
+                </svg>
+                <span class="font-medium text-gray-700">Carro</span>
+                {% elif travel.travelMethod == 'petTransport' %}
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                  stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                  class="text-blue-600 mr-2">
+                  <path d="M12 13V7"></path>
+                  <path d="M15 10l-3 3-3-3"></path>
+                  <rect x="4" y="4" width="16" height="16" rx="2"></rect>
+                  <path d="M9 18H7"></path>
+                  <path d="M17 18h-2"></path>
+                </svg>
+                <span class="font-medium text-gray-700">Transporte para Pets</span>
+                {% else %}
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                  stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                  class="text-blue-600 mr-2">
+                  <path d="M3 12a9 9 0 1 0 18 0 9 9 0 0 0-18 0Z"></path>
+                  <path d="M12 8v4"></path>
+                  <path d="M12 16h.01"></path>
+                </svg>
+                <span class="font-medium text-gray-700">Outro</span>
+                {% endif %}
+              </div>
+              <input type="hidden" id="travelMethod" name="travelMethod" value="{{ travel.travelMethod }}">
+              <input type="hidden" id="status" name="status" value="{{ travel.status }}">
+            </div>
+
+            <!-- Espaço em branco para alinhar layout -->
+            <div class="sm:col-span-3" x-show="['plane', 'bus'].includes(travelMethod)"></div>
+
+            <!-- Origem Aeroporto -->
+            <div class="sm:col-span-3">
+              <label for="origin" class="block text-sm font-medium text-gray-700 mb-1">Origem</label>
+              <!-- Seletor de Aeroporto (aparece apenas quando o método é avião) -->
+              <div class="relative" x-data="airportSelector('origin')" x-init="loadAirports()"
+                x-show="$store.travelForm.travelMethod === 'plane'">
+                <button type="button" @click="open = !open; $nextTick(() => { if(open) $refs.searchInput.focus(); })"
+                  @keydown.escape="open = false"
+                  class="relative w-full bg-white border border-gray-300 rounded-lg shadow-sm pl-9 pr-10 py-2 text-left cursor-default focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                  <input type="hidden" name="origin" id="origin" x-model="selectedCode"
+                    :required="$store.travelForm.travelMethod === 'plane'"
+                    value="{{ travel.origin if travel.travelMethod == 'plane' else '' }}">
+                  <div class="flex items-center">
+                    <div
+                      class="pointer-events-none absolute inset-y-0 start-0 flex items-center justify-center ps-3 text-muted-foreground/80 peer-disabled:opacity-50">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M2 22h20" />
+                        <path
+                          d="M6.36 17.4 4 17l-2-4 1.1-.55a2 2 0 0 1 1.8 0l.17.1a2 2 0 0 0 1.8 0L8 12 5 6l.9-.45a2 2 0 0 1 2.09.2l4.02 3a2 2 0 0 0 2.1.2l4.19-2.06a2.41 2.41 0 0 1 1.73-.17L21 7a1.4 1.4 0 0 1 .87 1.99l-.38.76c-.23.46-.6.84-1.07 1.08L7.58 17.2a2 2 0 0 1-1.22.18Z" />
+                      </svg>
+                    </div>
+                    <span
+                      x-html="selectedAirport ? '<strong>' + selectedAirport.code + '</strong> ' + selectedAirport.city + ' ' + selectedAirport.country : 'Selecione a origem'"
+                      class="block truncate ml-1 pr-2" :class="{'text-gray-500': !selectedAirport}"></span>
+                  </div>
+                  <span class="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
+                    <svg class="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"
+                      fill="currentColor" aria-hidden="true">
+                      <path fill-rule="evenodd"
+                        d="M10 3a1 1 0 01.707.293l3 3a1 1 0 01-1.414 1.414L10 5.414 7.707 7.707a1 1 0 01-1.414-1.414l3-3A1 1 0 0110 3z"
+                        clip-rule="evenodd" />
+                      <path fill-rule="evenodd"
+                        d="M10 17a1 1 0 01-.707-.293l-3-3a1 1 0 011.414-1.414L10 14.586l2.293-2.293a1 1 0 011.414 1.414l-3 3A1 1 0 0110 17z"
+                        clip-rule="evenodd" />
+                    </svg>
+                  </span>
+                </button>
+
+                <div x-show="open" @click.away="open = false" x-cloak
+                  class="absolute z-10 mt-1 w-full bg-white shadow-lg max-h-60 rounded-md text-base ring-1 ring-black ring-opacity-5 overflow-hidden focus:outline-none sm:text-sm"
+                  x-transition:enter="transition ease-out duration-100"
+                  x-transition:enter-start="transform opacity-0 scale-95"
+                  x-transition:enter-end="transform opacity-100 scale-100"
+                  x-transition:leave="transition ease-in duration-75"
+                  x-transition:leave-start="transform opacity-100 scale-100"
+                  x-transition:leave-end="transform opacity-0 scale-95">
+
+                  <div class="sticky top-0 z-20 bg-white pt-1 pb-1 px-1 border-b border-gray-200 shadow-sm">
+                    <input type="text" x-model="search" x-ref="searchInput" @keydown.enter.prevent=""
+                      @keydown.space.prevent=""
+                      class="block w-full px-4 py-2 border border-gray-200 rounded-md focus:ring-1 focus:ring-blue-500 focus:border-blue-500 focus:outline-none"
+                      placeholder="Digite para buscar...">
+                  </div>
+
+                  <div class="overflow-y-auto max-h-52 py-1">
+                    <template x-for="airport in filteredAirports" :key="airport.code">
+                      <div @click="selectAirport(airport)"
+                        class="cursor-pointer select-none relative py-2 pl-3 pr-9 hover:bg-gray-100"
+                        :class="{'bg-blue-100': selectedCode === airport.code}">
+                        <div class="flex items-center">
+                          <span class="font-bold mr-2" x-text="airport.code"></span>
+                          <span x-text="airport.city"></span>
+                          <span class="ml-1 text-gray-500" x-text="airport.country"></span>
+                        </div>
+                        <span x-show="selectedCode === airport.code"
+                          class="absolute inset-y-0 right-0 flex items-center pr-4 text-blue-600">
+                          <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"
+                            fill="currentColor">
+                            <path fill-rule="evenodd"
+                              d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                              clip-rule="evenodd" />
+                          </svg>
+                        </span>
+                      </div>
+                    </template>
+
+                    <div x-show="filteredAirports.length === 0" class="py-2 px-3 text-gray-500 text-center">
+                      Nenhum aeroporto encontrado
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Input de texto normal (aparece para todos os outros métodos) -->
+              <div class="relative" x-show="$store.travelForm.travelMethod !== 'plane'" x-cloak>
+                <input type="text" name="origin" id="origin_text" required
+                  class="block w-full rounded-lg border border-input bg-background px-3 py-2 ps-9 text-sm text-foreground shadow-sm shadow-black/5 transition-shadow placeholder:text-muted-foreground/70 focus-visible:border-ring focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/20 disabled:cursor-not-allowed disabled:opacity-50"
+                  placeholder="Cidade, País" x-bind:required="$store.travelForm.travelMethod !== 'plane'"
+                  value="{{ travel.origin if travel.travelMethod != 'plane' else '' }}">
+                <div
+                  class="pointer-events-none absolute inset-y-0 start-0 flex items-center justify-center ps-3 text-muted-foreground/80 peer-disabled:opacity-50">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z" />
+                    <circle cx="12" cy="10" r="3" />
+                  </svg>
+                </div>
+              </div>
+            </div>
+
+            <!-- Destino Aeroporto -->
+            <div class="sm:col-span-3">
+              <label for="destination" class="block text-sm font-medium text-gray-700 mb-1">Destino</label>
+              <!-- Seletor de Aeroporto (aparece apenas quando o método é avião) -->
+              <div class="relative" x-data="airportSelector('destination')" x-init="loadAirports()"
+                x-show="$store.travelForm.travelMethod === 'plane'">
+                <button type="button" @click="open = !open; $nextTick(() => { if(open) $refs.searchInput.focus(); })"
+                  @keydown.escape="open = false"
+                  class="relative w-full bg-white border border-gray-300 rounded-lg shadow-sm pl-9 pr-10 py-2 text-left cursor-default focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                  <input type="hidden" name="destination" id="destination" x-model="selectedCode"
+                    :required="$store.travelForm.travelMethod === 'plane'"
+                    value="{{ travel.destination if travel.travelMethod == 'plane' else '' }}">
+                  <div class="flex items-center">
+                    <div
+                      class="pointer-events-none absolute inset-y-0 start-0 flex items-center justify-center ps-3 text-muted-foreground/80 peer-disabled:opacity-50">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                        class="lucide lucide-plane-landing-icon lucide-plane-landing">
+                        <path d="M2 22h20" />
+                        <path
+                          d="M3.77 10.77 2 9l2-4.5 1.1.55c.55.28.9.84.9 1.45s.35 1.17.9 1.45L8 8.5l3-6 1.05.53a2 2 0 0 1 1.09 1.52l.72 5.4a2 2 0 0 0 1.09 1.52l4.4 2.2c.42.22.78.55 1.01.96l.6 1.03c.49.88-.06 1.98-1.06 2.1l-1.18.15c-.47.06-.95-.02-1.37-.24L4.29 11.15a2 2 0 0 1-.52-.38Z" />
+                      </svg>
+                    </div>
+                    <span
+                      x-html="selectedAirport ? '<strong>' + selectedAirport.code + '</strong> ' + selectedAirport.city + ' ' + selectedAirport.country : 'Selecione o destino'"
+                      class="block truncate ml-1 pr-2" :class="{'text-gray-500': !selectedAirport}"></span>
+                  </div>
+                  <span class="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
+                    <svg class="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"
+                      fill="currentColor" aria-hidden="true">
+                      <path fill-rule="evenodd"
+                        d="M10 3a1 1 0 01.707.293l3 3a1 1 0 01-1.414 1.414L10 5.414 7.707 7.707a1 1 0 01-1.414-1.414l3-3A1 1 0 0110 3z"
+                        clip-rule="evenodd" />
+                      <path fill-rule="evenodd"
+                        d="M10 17a1 1 0 01-.707-.293l-3-3a1 1 0 011.414-1.414L10 14.586l2.293-2.293a1 1 0 011.414 1.414l-3 3A1 1 0 0110 17z"
+                        clip-rule="evenodd" />
+                    </svg>
+                  </span>
+                </button>
+
+                <div x-show="open" @click.away="open = false" x-cloak
+                  class="absolute z-10 mt-1 w-full bg-white shadow-lg max-h-60 rounded-md text-base ring-1 ring-black ring-opacity-5 overflow-hidden focus:outline-none sm:text-sm"
+                  x-transition:enter="transition ease-out duration-100"
+                  x-transition:enter-start="transform opacity-0 scale-95"
+                  x-transition:enter-end="transform opacity-100 scale-100"
+                  x-transition:leave="transition ease-in duration-75"
+                  x-transition:leave-start="transform opacity-100 scale-100"
+                  x-transition:leave-end="transform opacity-0 scale-95">
+
+                  <div class="sticky top-0 z-20 bg-white pt-1 pb-1 px-1 border-b border-gray-200 shadow-sm">
+                    <input type="text" x-model="search" x-ref="searchInput" @keydown.enter.prevent=""
+                      @keydown.space.prevent=""
+                      class="block w-full px-4 py-2 border border-gray-200 rounded-md focus:ring-1 focus:ring-blue-500 focus:border-blue-500 focus:outline-none"
+                      placeholder="Digite para buscar...">
+                  </div>
+
+                  <div class="overflow-y-auto max-h-52 py-1">
+                    <template x-for="airport in filteredAirports" :key="airport.code">
+                      <div @click="selectAirport(airport)"
+                        class="cursor-pointer select-none relative py-2 pl-3 pr-9 hover:bg-gray-100"
+                        :class="{'bg-blue-100': selectedCode === airport.code}">
+                        <div class="flex items-center">
+                          <span class="font-bold mr-2" x-text="airport.code"></span>
+                          <span x-text="airport.city"></span>
+                          <span class="ml-1 text-gray-500" x-text="airport.country"></span>
+                        </div>
+                        <span x-show="selectedCode === airport.code"
+                          class="absolute inset-y-0 right-0 flex items-center pr-4 text-blue-600">
+                          <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"
+                            fill="currentColor">
+                            <path fill-rule="evenodd"
+                              d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                              clip-rule="evenodd" />
+                          </svg>
+                        </span>
+                      </div>
+                    </template>
+
+                    <div x-show="filteredAirports.length === 0" class="py-2 px-3 text-gray-500 text-center">
+                      Nenhum aeroporto encontrado
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Input de texto normal (aparece para todos os outros métodos) -->
+              <div class="relative" x-show="$store.travelForm.travelMethod !== 'plane'" x-cloak>
+                <input type="text" name="destination" id="destination_text" required
+                  class="block w-full rounded-lg border border-input bg-background px-3 py-2 ps-9 text-sm text-foreground shadow-sm shadow-black/5 transition-shadow placeholder:text-muted-foreground/70 focus-visible:border-ring focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/20 disabled:cursor-not-allowed disabled:opacity-50"
+                  placeholder="Cidade, País" x-bind:required="$store.travelForm.travelMethod !== 'plane'"
+                  value="{{ travel.destination if travel.travelMethod != 'plane' else '' }}">
+                <div
+                  class="pointer-events-none absolute inset-y-0 start-0 flex items-center justify-center ps-3 text-muted-foreground/80 peer-disabled:opacity-50">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                    class="lucide lucide-map-pin-check-inside-icon lucide-map-pin-check-inside">
+                    <path
+                      d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0" />
+                    <path d="m9 10 2 2 4-4" />
+                  </svg>
+                </div>
+              </div>
+            </div>
+
+            <!-- Origem OLD -->
+            <!-- <div class="sm:col-span-3">
+              <label for="origin" class="block text-sm font-medium text-gray-700 mb-1">Origem</label>
+              <div class="relative">
+                <input type="text" name="origin" id="origin" value="{{ travel.origin }}" required
+                  class="block w-full rounded-lg border border-input bg-background px-3 py-2 ps-9 text-sm text-foreground shadow-sm shadow-black/5 transition-shadow placeholder:text-muted-foreground/70 focus-visible:border-ring focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/20 disabled:cursor-not-allowed disabled:opacity-50"
+                  placeholder="Cidade, País">
+                <div
+                  class="pointer-events-none absolute inset-y-0 start-0 flex items-center justify-center ps-3 text-muted-foreground/80 peer-disabled:opacity-50">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z" />
+                    <circle cx="12" cy="10" r="3" />
+                  </svg>
+                </div>
+              </div>
+            </div> -->
+
+            <!-- Destino OLD -->
+            <!-- <div class="sm:col-span-3">
+              <label for="destination" class="block text-sm font-medium text-gray-700 mb-1">Destino</label>
+              <div class="relative">
+                <input type="text" name="destination" id="destination" value="{{ travel.destination }}" required
+                  class="block w-full rounded-lg border border-input bg-background px-3 py-2 ps-9 text-sm text-foreground shadow-sm shadow-black/5 transition-shadow placeholder:text-muted-foreground/70 focus-visible:border-ring focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/20 disabled:cursor-not-allowed disabled:opacity-50"
+                  placeholder="Cidade, País">
+                <div
+                  class="pointer-events-none absolute inset-y-0 start-0 flex items-center justify-center ps-3 text-muted-foreground/80 peer-disabled:opacity-50">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                    class="lucide lucide-map-pin-check-inside-icon lucide-map-pin-check-inside">
+                    <path
+                      d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0" />
+                    <path d="m9 10 2 2 4-4" />
+                  </svg>
+                </div>
+              </div>
+            </div> -->
+
+            <!-- Você já possui a passagem? (avião e ônibus) -->
+            <div class="sm:col-span-3" x-show="['plane', 'bus'].includes(travelMethod)">
+              <label class="block text-sm font-medium text-gray-700 mb-1">Você já possui a passagem?</label>
+              <div class="relative flex items-center rounded-md bg-gray-50 p-0.5 shadow-inner" data-name="hasTicket">
+                <button type="button"
+                  class="toggle-btn radio-button flex-1 py-1.5 px-4 rounded-md text-sm font-medium transition-all duration-200 relative z-10"
+                  data-value="true" data-name="hasTicket"
+                  @click="hasTicket = true; $nextTick(() => { ativarRadioButton(this, 'hasTicket', 'true'); })">
+                  Sim
+                </button>
+                <button type="button"
+                  class="toggle-btn radio-button flex-1 py-1.5 px-4 rounded-md text-sm font-medium transition-all duration-200 relative z-10"
+                  data-value="false" data-name="hasTicket"
+                  @click="hasTicket = false; $nextTick(() => { ativarRadioButton(this, 'hasTicket', 'false'); })">
+                  Não
+                </button>
+                <span id="hasTicket-indicator"
+                  class="indicator-pill absolute w-[calc(50%-1px)] bg-white rounded-md shadow-sm transition-all duration-200 opacity-0"></span>
+                <input type="hidden" name="hasTicket" x-model="hasTicket">
+              </div>
+            </div>
+
+
+            <!-- Espaço em branco para alinhar layout -->
+            <div class="sm:col-span-3" x-show="['plane', 'bus'].includes(travelMethod)"></div>
+
+            <!-- Data estimada (todos os métodos) -->
+            <div class="sm:col-span-3" x-show="!hasTicket || !['plane', 'bus'].includes(travelMethod)">
+              <label for="estimatedDate" class="block text-sm font-medium text-gray-700 mb-1">Data estimada</label>
+              <div class="relative">
+                <input type="text" name="estimatedDate" id="estimatedDate" value="{{ travel.estimatedDate }}"
+                  class="block w-full rounded-lg border border-input bg-background px-3 py-2 ps-9 text-sm text-foreground shadow-sm shadow-black/5 transition-shadow placeholder:text-muted-foreground/70 focus-visible:border-ring focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/20 disabled:cursor-not-allowed disabled:opacity-50 datepicker-month-year"
+                  placeholder="MM/AAAA" autocomplete="off">
+                <div
+                  class="pointer-events-none absolute inset-y-0 start-0 flex items-center justify-center ps-3 text-muted-foreground/80 peer-disabled:opacity-50">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                    <line x1="16" y1="2" x2="16" y2="6"></line>
+                    <line x1="8" y1="2" x2="8" y2="6"></line>
+                    <line x1="3" y1="10" x2="21" y2="10"></line>
+                  </svg>
+                </div>
+              </div>
+            </div>
+
+            <!-- Data da Passagem (quando tem passagem) -->
+            <div class="sm:col-span-3" x-show="hasTicket && ['plane', 'bus'].includes(travelMethod)">
+              <label for="travelTicketDate" class="block text-sm font-medium text-gray-700 mb-1">Data da
+                Passagem</label>
+              <div class="relative">
+                <input type="text" name="travelTicketDate" id="travelTicketDate"
+                  value="{{ travel.travelTicketDate.strftime('%d/%m/%Y %H:%M') if travel.travelTicketDate else '' }}"
+                  class="block w-full rounded-lg border border-input bg-background px-3 py-2 ps-9 text-sm text-foreground shadow-sm shadow-black/5 transition-shadow placeholder:text-muted-foreground/70 focus-visible:border-ring focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/20 disabled:cursor-not-allowed disabled:opacity-50 datepicker-with-time"
+                  placeholder="DD/MM/AAAA HH:MM" autocomplete="off">
+                <div
+                  class="pointer-events-none absolute inset-y-0 start-0 flex items-center justify-center ps-3 text-muted-foreground/80 peer-disabled:opacity-50">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                    <line x1="16" y1="2" x2="16" y2="6"></line>
+                    <line x1="8" y1="2" x2="8" y2="6"></line>
+                    <line x1="3" y1="10" x2="21" y2="10"></line>
+                    <path d="M17 14h-6"></path>
+                    <path d="M13 18h-2"></path>
+                    <path d="M9 14h.01"></path>
+                  </svg>
+                </div>
+              </div>
+            </div>
+
+            <!-- Campos específicos para avião -->
+            <div class="sm:col-span-3" x-show="hasTicket && ['plane', 'bus'].includes(travelMethod)">
+              <label for="airline" class="block text-sm font-medium text-gray-700 mb-1">Companhia Aérea</label>
+              <div class="relative">
+                <input type="text" name="airline" id="airline" value="{{ travel.airline or '' }}"
+                  class="block w-full rounded-lg border border-input bg-background px-3 py-2 ps-9 text-sm text-foreground shadow-sm shadow-black/5 transition-shadow placeholder:text-muted-foreground/70 focus-visible:border-ring focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/20 disabled:cursor-not-allowed disabled:opacity-50"
+                  placeholder="Ex: Latam, Azul, GOL">
+                <div
+                  class="pointer-events-none absolute inset-y-0 start-0 flex items-center justify-center ps-3 text-muted-foreground/80 peer-disabled:opacity-50">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path
+                      d="M17.8 19.2 16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.5 5.3c.3.4.8.5 1.3.3l.5-.2c.4-.3.6-.7.5-1.2z">
+                    </path>
+                  </svg>
+                </div>
+              </div>
+            </div>
+
+            <!-- Campo de arquivo de passagem -->
+            <div class="sm:col-span-6" x-show="hasTicket && ['plane', 'bus'].includes(travelMethod)">
+              <label class="block text-sm font-medium text-gray-700 mb-1">Arquivo da Passagem</label>
+              <div class="relative">
+                <div
+                  class="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md hover:bg-gray-50 transition-colors cursor-pointer">
+                  <div class="space-y-2 text-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="mx-auto h-12 w-12 text-gray-400" fill="none"
+                      viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                      <path stroke-linecap="round" stroke-linejoin="round"
+                        d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                    </svg>
+                    <div class="flex text-sm text-gray-600 justify-center">
+                      <label for="travelTicketFile"
+                        class="relative cursor-pointer bg-white rounded-md font-medium text-blue-600 hover:text-blue-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-blue-500">
+                        <span>Fazer upload de arquivo</span>
+                        <input id="travelTicketFile" name="travelTicketFile" type="file" class="sr-only">
+                      </label>
+                      <p class="pl-1">ou arraste e solte</p>
+                    </div>
+                    <p class="text-xs text-gray-500">PNG, JPG, PDF até 10MB</p>
+                  </div>
+                </div>
+                <div id="uploadPreview" class="mt-2 hidden">
+                  <div class="flex items-center justify-between bg-gray-50 p-2 rounded-lg border border-gray-200">
+                    <div class="flex items-center">
+                      <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-500 mr-2" viewBox="0 0 20 20"
+                        fill="currentColor">
+                        <path fill-rule="evenodd"
+                          d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z"
+                          clip-rule="evenodd" />
+                      </svg>
+                      <span id="fileName" class="text-sm text-gray-700"></span>
+                    </div>
+                    <button type="button" id="removeFile" class="text-red-500 hover:text-red-700">
+                      <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd"
+                          d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                          clip-rule="evenodd" />
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+                {% if travel.travelTicketFile %}
+                <p class="mt-2 text-sm text-gray-500 bg-blue-50 p-2 rounded-md border border-blue-200">
+                  <span class="flex items-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-blue-500 mr-2" viewBox="0 0 20 20"
+                      fill="currentColor">
+                      <path fill-rule="evenodd"
+                        d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z"
+                        clip-rule="evenodd" />
+                    </svg>
+                    Arquivo atual:
+                    <a href="{{ url_for('static', filename=travel.travelTicketFile.path) }}" target="_blank"
+                      class="ml-1 text-blue-600 hover:text-blue-800 underline">
+                      Ver arquivo
+                    </a>
+                  </span>
+                </p>
+                {% endif %}
+              </div>
+            </div>
+
+            <!-- Campos específicos para carro -->
+            <div class="sm:col-span-3" x-show="travelMethod === 'car'">
+              <label for="vehiclePlate" class="block text-sm font-medium text-gray-700 mb-1">Placa do Veículo</label>
+              <div class="relative">
+                <input type="text" name="vehiclePlate" id="vehiclePlate" maxlength="7"
+                  value="{{ travel.vehiclePlate or '' }}"
+                  class="block w-full rounded-lg border border-input bg-background px-3 py-2 ps-9 text-sm text-foreground shadow-sm shadow-black/5 transition-shadow placeholder:text-muted-foreground/70 focus-visible:border-ring focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/20 disabled:cursor-not-allowed disabled:opacity-50">
+                <div
+                  class="pointer-events-none absolute inset-y-0 start-0 flex items-center justify-center ps-3 text-muted-foreground/80 peer-disabled:opacity-50">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="3" y="8" width="18" height="8" rx="1"></rect>
+                    <path d="M7 12h.01"></path>
+                    <path d="M17 12h.01"></path>
+                  </svg>
+                </div>
+              </div>
+            </div>
+
+            <!-- Cidade de fronteira (carro e ônibus) -->
+            <div class="sm:col-span-3" x-show="['car', 'bus'].includes(travelMethod)">
+              <label for="borderCity" class="block text-sm font-medium text-gray-700 mb-1">Cidade de Fronteira</label>
+              <div class="relative">
+                <input type="text" name="borderCity" id="borderCity" value="{{ travel.borderCity or '' }}"
+                  class="block w-full rounded-lg border border-input bg-background px-3 py-2 ps-9 text-sm text-foreground shadow-sm shadow-black/5 transition-shadow placeholder:text-muted-foreground/70 focus-visible:border-ring focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/20 disabled:cursor-not-allowed disabled:opacity-50"
+                  placeholder="Opcional">
+                <div
+                  class="pointer-events-none absolute inset-y-0 start-0 flex items-center justify-center ps-3 text-muted-foreground/80 peer-disabled:opacity-50">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M3 12a9 9 0 1 0 18 0 9 9 0 0 0-18 0Z"></path>
+                    <path d="M3.6 9h16.8"></path>
+                    <path d="M3.6 15h16.8"></path>
+                    <path d="M12 3a9 9 0 0 1 0 18"></path>
+                    <path d="M12 3a9 9 0 0 0 0 18"></path>
+                  </svg>
+                </div>
+              </div>
+            </div>
+
+            <!-- Endereço de destino (todos os métodos) -->
+            <div class="sm:col-span-6">
+              <label for="destinationAddress" class="block text-sm font-medium text-gray-700 mb-1">Endereço de
+                Destino</label>
+              <div class="relative">
+                <input type="text" name="destinationAddress" id="destinationAddress"
+                  value="{{ travel.destinationAddress.formatted if travel.destinationAddress else '' }}"
+                  class="block w-full rounded-lg border border-input bg-background px-3 py-2 ps-9 text-sm text-foreground shadow-sm shadow-black/5 transition-shadow placeholder:text-muted-foreground/70 focus-visible:border-ring focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/20 disabled:cursor-not-allowed disabled:opacity-50"
+                  placeholder="Busque um endereço">
+                <div
+                  class="pointer-events-none absolute inset-y-0 start-0 flex items-center justify-center ps-3 text-muted-foreground/80 peer-disabled:opacity-50">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                    class="lucide lucide-map-pinned-icon lucide-map-pinned">
+                    <path
+                      d="M18 8c0 3.613-3.869 7.429-5.393 8.795a1 1 0 0 1-1.214 0C9.87 15.429 6 11.613 6 8a6 6 0 0 1 12 0" />
+                    <circle cx="12" cy="8" r="2" />
+                    <path
+                      d="M8.714 14h-3.71a1 1 0 0 0-.948.683l-2.004 6A1 1 0 0 0 3 22h18a1 1 0 0 0 .948-1.316l-2-6a1 1 0 0 0-.949-.684h-3.712" />
+                  </svg>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="flex justify-end space-x-3 pt-5">
+      <a href="{{ url_for('viagem_detalhes', usuario=usuario.username, viagem_id=travel._id) }}"
+        class="py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+        Cancelar
+      </a>
+      <button type="submit"
+        class="ml-3 inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+        Salvar
+      </button>
+    </div>
+  </form>
+</div>
+
+<script>
+  // Definir o componente Alpine.js para aeroportos ANTES que a página seja renderizada
+  document.addEventListener('alpine:init', () => {
+    // Criar store global para o método de viagem
+    Alpine.store('travelForm', {
+      travelMethod: document.getElementById('travelMethod') ? document.getElementById('travelMethod').value : 'plane',
+      hasTicket: document.querySelector('input[name="hasTicket"]') ? document.querySelector('input[name="hasTicket"]').value === 'true' : false
+    });
+
+    // Componente para seletor de aeroportos com formato IATA
+    Alpine.data('airportSelector', (fieldName) => ({
+      airports: [
+        // Aeroportos do Brasil
+        { code: "GRU", city: "São Paulo (Guarulhos)", country: "BR" },
+        { code: "CGH", city: "São Paulo (Congonhas)", country: "BR" },
+        { code: "VCP", city: "Campinas", country: "BR" },
+        { code: "SDU", city: "Rio de Janeiro (S. Dumont)", country: "BR" },
+        { code: "GIG", city: "Rio de Janeiro (Galeão)", country: "BR" },
+        { code: "BSB", city: "Brasília", country: "BR" },
+        { code: "CNF", city: "Belo Horizonte (Confins)", country: "BR" },
+        { code: "PLU", city: "Belo Horizonte (Pampulha)", country: "BR" },
+        { code: "POA", city: "Porto Alegre", country: "BR" },
+        { code: "SSA", city: "Salvador", country: "BR" },
+        { code: "REC", city: "Recife", country: "BR" },
+        { code: "FOR", city: "Fortaleza", country: "BR" },
+        { code: "CWB", city: "Curitiba (Afonso Pena)", country: "BR" },
+        { code: "BEL", city: "Belém", country: "BR" },
+        { code: "MAO", city: "Manaus", country: "BR" },
+        { code: "FLN", city: "Florianópolis", country: "BR" },
+        { code: "NAT", city: "Natal", country: "BR" },
+        { code: "MCZ", city: "Maceió", country: "BR" },
+        { code: "CGB", city: "Cuiabá", country: "BR" },
+        { code: "GYN", city: "Goiânia", country: "BR" },
+        { code: "VIX", city: "Vitória", country: "BR" },
+        { code: "AJU", city: "Aracaju", country: "BR" },
+        { code: "JPA", city: "João Pessoa", country: "BR" },
+        { code: "SLZ", city: "São Luís", country: "BR" },
+        { code: "THE", city: "Teresina", country: "BR" },
+        { code: "PMW", city: "Palmas", country: "BR" },
+        { code: "BPS", city: "Porto Seguro", country: "BR" },
+        { code: "LDB", city: "Londrina", country: "BR" },
+        { code: "RBR", city: "Rio Branco", country: "BR" },
+        { code: "MGF", city: "Maringá", country: "BR" },
+        { code: "JOI", city: "Joinville", country: "BR" },
+        { code: "IGU", city: "Foz do Iguaçu", country: "BR" },
+
+        // Aeroportos dos EUA
+        { code: "JFK", city: "New York (Kennedy)", country: "US" },
+        { code: "LGA", city: "New York (LaGuardia)", country: "US" },
+        { code: "EWR", city: "New York (Newark)", country: "US" },
+        { code: "LAX", city: "Los Angeles", country: "US" },
+        { code: "ORD", city: "Chicago (O'Hare)", country: "US" },
+        { code: "MDW", city: "Chicago (Midway)", country: "US" },
+        { code: "ATL", city: "Atlanta", country: "US" },
+        { code: "DFW", city: "Dallas", country: "US" },
+        { code: "MIA", city: "Miami", country: "US" },
+        { code: "SFO", city: "San Francisco", country: "US" },
+        { code: "LAS", city: "Las Vegas", country: "US" },
+        { code: "MCO", city: "Orlando", country: "US" },
+        { code: "SEA", city: "Seattle", country: "US" },
+        { code: "BOS", city: "Boston", country: "US" },
+        { code: "IAD", city: "Washington (Dulles)", country: "US" },
+        { code: "DCA", city: "Washington (Reagan)", country: "US" },
+
+        // Aeroportos da Europa
+        { code: "LHR", city: "London (Heathrow)", country: "UK" },
+        { code: "LGW", city: "London (Gatwick)", country: "UK" },
+        { code: "LCY", city: "London (City)", country: "UK" },
+        { code: "CDG", city: "Paris (C. de Gaulle)", country: "FR" },
+        { code: "ORY", city: "Paris (Orly)", country: "FR" },
+        { code: "FRA", city: "Frankfurt", country: "DE" },
+        { code: "AMS", city: "Amsterdam", country: "NL" },
+        { code: "MAD", city: "Madrid", country: "ES" },
+        { code: "BCN", city: "Barcelona", country: "ES" },
+        { code: "FCO", city: "Rome (Fiumicino)", country: "IT" },
+        { code: "CIA", city: "Rome (Ciampino)", country: "IT" },
+        { code: "MXP", city: "Milan (Malpensa)", country: "IT" },
+        { code: "LIN", city: "Milan (Linate)", country: "IT" },
+        { code: "VIE", city: "Vienna", country: "AT" },
+        { code: "ZRH", city: "Zurich", country: "CH" },
+        { code: "GVA", city: "Geneva", country: "CH" },
+        { code: "CPH", city: "Copenhagen", country: "DK" },
+        { code: "ARN", city: "Stockholm", country: "SE" },
+        { code: "OSL", city: "Oslo", country: "NO" },
+        { code: "HEL", city: "Helsinki", country: "FI" },
+        { code: "DUB", city: "Dublin", country: "IE" },
+        { code: "MUC", city: "Munich", country: "DE" },
+        { code: "BRU", city: "Brussels", country: "BE" },
+        { code: "ATH", city: "Athens", country: "GR" },
+        { code: "LIS", city: "Lisbon", country: "PT" },
+        { code: "OPO", city: "Porto", country: "PT" },
+
+        // Aeroportos da América Latina
+        { code: "MEX", city: "Mexico City", country: "MX" },
+        { code: "CUN", city: "Cancun", country: "MX" },
+        { code: "EZE", city: "B. Aires (Ezeiza)", country: "AR" },
+        { code: "AEP", city: "B. Aires (Aeroparque)", country: "AR" },
+        { code: "SCL", city: "Santiago", country: "CL" },
+        { code: "LIM", city: "Lima", country: "PE" },
+        { code: "BOG", city: "Bogotá", country: "CO" },
+        { code: "CCS", city: "Caracas", country: "VE" },
+        { code: "MVD", city: "Montevideo", country: "UY" },
+        { code: "ASU", city: "Asunción", country: "PY" },
+        { code: "PTY", city: "Panama City", country: "PA" },
+        { code: "HAV", city: "Havana", country: "CU" },
+        { code: "SDQ", city: "Santo Domingo", country: "DO" },
+        { code: "SJO", city: "San José", country: "CR" },
+
+        // Aeroportos da Ásia e Oceania
+        { code: "SYD", city: "Sydney", country: "AU" },
+        { code: "MEL", city: "Melbourne", country: "AU" },
+        { code: "BNE", city: "Brisbane", country: "AU" },
+        { code: "PER", city: "Perth", country: "AU" },
+        { code: "AKL", city: "Auckland", country: "NZ" },
+        { code: "SIN", city: "Singapore", country: "SG" },
+        { code: "HKG", city: "Hong Kong", country: "HK" },
+        { code: "PVG", city: "Shanghai (Pudong)", country: "CN" },
+        { code: "PEK", city: "Beijing (Capital)", country: "CN" },
+        { code: "NRT", city: "Tokyo (Narita)", country: "JP" },
+        { code: "HND", city: "Tokyo (Haneda)", country: "JP" },
+        { code: "ICN", city: "Seoul (Incheon)", country: "KR" },
+        { code: "BKK", city: "Bangkok", country: "TH" },
+        { code: "KUL", city: "Kuala Lumpur", country: "MY" },
+        { code: "DEL", city: "Delhi", country: "IN" },
+        { code: "BOM", city: "Mumbai", country: "IN" },
+        { code: "DXB", city: "Dubai", country: "AE" },
+        { code: "DOH", city: "Doha", country: "QA" },
+        { code: "IST", city: "Istanbul", country: "TR" },
+
+        // Aeroportos da África
+        { code: "JNB", city: "Johannesburg", country: "ZA" },
+        { code: "CPT", city: "Cape Town", country: "ZA" },
+        { code: "CAI", city: "Cairo", country: "EG" },
+        { code: "CMN", city: "Casablanca", country: "MA" },
+        { code: "LOS", city: "Lagos", country: "NG" },
+        { code: "NBO", city: "Nairobi", country: "KE" }
+      ],
+      fieldName: fieldName,
+      open: false,
+      search: '',
+      selectedCode: '',
+      selectedAirport: null,
+
+      init() {
+        console.log('Inicializando seletor de aeroporto para', this.fieldName);
+        // Tentar carregar valor inicial do aeroporto se já estiver definido
+        this.loadAirports();
+      },
+
+      loadAirports() {
+        console.log('Carregando aeroportos para o campo:', this.fieldName);
+
+        // Se já temos um valor selecionado, encontre o aeroporto correspondente
+        const inputField = document.getElementById(this.fieldName);
+        if (inputField && inputField.value) {
+          this.selectedCode = inputField.value;
+          this.selectedAirport = this.airports.find(airport => airport.code === this.selectedCode);
+          if (this.selectedAirport) {
+            console.log(`Aeroporto encontrado para ${this.fieldName}:`, this.selectedAirport);
+          }
+        }
+      },
+
+      get filteredAirports() {
+        if (!this.search) return this.airports;
+
+        const searchLower = this.search.toLowerCase();
+        return this.airports.filter(airport =>
+          airport.code.toLowerCase().includes(searchLower) ||
+          airport.city.toLowerCase().includes(searchLower) ||
+          airport.country.toLowerCase().includes(searchLower)
+        );
+      },
+
+      selectAirport(airport) {
+        this.selectedAirport = airport;
+        this.selectedCode = airport.code;
+        this.open = false;
+        console.log(`Aeroporto selecionado para ${this.fieldName}:`, airport);
+      }
+    }));
+  });
+
+  document.addEventListener('DOMContentLoaded', function () {
+    console.log("DOM carregado, inicializando componentes...");
+
+    // Inicializa Flatpickr para campos de data
+    flatpickr(".datepicker-month-year", {
+      dateFormat: "m/Y",
+      locale: "pt",
+      allowInput: true,
+      plugins: [
+        new monthSelectPlugin({
+          shorthand: true,
+          dateFormat: "m/Y",
+          altFormat: "F Y",
+        })
+      ]
+    });
+
+    flatpickr(".datepicker-with-time", {
+      dateFormat: "d/m/Y H:i",
+      enableTime: true,
+      time_24hr: true,
+      locale: "pt",
+      allowInput: true,
+      position: "auto",
+      minuteIncrement: 5,
+    });
+
+    // Gestão de upload de arquivo
+    const fileInput = document.getElementById('travelTicketFile');
+    const uploadPreview = document.getElementById('uploadPreview');
+    const fileName = document.getElementById('fileName');
+    const removeFile = document.getElementById('removeFile');
+
+    if (fileInput) {
+      fileInput.addEventListener('change', function () {
+        const file = this.files[0];
+        if (file) {
+          fileName.textContent = file.name;
+          uploadPreview.classList.remove('hidden');
+        }
+      });
+
+      if (removeFile) {
+        removeFile.addEventListener('click', function () {
+          fileInput.value = '';
+          uploadPreview.classList.add('hidden');
+        });
+      }
+    }
+
+    // Inicializa o Google Places para o campo de endereço
+    if (window.google && window.google.maps && window.google.maps.places) {
+      setupGooglePlaces();
+    } else {
+      console.log("Aguardando carregamento da API do Google Maps...");
+      // Verificar a cada 500ms se a API foi carregada
+      const checkInterval = setInterval(function () {
+        if (window.google && window.google.maps && window.google.maps.places) {
+          clearInterval(checkInterval);
+          setupGooglePlaces();
+        }
+      }, 500);
+
+      // Depois de 10 segundos, parar de verificar se a API não carregou
+      setTimeout(function () {
+        clearInterval(checkInterval);
+        if (!(window.google && window.google.maps && window.google.maps.places)) {
+          console.error("API do Google Maps não carregou após 10 segundos");
+        }
+      }, 10000);
+    }
+
+    // Inicializa os indicadores de botões de rádio
+    initRadioButtons();
+  });
+
+  // Função para ativar botões de rádio
+  function ativarRadioButton(button, name, value) {
+    // Remove a classe active de todos os botões do mesmo grupo
+    document.querySelectorAll(`.radio-button[data-name="${name}"]`).forEach(btn => {
+      btn.classList.remove('active');
+    });
+
+    // Adiciona a classe active ao botão clicado
+    if (button.classList) {
+      button.classList.add('active');
+    } else {
+      // Se this for passado do Alpine, precisamos encontrar o botão correto
+      const buttons = document.querySelectorAll(`.radio-button[data-name="${name}"]`);
+      for (let btn of buttons) {
+        if (btn.dataset.value === value) {
+          btn.classList.add('active');
+          button = btn; // atualiza a referência do botão
+          break;
+        }
+      }
+    }
+
+    // Atualiza o campo oculto correspondente
+    let hiddenInput = document.querySelector(`input[name="${name}"]`);
+    if (!hiddenInput) {
+      hiddenInput = document.createElement('input');
+      hiddenInput.type = 'hidden';
+      hiddenInput.name = name;
+      document.querySelector('form').appendChild(hiddenInput);
+    }
+    hiddenInput.value = value;
+
+    // Anima o indicador pill
+    animateIndicator(name, button);
+  }
+
+  // Função para animar o indicador
+  function animateIndicator(name, selectedButton) {
+    const indicator = document.getElementById(`${name}-indicator`);
+    if (!indicator) return;
+
+    const parent = selectedButton.parentElement;
+    const buttons = parent.querySelectorAll('.radio-button');
+    const index = Array.from(buttons).indexOf(selectedButton);
+    const width = `calc(${100 / buttons.length}% - 1px)`;
+
+    indicator.style.width = width;
+    indicator.style.transform = `translateX(${index * 100}%)`;
+    indicator.style.opacity = '1';
+  }
+
+  // Inicializar todos os botões de rádio na página
+  function initRadioButtons() {
+    document.querySelectorAll('.radio-button').forEach(btn => {
+      // Se já estiver com a classe active, anime o indicador
+      if (btn.classList.contains('active')) {
+        animateIndicator(btn.dataset.name, btn);
+      }
+
+      // Adicionar eventos de hover
+      btn.addEventListener('mouseenter', function () {
+        if (!this.classList.contains('active')) {
+          this.classList.add('hover');
+        }
+      });
+
+      btn.addEventListener('mouseleave', function () {
+        this.classList.remove('hover');
+      });
+    });
+
+    // Ativar o botão correto conforme valor inicial
+    const hasTicketValue = document.querySelector('input[name="hasTicket"]').value;
+    if (hasTicketValue) {
+      const btn = document.querySelector(`.radio-button[data-name="hasTicket"][data-value="${hasTicketValue}"]`);
+      if (btn) {
+        btn.classList.add('active');
+        animateIndicator('hasTicket', btn);
+      }
+    }
+  }
+
+  // Configuração do Google Places Autocomplete
+  function setupGooglePlaces() {
+    console.log("Configurando Google Places Autocomplete");
+
+    const addressInput = document.getElementById('destinationAddress');
+    if (!addressInput) {
+      console.error("Campo de endereço não encontrado");
+      return;
+    }
+
+    try {
+      const autocomplete = new google.maps.places.Autocomplete(addressInput, {
+        types: ['address'],
+        fields: ['formatted_address', 'geometry']
+      });
+
+      autocomplete.addListener('place_changed', function () {
+        const place = autocomplete.getPlace();
+        console.log("Lugar selecionado:", place);
+
+        if (place && place.formatted_address) {
+          addressInput.value = place.formatted_address;
+        }
+      });
+
+      console.log("Google Places configurado com sucesso!");
+    } catch (error) {
+      console.error("Erro ao configurar Google Places:", error);
+    }
+  }
+
+  // Componente para seletor de aeroportos com formato IATA
+  Alpine.data('airportSelector', (fieldName) => ({
+    airports: [
+      // Aeroportos do Brasil
+      { code: "GRU", city: "São Paulo (Guarulhos)", country: "BR" },
+      { code: "CGH", city: "São Paulo (Congonhas)", country: "BR" },
+      { code: "VCP", city: "Campinas", country: "BR" },
+      { code: "SDU", city: "Rio de Janeiro (S. Dumont)", country: "BR" },
+      { code: "GIG", city: "Rio de Janeiro (Galeão)", country: "BR" },
+      { code: "BSB", city: "Brasília", country: "BR" },
+      { code: "CNF", city: "Belo Horizonte (Confins)", country: "BR" },
+      { code: "PLU", city: "Belo Horizonte (Pampulha)", country: "BR" },
+      { code: "POA", city: "Porto Alegre", country: "BR" },
+      { code: "SSA", city: "Salvador", country: "BR" },
+      { code: "REC", city: "Recife", country: "BR" },
+      { code: "FOR", city: "Fortaleza", country: "BR" },
+      { code: "CWB", city: "Curitiba (Afonso Pena)", country: "BR" },
+      { code: "BEL", city: "Belém", country: "BR" },
+      { code: "MAO", city: "Manaus", country: "BR" },
+      { code: "FLN", city: "Florianópolis", country: "BR" },
+      { code: "NAT", city: "Natal", country: "BR" },
+      { code: "MCZ", city: "Maceió", country: "BR" },
+      { code: "CGB", city: "Cuiabá", country: "BR" },
+      { code: "GYN", city: "Goiânia", country: "BR" },
+      { code: "VIX", city: "Vitória", country: "BR" },
+      { code: "AJU", city: "Aracaju", country: "BR" },
+      { code: "JPA", city: "João Pessoa", country: "BR" },
+      { code: "SLZ", city: "São Luís", country: "BR" },
+      { code: "THE", city: "Teresina", country: "BR" },
+      { code: "PMW", city: "Palmas", country: "BR" },
+      { code: "BPS", city: "Porto Seguro", country: "BR" },
+      { code: "LDB", city: "Londrina", country: "BR" },
+      { code: "RBR", city: "Rio Branco", country: "BR" },
+      { code: "MGF", city: "Maringá", country: "BR" },
+      { code: "JOI", city: "Joinville", country: "BR" },
+      { code: "IGU", city: "Foz do Iguaçu", country: "BR" },
+
+      // Aeroportos dos EUA
+      { code: "JFK", city: "New York (Kennedy)", country: "US" },
+      { code: "LGA", city: "New York (LaGuardia)", country: "US" },
+      { code: "EWR", city: "New York (Newark)", country: "US" },
+      { code: "LAX", city: "Los Angeles", country: "US" },
+      { code: "ORD", city: "Chicago (O'Hare)", country: "US" },
+      { code: "MDW", city: "Chicago (Midway)", country: "US" },
+      { code: "ATL", city: "Atlanta", country: "US" },
+      { code: "DFW", city: "Dallas", country: "US" },
+      { code: "MIA", city: "Miami", country: "US" },
+      { code: "SFO", city: "San Francisco", country: "US" },
+      { code: "LAS", city: "Las Vegas", country: "US" },
+      { code: "MCO", city: "Orlando", country: "US" },
+      { code: "SEA", city: "Seattle", country: "US" },
+      { code: "BOS", city: "Boston", country: "US" },
+      { code: "IAD", city: "Washington (Dulles)", country: "US" },
+      { code: "DCA", city: "Washington (Reagan)", country: "US" },
+
+      // Aeroportos da Europa
+      { code: "LHR", city: "London (Heathrow)", country: "UK" },
+      { code: "LGW", city: "London (Gatwick)", country: "UK" },
+      { code: "LCY", city: "London (City)", country: "UK" },
+      { code: "CDG", city: "Paris (C. de Gaulle)", country: "FR" },
+      { code: "ORY", city: "Paris (Orly)", country: "FR" },
+      { code: "FRA", city: "Frankfurt", country: "DE" },
+      { code: "AMS", city: "Amsterdam", country: "NL" },
+      { code: "MAD", city: "Madrid", country: "ES" },
+      { code: "BCN", city: "Barcelona", country: "ES" },
+      { code: "FCO", city: "Rome (Fiumicino)", country: "IT" },
+      { code: "CIA", city: "Rome (Ciampino)", country: "IT" },
+      { code: "MXP", city: "Milan (Malpensa)", country: "IT" },
+      { code: "LIN", city: "Milan (Linate)", country: "IT" },
+      { code: "VIE", city: "Vienna", country: "AT" },
+      { code: "ZRH", city: "Zurich", country: "CH" },
+      { code: "GVA", city: "Geneva", country: "CH" },
+      { code: "CPH", city: "Copenhagen", country: "DK" },
+      { code: "ARN", city: "Stockholm", country: "SE" },
+      { code: "OSL", city: "Oslo", country: "NO" },
+      { code: "HEL", city: "Helsinki", country: "FI" },
+      { code: "DUB", city: "Dublin", country: "IE" },
+      { code: "MUC", city: "Munich", country: "DE" },
+      { code: "BRU", city: "Brussels", country: "BE" },
+      { code: "ATH", city: "Athens", country: "GR" },
+      { code: "LIS", city: "Lisbon", country: "PT" },
+      { code: "OPO", city: "Porto", country: "PT" },
+
+      // Aeroportos da América Latina
+      { code: "MEX", city: "Mexico City", country: "MX" },
+      { code: "CUN", city: "Cancun", country: "MX" },
+      { code: "EZE", city: "B. Aires (Ezeiza)", country: "AR" },
+      { code: "AEP", city: "B. Aires (Aeroparque)", country: "AR" },
+      { code: "SCL", city: "Santiago", country: "CL" },
+      { code: "LIM", city: "Lima", country: "PE" },
+      { code: "BOG", city: "Bogotá", country: "CO" },
+      { code: "CCS", city: "Caracas", country: "VE" },
+      { code: "MVD", city: "Montevideo", country: "UY" },
+      { code: "ASU", city: "Asunción", country: "PY" },
+      { code: "PTY", city: "Panama City", country: "PA" },
+      { code: "HAV", city: "Havana", country: "CU" },
+      { code: "SDQ", city: "Santo Domingo", country: "DO" },
+      { code: "SJO", city: "San José", country: "CR" },
+
+      // Aeroportos da Ásia e Oceania
+      { code: "SYD", city: "Sydney", country: "AU" },
+      { code: "MEL", city: "Melbourne", country: "AU" },
+      { code: "BNE", city: "Brisbane", country: "AU" },
+      { code: "PER", city: "Perth", country: "AU" },
+      { code: "AKL", city: "Auckland", country: "NZ" },
+      { code: "SIN", city: "Singapore", country: "SG" },
+      { code: "HKG", city: "Hong Kong", country: "HK" },
+      { code: "PVG", city: "Shanghai (Pudong)", country: "CN" },
+      { code: "PEK", city: "Beijing (Capital)", country: "CN" },
+      { code: "NRT", city: "Tokyo (Narita)", country: "JP" },
+      { code: "HND", city: "Tokyo (Haneda)", country: "JP" },
+      { code: "ICN", city: "Seoul (Incheon)", country: "KR" },
+      { code: "BKK", city: "Bangkok", country: "TH" },
+      { code: "KUL", city: "Kuala Lumpur", country: "MY" },
+      { code: "DEL", city: "Delhi", country: "IN" },
+      { code: "BOM", city: "Mumbai", country: "IN" },
+      { code: "DXB", city: "Dubai", country: "AE" },
+      { code: "DOH", city: "Doha", country: "QA" },
+      { code: "IST", city: "Istanbul", country: "TR" },
+
+      // Aeroportos da África
+      { code: "JNB", city: "Johannesburg", country: "ZA" },
+      { code: "CPT", city: "Cape Town", country: "ZA" },
+      { code: "CAI", city: "Cairo", country: "EG" },
+      { code: "CMN", city: "Casablanca", country: "MA" },
+      { code: "LOS", city: "Lagos", country: "NG" },
+      { code: "NBO", city: "Nairobi", country: "KE" }
+    ],
+    fieldName: fieldName,
+    open: false,
+    search: '',
+    selectedCode: '',
+    selectedAirport: null,
+
+    loadAirports() {
+      console.log('Carregando aeroportos para o campo:', this.fieldName);
+    },
+
+    get filteredAirports() {
+      if (!this.search) return this.airports;
+
+      const searchLower = this.search.toLowerCase();
+      return this.airports.filter(airport =>
+        airport.code.toLowerCase().includes(searchLower) ||
+        airport.city.toLowerCase().includes(searchLower) ||
+        airport.country.toLowerCase().includes(searchLower)
+      );
+    },
+
+    selectAirport(airport) {
+      this.selectedAirport = airport;
+      this.selectedCode = airport.code;
+      this.open = false;
+      console.log(`Aeroporto selecionado para ${this.fieldName}:`, airport);
+    }
+  }));
+</script>
+{% endblock %}

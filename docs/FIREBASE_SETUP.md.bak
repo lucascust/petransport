@@ -1,0 +1,77 @@
+# Firebase Storage Setup Guide
+
+This guide will help you set up Firebase Storage for the PetTransport application.
+
+## Prerequisites
+
+1. A Google account
+2. A Firebase project (either create a new one or use an existing one)
+
+## Step 1: Create or Access Your Firebase Project
+
+1. Go to [Firebase Console](https://console.firebase.google.com/)
+2. Create a new project or select the existing "pettransport-b01b8" project
+
+## Step 2: Enable Firebase Storage
+
+1. In the Firebase Console, navigate to "Storage" in the left sidebar
+2. Click "Get Started" if you haven't set up Storage yet
+3. Choose production or test mode (production is recommended)
+4. Select a location for your data (choose something close to your users)
+5. Click "Done"
+
+## Step 3: Setting up Firebase Admin SDK
+
+### Option 1: Create and Download a Service Account Key
+
+1. In the Firebase Console, go to Project Settings (gear icon)
+2. Navigate to the "Service accounts" tab
+3. Click "Generate new private key" button
+4. Save the downloaded JSON file as `service-account.json` in your project root directory
+
+### Option 2: Set Environment Variable
+
+Alternatively, you can set the `FIREBASE_SERVICE_ACCOUNT` environment variable with the contents of the service account JSON:
+
+1. Download the service account key as in Option 1
+2. Add the entire contents of the JSON file to your `.env` file as:
+   ```
+   FIREBASE_SERVICE_ACCOUNT={"type":"service_account","project_id":"...",...}
+   ```
+
+## Step 4: Update Bucket Permissions
+
+Make sure your Firebase Storage bucket allows read access:
+
+1. In Firebase Console, go to Storage
+2. Navigate to the "Rules" tab
+3. Update the rules to allow read access:
+   ```
+   rules_version = '2';
+   service firebase.storage {
+     match /b/{bucket}/o {
+       match /{allPaths=**} {
+         allow read;
+         allow write: if request.auth != null;
+       }
+     }
+   }
+   ```
+   
+4. Click "Publish"
+
+## Step 5: Update Your Flask Application
+
+1. Copy `env.example` to `.env` and fill in your Firebase settings
+2. Make sure your application can access either:
+   - The `service-account.json` file in your project root
+   - The `FIREBASE_SERVICE_ACCOUNT` environment variable
+
+## Testing
+
+To verify your setup:
+
+1. Start your Flask application
+2. Try uploading a file through one of the upload forms
+3. Check if the file appears in your Firebase Storage bucket
+4. Verify that you can view the uploaded file in the application 

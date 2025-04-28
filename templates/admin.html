@@ -1,0 +1,630 @@
+{% extends "base.html" %}
+
+{% block title %}Painel Administrativo{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+  <!-- Cabeçalho -->
+  <div class="flex flex-col sm:flex-row justify-between items-center mb-8">
+    <h1 class="text-3xl font-bold text-gray-900 mb-4 sm:mb-0">Painel Administrativo</h1>
+    <div class="flex space-x-4">
+      <a href="/cadastro_usuario_novo"
+        class="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors">
+        <svg class="w-5 h-5 mr-2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+          <path fill-rule="evenodd"
+            d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z"
+            clip-rule="evenodd" />
+        </svg>
+        Novo Responsável
+      </a>
+      <a href="/admin/logout"
+        class="inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-gray-700 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 transition-colors">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+          stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-5 h-5 mr-2">
+          <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+          <polyline points="16 17 21 12 16 7" />
+          <line x1="21" x2="9" y1="12" y2="12" />
+        </svg>
+        Sair
+      </a>
+    </div>
+  </div>
+
+  <!-- Barra de busca -->
+  <div class="mb-8">
+    <div class="relative">
+      <input type="text" id="search-input" placeholder="Buscar por nome do tutor ou pet..."
+        class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-primary-500 focus:border-primary-500">
+      <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+        <svg class="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+          <path fill-rule="evenodd"
+            d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z"
+            clip-rule="evenodd" />
+        </svg>
+      </div>
+    </div>
+  </div>
+
+  <!-- Grade de usuários -->
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+    {% for usuario in usuarios %}
+    <div class="usuario-card bg-white rounded-lg shadow-md overflow-hidden border border-gray-200"
+      data-tutor="{{ usuario['owner_name'].lower() }}"
+      data-pets="{{ usuario['pets']|map(attribute='name')|join(' ')|lower }}">
+
+      <!-- Cabeçalho do card de usuário -->
+      <div class="px-4 py-3 bg-gray-50 border-b border-gray-200 flex justify-between items-center">
+        <h3 class="text-lg font-semibold text-gray-800 truncate">{{ usuario['owner_name'] if usuario['owner_name'] is
+          defined else 'Sem nome' }}</h3>
+        <a href="/{{ usuario['username'] }}" class="text-sm text-primary-600 hover:text-primary-800 font-medium">@{{
+          usuario['username'] }}</a>
+      </div>
+
+      <!-- Status de viagem atual -->
+      {% if usuario.get('current_travel') %}
+      <div
+        class="px-4 py-2 border-b border-gray-200 {% if usuario['current_travel']['status'] == 'active' %}bg-green-50{% elif usuario['current_travel']['status'] == 'scheduled' %}bg-blue-50{% else %}bg-gray-50{% endif %}">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center">
+            <svg xmlns="http://www.w3.org/2000/svg"
+              class="h-4 w-4 mr-1 {% if usuario['current_travel']['status'] == 'active' %}text-green-600{% elif usuario['current_travel']['status'] == 'scheduled' %}text-blue-600{% else %}text-gray-600{% endif %}"
+              viewBox="0 0 20 20" fill="currentColor">
+              <path fill-rule="evenodd"
+                d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z"
+                clip-rule="evenodd" />
+            </svg>
+            <span
+              class="text-sm font-medium {% if usuario['current_travel']['status'] == 'active' %}text-green-800{% elif usuario['current_travel']['status'] == 'scheduled' %}text-blue-800{% else %}text-gray-800{% endif %}">
+              {% if usuario['current_travel']['status'] == 'active' %}
+              Em transporte
+              {% elif usuario['current_travel']['status'] == 'scheduled' %}
+              Agendado
+              {% else %}
+              Concluído
+              {% endif %}
+            </span>
+          </div>
+          <button onclick="verDetalhesViagem('{{ usuario.username }}', '{{ usuario.current_travel.id }}')"
+            class="text-xs text-primary-600 hover:text-primary-800">
+            Detalhes
+          </button>
+        </div>
+        <div class="mt-1 grid grid-cols-3 gap-x-2 text-xs">
+          <div class="text-gray-500">Origem: {{ usuario['current_travel']['origin'] }}</div>
+          <div class="text-gray-500">Destino: {{ usuario['current_travel']['destination'] }}</div>
+          <div class="text-gray-500">{{ 'Saída:' if usuario['current_travel']['status'] != 'completed' else 'Concluído:'
+            }} {{ usuario['current_travel']['ticket_date'] if usuario['current_travel'].get('ticket_date') else
+            usuario['current_travel'].get('estimated_date', '') }}</div>
+        </div>
+      </div>
+      {% else %}
+      <div class="px-4 py-5 border-b border-gray-200 bg-gray-50 flex items-center justify-between">
+        <span class="text-sm text-gray-500 italic">Sem viagens recentes</span>
+      </div>
+      {% endif %}
+
+      <!-- Informações do usuário (compactadas) -->
+      <div class="px-4 py-2 border-b border-gray-200 bg-gray-50 flex justify-between items-center text-sm">
+        <div class="flex space-x-4">
+          <div class="flex items-center">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1 text-gray-400" viewBox="0 0 20 20"
+              fill="currentColor">
+              <path fill-rule="evenodd" d="M10 2a8 8 0 100 16 8 8 0 000-16zm0 14a6 6 0 110-12 6 6 0 010 12z"
+                clip-rule="evenodd" />
+              <path
+                d="M10 4a1 1 0 00-1 1v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V5a1 1 0 00-1-1z" />
+            </svg>
+            <span title="Último acesso" class="text-gray-600">{{ usuario['last_access'].strftime('%d/%m/%Y') if
+              usuario['last_access'] is defined else 'N/A' }}</span>
+          </div>
+          <div class="flex items-center">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1 text-gray-400" viewBox="0 0 20 20"
+              fill="currentColor">
+              <path fill-rule="evenodd"
+                d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z"
+                clip-rule="evenodd" />
+            </svg>
+            <span title="Data de cadastro" class="text-gray-600">{{ usuario['registration_date'].strftime('%d/%m/%Y') if
+              usuario['registration_date'] is defined else 'N/A' }}</span>
+          </div>
+        </div>
+        <button onclick="verPerfilUsuario('{{ usuario.username }}')"
+          class="text-xs text-primary-600 hover:text-primary-800">
+          Ver perfil
+        </button>
+      </div>
+
+      <!-- Pets do usuário -->
+      <div class="p-4">
+        <div class="flex justify-between items-center mb-3">
+          <h4 class="font-medium text-gray-800">Pets</h4>
+        </div>
+
+        <!-- Lista de pets compacta -->
+        {% if usuario['pets'] %}
+        <div class="space-y-3">
+          {% for pet in usuario['pets'] %}
+          <div class="pet-card bg-gray-50 rounded-md border border-gray-200 overflow-hidden flex"
+            data-pet-id="{{ pet['id'] }}" data-pet="{{ pet['name'] }}" data-especie="{{ pet['species'] }}"
+            data-raca="{{ pet['breed'] }}" data-sexo="{{ pet['gender'] }}" data-nascimento="{{ pet['birth_date'] }}"
+            data-microchip="{{ pet['microchip'] }}" data-fur-color="{{ pet['fur_color'] }}"
+            data-weight="{{ pet['weight'] }}">
+
+            <!-- Foto do pet -->
+            <div class="w-16 h-16 flex-shrink-0 relative"
+              onclick="triggerFileInput(this, '{{ usuario.username }}', '{{ pet.name }}', '{{ pet.id }}')">
+              {% if 'photo_id' in pet and pet['photo_id'] %}
+              {% if 'photo' in pet and pet['photo'] is mapping and 'path' in pet['photo'] %}
+              <img src="{{ url_for('static', filename='uploads/' + pet['photo']['path']) }}"
+                alt="Foto de {{ pet['name'] }}" class="w-full h-full object-cover">
+              {% else %}
+              <div class="w-full h-full bg-gray-200 flex items-center justify-center">
+                <svg class="w-8 h-8 text-gray-400" viewBox="0 0 512 512" fill="currentColor">
+                  <path
+                    d="M256 224c-79.41 0-192 122.76-192 200.25 0 34.9 26.81 55.75 71.74 55.75 48.84 0 81.09-25.08 120.26-25.08 39.51 0 71.85 25.08 120.26 25.08 44.93 0 71.74-20.85 71.74-55.75C448 346.76 335.41 224 256 224zm-147.28-12.61c-10.4-34.65-42.44-57.09-71.56-50.13-29.12 6.96-44.29 40.69-33.89 75.34 10.4 34.65 42.44 57.09 71.56 50.13 29.12-6.96 44.29-40.69 33.89-75.34zm84.72-20.78c30.94-8.14 46.42-49.94 34.58-93.36s-46.52-72.01-77.46-63.87-46.42 49.94-34.58 93.36c11.84 43.42 46.53 72.02 77.46 63.87zm281.39-29.34c-29.12-6.96-61.15 15.48-71.56 50.13-10.4 34.65 4.77 68.38 33.89 75.34 29.12 6.96 61.15-15.48 71.56-50.13 10.4-34.65-4.77-68.38-33.89-75.34zm-156.27 29.34c30.94 8.14 65.62-20.45 77.46-63.87 11.84-43.42-3.64-85.21-34.58-93.36s-65.62 20.45-77.46 63.87c-11.84 43.42 3.64 85.22 34.58 93.36z" />
+                </svg>
+              </div>
+              {% endif %}
+              {% else %}
+              <div class="w-full h-full bg-gray-200 flex items-center justify-center">
+                <svg class="w-8 h-8 text-gray-400" viewBox="0 0 512 512" fill="currentColor">
+                  <path
+                    d="M256 224c-79.41 0-192 122.76-192 200.25 0 34.9 26.81 55.75 71.74 55.75 48.84 0 81.45-25.08 120.26-25.08 38.79 0 71.42 25.08 120.26 25.08 44.93 0 71.74-20.85 71.74-55.75C448 346.76 335.41 224 256 224zm-147.28-12.61c-10.4-34.65-42.44-57.09-71.56-50.13-29.12 6.96-44.29 40.69-33.89 75.34 10.4 34.65 42.44 57.09 71.56 50.13 29.12-6.96 44.29-40.69 33.89-75.34zm84.72-20.78c30.94-8.14 46.42-49.94 34.58-93.36s-46.52-72.01-77.46-63.87-46.42 49.94-34.58 93.36c11.84 43.42 46.53 72.02 77.46 63.87zm281.39-29.34c-29.12-6.96-61.15 15.48-71.56 50.13-10.4 34.65 4.77 68.38 33.89 75.34 29.12 6.96 61.15-15.48 71.56-50.13 10.4-34.65-4.77-68.38-33.89-75.34zm-156.27 29.34c30.94 8.14 65.62-20.45 77.46-63.87 11.84-43.42-3.64-85.21-34.58-93.36s-65.62 20.45-77.46 63.87c-11.84 43.42 3.64 85.22 34.58 93.36z">
+                  </path>
+                </svg>
+              </div>
+              {% endif %}
+              <div
+                class="absolute inset-0 bg-black bg-opacity-30 opacity-0 hover:opacity-100 flex items-center justify-center text-white text-xs transition-opacity">
+                <svg class="w-4 h-4 mr-1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                  <path fill-rule="evenodd"
+                    d="M4 5a2 2 0 00-2 2v8a2 2 0 002 2h12a2 2 0 002-2V7a2 2 0 00-2-2h-1.586a1 1 0 01-.707-.293l-1.121-1.121A2 2 0 0011.172 3H8.828a2 2 0 00-1.414.586L6.293 4.707A1 1 0 015.586 5H4zm6 9a3 3 0 100-6 3 3 0 000 6z"
+                    clip-rule="evenodd" />
+                </svg>
+              </div>
+            </div>
+
+            <!-- Detalhes do pet -->
+            <div class="flex-1 p-2 flex flex-col justify-between min-w-0">
+              <div>
+                <div class="flex justify-between items-start">
+                  <h5 class="font-medium text-gray-900 truncate">{{ pet['name'] }}</h5>
+                  <span
+                    class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-primary-100 text-primary-800">
+                    {{ pet['species']|title }}
+                  </span>
+                </div>
+                <div class="flex justify-between items-center mt-0.5">
+                  <div class="text-xs text-gray-500">
+                    {{ pet['breed'] }} • {{ pet['gender']|title }}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+        {% else %}
+        <div class="text-center py-6 text-gray-500 italic text-sm">
+          Nenhum pet cadastrado
+        </div>
+        {% endif %}
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+
+  {% if not usuarios %}
+  <div class="text-center py-12">
+    <svg class="mx-auto h-12 w-12 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+      stroke="currentColor">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+        d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+    </svg>
+    <h3 class="mt-2 text-sm font-medium text-gray-900">Nenhum usuário encontrado</h3>
+    <p class="mt-1 text-sm text-gray-500">Comece adicionando um novo responsável.</p>
+  </div>
+  {% endif %}
+</div>
+
+<!-- Include modais de pets -->
+{% include "modals/pet_modals.html" %}
+
+<!-- Modal de detalhes de viagem -->
+<div id="modal-detalhes-viagem"
+  class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center hidden">
+  <div class="bg-white rounded-lg max-w-lg w-full max-h-[90vh] overflow-y-auto">
+    <div class="p-4 border-b border-gray-200 flex justify-between items-center">
+      <h3 class="text-lg font-semibold text-gray-900">Detalhes da Viagem</h3>
+      <button onclick="fecharModalDetalhesViagem()" class="text-gray-400 hover:text-gray-500">
+        <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </button>
+    </div>
+    <div class="p-4" id="conteudo-detalhes-viagem">
+      <!-- Conteúdo será carregado dinamicamente -->
+    </div>
+    <div class="p-4 border-t border-gray-200 flex justify-end space-x-3">
+      <button onclick="fecharModalDetalhesViagem()"
+        class="px-4 py-2 bg-gray-200 text-gray-800 rounded hover:bg-gray-300 transition-colors">
+        Fechar
+      </button>
+      <button onclick="atualizarStatusViagem()"
+        class="px-4 py-2 bg-primary-600 text-white rounded hover:bg-primary-700 transition-colors">
+        Atualizar Status
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal de perfil de usuário -->
+<div id="modal-perfil-usuario"
+  class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center hidden">
+  <div class="bg-white rounded-lg max-w-lg w-full max-h-[90vh] overflow-y-auto">
+    <div class="p-4 border-b border-gray-200 flex justify-between items-center">
+      <h3 class="text-lg font-semibold text-gray-900">Perfil do Usuário</h3>
+      <button onclick="fecharModalPerfilUsuario()" class="text-gray-400 hover:text-gray-500">
+        <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </button>
+    </div>
+    <div class="p-4" id="conteudo-perfil-usuario">
+      <!-- Conteúdo será carregado dinamicamente -->
+    </div>
+    <div class="p-4 border-t border-gray-200 flex justify-end">
+      <button onclick="fecharModalPerfilUsuario()"
+        class="px-4 py-2 bg-gray-200 text-gray-800 rounded hover:bg-gray-300 transition-colors">
+        Fechar
+      </button>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/form_validation.js') }}"></script>
+<script>
+  // Funções para gerenciamento de viagens
+  function verDetalhesViagem(username, travel_id) {
+    // Aqui você carregaria os detalhes completos da viagem via AJAX
+    document.getElementById('conteudo-detalhes-viagem').innerHTML = '<div class="text-center py-4"><svg class="animate-spin h-5 w-5 mx-auto text-primary-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg></div>';
+    document.getElementById('modal-detalhes-viagem').classList.remove('hidden');
+
+    // Na implementação real, você faria uma chamada AJAX para buscar os detalhes da viagem
+    // Exemplo usando fetch:
+    fetch(`/api/travel/${travel_id || ''}?username=${username}`)
+      .then(response => {
+        if (!response.ok) {
+          throw new Error('Erro ao buscar detalhes da viagem');
+        }
+        return response.json();
+      })
+      .then(data => {
+        // Aqui você preencheria o modal com os dados reais
+        let statusClass, statusLabel;
+
+        switch (data.status) {
+          case 'in_progress':
+            statusClass = 'text-green-600';
+            statusLabel = 'Em transporte';
+            break;
+          case 'upcoming':
+            statusClass = 'text-blue-600';
+            statusLabel = 'Agendado';
+            break;
+          case 'completed':
+            statusClass = 'text-gray-600';
+            statusLabel = 'Concluído';
+            break;
+          case 'cancelled':
+            statusClass = 'text-red-600';
+            statusLabel = 'Cancelado';
+            break;
+          default:
+            statusClass = 'text-gray-600';
+            statusLabel = data.status || 'Desconhecido';
+        }
+
+        // Criar o HTML para a lista de pets
+        let petsHTML = '';
+        if (data.pets && data.pets.length > 0) {
+          data.pets.forEach(pet => {
+            petsHTML += `
+              <div class="flex items-center p-2 bg-gray-50 rounded-md">
+                <div class="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center mr-3">
+                  ${pet.photo_url ? `<img src="${pet.photo_url}" alt="${pet.name}" class="w-10 h-10 rounded-full object-cover">` :
+                `<svg class="w-6 h-6 text-gray-500" viewBox="0 0 512 512" fill="currentColor">
+                    <path d="M256 224c-79.41 0-192 122.76-192 200.25 0 34.9 26.81 55.75 71.74 55.75 48.84 0 81.09-25.08 120.26-25.08 39.51 0 71.85 25.08 120.26 25.08 44.93 0 71.74-20.85 71.74-55.75C448 346.76 335.41 224 256 224z"/>
+                  </svg>`}
+                </div>
+                <div>
+                  <p class="font-medium">${pet.name}</p>
+                  <p class="text-sm text-gray-500">${pet.species} • ${pet.breed}</p>
+                </div>
+              </div>
+            `;
+          });
+        } else {
+          petsHTML = '<p class="text-gray-500 italic">Nenhum pet associado a esta viagem</p>';
+        }
+
+        // Criar o HTML para os eventos/atualizações
+        let eventsHTML = '';
+        if (data.history && data.history.length > 0) {
+          // Ordena os eventos por data (mais recente primeiro)
+          const sortedEvents = [...data.history].sort((a, b) =>
+            new Date(b.date) - new Date(a.date)
+          );
+
+          sortedEvents.forEach((event, index) => {
+            const eventDate = new Date(event.date);
+            const formattedDate = eventDate.toLocaleDateString('pt-BR') + ' ' +
+              eventDate.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+
+            eventsHTML += `
+              <div class="flex">
+                <div class="flex-shrink-0 h-full">
+                  <div class="w-1.5 h-1.5 rounded-full ${index === 0 ? 'bg-blue-600' : 'bg-gray-400'} mt-1.5 mr-2.5"></div>
+                  ${index < sortedEvents.length - 1 ? '<div class="w-0.5 h-full bg-gray-200 ml-0.5"></div>' : ''}
+                </div>
+                <div class="pb-4">
+                  <p class="text-sm font-medium">${event.description}</p>
+                  <p class="text-xs text-gray-500">${formattedDate}</p>
+                </div>
+              </div>
+            `;
+          });
+        } else {
+          eventsHTML = '<p class="text-gray-500 italic">Nenhuma atualização disponível</p>';
+        }
+
+        // Montar o HTML completo
+        document.getElementById('conteudo-detalhes-viagem').innerHTML = `
+          <div class="space-y-4">
+            <div class="grid grid-cols-2 gap-4">
+              <div class="space-y-2">
+                <p class="text-sm text-gray-500">Status</p>
+                <p class="font-medium ${statusClass}">${statusLabel}</p>
+              </div>
+              <div class="space-y-2">
+                <p class="text-sm text-gray-500">Código</p>
+                <p class="font-medium">${data.id || 'N/A'}</p>
+              </div>
+              <div class="space-y-2">
+                <p class="text-sm text-gray-500">Origem</p>
+                <p class="font-medium">${data.origin || 'N/A'}</p>
+              </div>
+              <div class="space-y-2">
+                <p class="text-sm text-gray-500">Destino</p>
+                <p class="font-medium">${data.destination || 'N/A'}</p>
+              </div>
+              <div class="space-y-2">
+                <p class="text-sm text-gray-500">Data de Saída</p>
+                <p class="font-medium">${data.formatted_ticket_date || 'N/A'}</p>
+              </div>
+              <div class="space-y-2">
+                <p class="text-sm text-gray-500">Método de Viagem</p>
+                <p class="font-medium">${data.travel_method || 'N/A'}</p>
+              </div>
+            </div>
+            
+            <div class="border-t border-gray-200 pt-4">
+              <p class="font-medium mb-2">Pets em Transporte</p>
+              <div class="space-y-2">
+                ${petsHTML}
+              </div>
+            </div>
+            
+            <div class="border-t border-gray-200 pt-4">
+              <p class="font-medium mb-2">Atualizações</p>
+              <div class="space-y-3">
+                ${eventsHTML}
+              </div>
+            </div>
+            
+            <div class="border-t border-gray-200 pt-4">
+              <p class="font-medium mb-2">Observações</p>
+              <textarea class="w-full p-2 border border-gray-300 rounded-md text-sm" rows="2" placeholder="Adicionar observação..."></textarea>
+            </div>
+          </div>
+        `;
+      })
+      .catch(error => {
+        console.error('Erro:', error);
+        // Exibir mensagem de erro no modal
+        document.getElementById('conteudo-detalhes-viagem').innerHTML = `
+          <div class="text-center py-6">
+            <svg class="mx-auto h-12 w-12 text-red-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <h3 class="mt-2 text-base font-medium text-gray-900">Erro ao buscar detalhes</h3>
+            <p class="mt-1 text-sm text-gray-500">Não foi possível carregar os detalhes da viagem.</p>
+          </div>
+        `;
+      });
+  }
+
+  function atualizarStatusViagem() {
+    // Implementação para atualização de status
+    alert('Status atualizado com sucesso!');
+    fecharModalDetalhesViagem();
+  }
+
+  function fecharModalDetalhesViagem() {
+    document.getElementById('modal-detalhes-viagem').classList.add('hidden');
+  }
+
+  function verPerfilUsuario(username) {
+    // Aqui você carregaria os detalhes do perfil via AJAX
+    document.getElementById('conteudo-perfil-usuario').innerHTML = '<div class="text-center py-4"><svg class="animate-spin h-5 w-5 mx-auto text-primary-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg></div>';
+    document.getElementById('modal-perfil-usuario').classList.remove('hidden');
+
+    // Fazer requisição AJAX para buscar dados do usuário
+    fetch(`/api/user/${username}`)
+      .then(response => {
+        if (!response.ok) {
+          throw new Error('Erro ao buscar detalhes do usuário');
+        }
+        return response.json();
+      })
+      .then(data => {
+        // Função para obter texto de status formatado
+        const getStatusText = (status) => {
+          switch (status) {
+            case 'in_progress': return '<span class="text-green-600">Em andamento</span>';
+            case 'upcoming': return '<span class="text-blue-600">Agendada</span>';
+            case 'completed': return '<span class="text-gray-600">Concluída</span>';
+            case 'cancelled': return '<span class="text-red-600">Cancelada</span>';
+            default: return '<span class="text-gray-600">Desconhecido</span>';
+          }
+        };
+
+        // Formatar endereço residencial
+        let residentialAddress = 'Não cadastrado';
+        if (data.addresses && data.addresses.residential) {
+          const address = data.addresses.residential;
+          residentialAddress = address.formatted || '';
+          if (address.city || address.state) {
+            residentialAddress += `<br>${address.city || ''}${address.city && address.state ? '/' : ''}${address.state || ''}`;
+          }
+          if (address.zip_code) {
+            residentialAddress += `<br>CEP: ${address.zip_code}`;
+          }
+        }
+
+        // Formatar histórico de viagens
+        let travelHistoryHTML = '';
+        if (data.travel_history && data.travel_history.length > 0) {
+          data.travel_history.forEach(travel => {
+            travelHistoryHTML += `
+              <div class="p-2 bg-gray-50 rounded-md text-sm">
+                <div class="flex justify-between">
+                  <p class="font-medium">${travel.id.substring(0, 8)}</p>
+                  ${getStatusText(travel.status)}
+                </div>
+                <p>${travel.origin} → ${travel.destination}</p>
+                <p class="text-xs text-gray-500">${travel.date || 'Data não informada'}</p>
+              </div>
+            `;
+          });
+        } else {
+          travelHistoryHTML = '<p class="text-gray-500 italic">Nenhuma viagem registrada</p>';
+        }
+
+        // Montar conteúdo do modal
+        document.getElementById('conteudo-perfil-usuario').innerHTML = `
+          <div class="space-y-4">
+            <div class="flex items-center space-x-4">
+              <div class="w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center">
+                <svg class="w-8 h-8 text-gray-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                  <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd" />
+                </svg>
+              </div>
+              <div>
+                <h4 class="text-lg font-medium">${data.owner_name || 'Sem nome'}</h4>
+                <p class="text-sm text-gray-500">@${data.username}</p>
+              </div>
+            </div>
+            
+            <div class="grid grid-cols-2 gap-4 pt-2">
+              <div class="space-y-1">
+                <p class="text-sm text-gray-500">Email</p>
+                <p class="font-medium">${data.email || 'Não informado'}</p>
+              </div>
+              <div class="space-y-1">
+                <p class="text-sm text-gray-500">Telefone</p>
+                <p class="font-medium">${data.contact_number || 'Não informado'}</p>
+              </div>
+              <div class="space-y-1">
+                <p class="text-sm text-gray-500">CPF</p>
+                <p class="font-medium">${data.cpf || 'Não informado'}</p>
+              </div>
+              <div class="space-y-1">
+                <p class="text-sm text-gray-500">Cadastrado em</p>
+                <p class="font-medium">${data.formatted_registration_date || 'N/A'}</p>
+              </div>
+              <div class="space-y-1">
+                <p class="text-sm text-gray-500">Último acesso</p>
+                <p class="font-medium">${data.formatted_last_access || 'N/A'}</p>
+              </div>
+              <div class="space-y-1">
+                <p class="text-sm text-gray-500">Total de pets</p>
+                <p class="font-medium">${data.pet_ids ? data.pet_ids.length : 0}</p>
+              </div>
+            </div>
+            
+            <div class="border-t border-gray-200 pt-4">
+              <h4 class="font-medium mb-2">Endereço</h4>
+              <p class="text-sm">${residentialAddress}</p>
+            </div>
+            
+            <div class="border-t border-gray-200 pt-4">
+              <h4 class="font-medium mb-2">Histórico de Viagens</h4>
+              <div class="space-y-2">
+                ${travelHistoryHTML}
+              </div>
+            </div>
+          </div>
+        `;
+      })
+      .catch(error => {
+        console.error('Erro:', error);
+        // Exibir mensagem de erro no modal
+        document.getElementById('conteudo-perfil-usuario').innerHTML = `
+          <div class="text-center py-6">
+            <svg class="mx-auto h-12 w-12 text-red-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <h3 class="mt-2 text-base font-medium text-gray-900">Erro ao buscar detalhes</h3>
+            <p class="mt-1 text-sm text-gray-500">Não foi possível carregar os detalhes do usuário.</p>
+          </div>
+        `;
+      });
+  }
+
+  function fecharModalPerfilUsuario() {
+    document.getElementById('modal-perfil-usuario').classList.add('hidden');
+  }
+
+  // Busca
+  document.getElementById('search-input').addEventListener('input', function (e) {
+    const searchTerm = e.target.value.toLowerCase();
+    const cards = document.querySelectorAll('.usuario-card');
+
+    cards.forEach(card => {
+      const tutorName = card.getAttribute('data-tutor');
+      const petNames = card.getAttribute('data-pets');
+
+      if (tutorName.includes(searchTerm) || petNames.includes(searchTerm)) {
+        card.style.display = '';
+      } else {
+        card.style.display = 'none';
+      }
+    });
+  });
+</script>
+<style>
+  /* Estilo para destaque de campo com erro */
+  .error-highlight {
+    animation: pulse-error 1.5s ease-in-out;
+    box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.7);
+  }
+
+  @keyframes pulse-error {
+    0% {
+      box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7);
+    }
+
+    50% {
+      box-shadow: 0 0 0 10px rgba(239, 68, 68, 0);
+    }
+
+    100% {
+      box-shadow: 0 0 0 0 rgba(239, 68, 68, 0);
+    }
+  }
+</style>
+{% endblock %}

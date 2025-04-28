@@ -1,0 +1,310 @@
+{% extends "base.html" %}
+{% block title %}Documentos Necessários da Viagem{% endblock %}
+
+{% block content %}
+<style>
+  .doc-row {
+    transition: background 0.2s, color 0.2s;
+    cursor: pointer;
+    border-radius: 0.5rem;
+    padding: 0.25rem 0.5rem;
+  }
+
+  .doc-row.selected {
+    background: #eef3ff;
+    color: #fff;
+  }
+
+  .doc-row.selected label span {
+    color: #2A5271 !important;
+    font-weight: 500;
+    font-family: Roboto, sans-serif;
+  }
+
+  .doc-row input[type="checkbox"]+div {
+    width: 44px;
+    height: 22px;
+    background: #e5e7eb;
+    border-radius: 9999px;
+    position: relative;
+    transition: background 0.2s;
+  }
+
+  .doc-row input[type="checkbox"]:checked+div {
+    background: #1D75BB;
+  }
+
+  .doc-row input[type="checkbox"]+div .dot {
+    position: absolute;
+    top: 2px;
+    left: 3px;
+    width: 18px;
+    height: 18px;
+    background: #fff;
+    border-radius: 50%;
+    transition: transform 0.2s;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+  }
+
+  .doc-row input[type="checkbox"]:checked+div .dot {
+    transform: translateX(20px);
+    /* 44 - 24 = 20px */
+    background: #fff;
+  }
+
+  .pet-tab {
+    display: inline-flex;
+    align-items: center;
+    background: #fff;
+    color: #175C94;
+    font-weight: 600;
+    border-radius: 0.3rem;
+    padding: 0.2rem 0.6rem;
+    cursor: pointer;
+    transition: background 0.2s, color 0.2s;
+    border: 1px solid #E0E0E3;
+    outline: none;
+    font-size: 0.95rem;
+  }
+
+  .pet-tab:hover {
+    background: #f4f5f6;
+  }
+
+  .pet-tab.active {
+    background: #1D75BB;
+    color: #fff;
+  }
+
+  .pet-badge {
+    background: #EEF8FF;
+    color: #1D75BB;
+    font-size: 0.6rem;
+    font-weight: 700;
+    border-radius: 5px;
+    padding: 0 0.45em;
+    margin-left: 0.5em;
+    min-width: 1.5em;
+    text-align: center;
+    display: inline-block;
+  }
+
+  .pet-tab.active .pet-badge {
+    background: #fff;
+    color: #1D75BB;
+  }
+
+  .tutor-badge {
+    background: #EEF8FF;
+    color: #175C94;
+    font-size: 0.65rem;
+    font-weight: 600;
+    padding: 0 0.45em;
+    margin-left: 0.5em;
+    min-width: 1.5em;
+    text-align: center;
+    display: inline-block;
+  }
+
+  .section-title {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #175C94;
+    margin: 0;
+    letter-spacing: 0.01em;
+    line-height: 1.2;
+  }
+
+  .doc-row:hover {
+    background: #f3f4f6;
+  }
+
+  /* Further reduce font size for form labels and doc-row text (list items) */
+  .doc-row label span {
+    font-size: 0.9rem;
+  }
+
+  /* Reduce font size for main title */
+  h1.text-2xl {
+    font-size: 1.45rem;
+  }
+</style>
+<div class="max-w-5xl mx-auto p-4">
+  <div class="flex items-center mb-2">
+    <a href="{{ url_for('viagem_detalhes', usuario=usuario.username, viagem_id=travel._id) }}"
+      class="text-blue-600 hover:text-blue-800 mr-2">
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+      </svg>
+    </a>
+    <h1 class="text-2xl font-bold text-gray-900">Documentos Necessários</h1>
+  </div>
+
+  <form method="post" class="space-y-8 divide-y divide-gray-200">
+    <div class="space-y-8 divide-y divide-gray-200">
+      <div class="border-t border-gray-200 pt-2">
+
+        <div class="grid grid-cols-1 gap-y-6 gap-x-8 sm:grid-cols-2">
+          <!-- Tutor Section -->
+          <div>
+            <div class="flex items-center mb-[51px] min-h-[2.5rem]">
+              <h4 class="section-title">Documentos do Tutor</h4>
+              <span class="tutor-badge ml-2" id="tutor-selected-count">0 selecionados</span>
+            </div>
+            <div class="border rounded p-3 mb-2">
+              <div class="space-y-2" id="tutor-doc-list">
+                {% set tutor_docs = [
+                ('identityDocument', 'Documento de Identidade'),
+                ('passport', 'Passaporte'),
+                ('travelTicket', 'Passagem'),
+                ('travelAuthorization', 'Autorização de Viagem'),
+                ('carDocument', 'Documento do Carro'),
+                ('addressProof', 'Comprovante de Endereço'),
+                ('cviIssuanceAuthorization', 'Autorização de Emissão do CVI'),
+                ] %}
+                {% for doc_type, doc_label in tutor_docs %}
+                <div
+                  class="relative flex items-center h-10 doc-row{% if doc_type in travel.required_documents.human_docs %} selected{% endif %}"
+                  data-doc-type="{{doc_type}}">
+                  <label class="flex items-center cursor-pointer w-full">
+                    <input id="humanDoc_{{doc_type}}" name="human_docs" value="{{doc_type}}" type="checkbox" {% if
+                      doc_type in travel.required_documents.human_docs %}checked{% endif %}
+                      class="sr-only tutor-checkbox">
+                    <div
+                      class="w-10 h-5 bg-gray-200 rounded-full peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-blue-500 transition-colors duration-200 relative mr-3">
+                      <div
+                        class="dot absolute left-0.5 top-0.5 bg-white w-4 h-4 rounded-full transition-transform duration-200">
+                      </div>
+                    </div>
+                    <span class="font-medium text-gray-700">{{ doc_label }}</span>
+                  </label>
+                </div>
+                {% endfor %}
+              </div>
+            </div>
+          </div>
+
+          <!-- Pets Section -->
+          <div>
+            <div class="mb-1 min-h-[2.5rem] flex items-center">
+              <h4 class="section-title">Documentos dos Pets</h4>
+            </div>
+            <div class="flex flex-wrap gap-2 mb-3" id="pet-tabs">
+              {% for pet in pet_doc_selection %}
+              <button type="button" class="pet-tab{% if loop.first %} active{% endif %}" data-pet-id="{{pet.id}}">
+                {{ pet.name }}
+                <span class="pet-badge" id="pet-badge-{{pet.id}}">0</span>
+              </button>
+              {% endfor %}
+            </div>
+            <div>
+              {% for pet in pet_doc_selection %}
+              <div class="pet-doc-list mb-6{% if not loop.first %} hidden{% endif %}" id="pet-doc-list-{{pet.id}}">
+                <div class="border rounded p-3 mb-2">
+                  <div class="space-y-2">
+                    {% set all_pet_doc_types = [
+                    ('vaccinationCard', 'Carteira de Vacinação'),
+                    ('microchipCertificate', 'Certificado de Microchip'),
+                    ('rabiesSerologyReport', 'Relatório de Sorologia Antirrábica'),
+                    ('leishmaniasisSerologyReport', 'Relatório de Sorologia para Leishmaniose'),
+                    ('importPermit', 'Permissão de Importação'),
+                    ('petPassport', 'Passaporte do Pet'),
+                    ('cvi', 'CVI (Certificado Veterinário Internacional)'),
+                    ('importAuthorization', 'Autorização de Importação'),
+                    ('arrivalNotice', 'Notificação de Chegada'),
+                    ('endorsedCvi', 'CVI Endossado'),
+                    ('awbCargo', 'AWB Cargo'),
+                    ('petFacilities', 'Instalações para Pet'),
+                    ] %}
+                    {% for doc_type, doc_label in all_pet_doc_types %}
+                    <div
+                      class="relative flex items-center h-10 doc-row{% if doc_type in pet.required_docs %} selected{% endif %}"
+                      data-doc-type="{{doc_type}}">
+                      <label class="flex items-center cursor-pointer w-full">
+                        <input id="petDoc_{{pet.id}}_{{doc_type}}" name="pet_docs[{{pet.id}}][]" value="{{doc_type}}"
+                          type="checkbox" {% if doc_type in pet.required_docs %}checked{% endif %}
+                          class="sr-only pet-checkbox" data-pet-id="{{pet.id}}">
+                        <div class="mr-3">
+                          <div class="dot absolute left-0.5 top-1 bg-white w-2 h-2 rounded-full transition-transform">
+                          </div>
+                        </div>
+                        <span class="font-medium text-gray-700">{{ doc_label }}</span>
+                      </label>
+                    </div>
+                    {% endfor %}
+                  </div>
+                </div>
+              </div>
+              {% endfor %}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="pt-5">
+      <div class="flex justify-end">
+        <a href="{{ url_for('viagem_detalhes', usuario=usuario.username, viagem_id=travel._id) }}"
+          class="py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+          Cancelar
+        </a>
+        <button type="submit"
+          class="ml-3 inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+          Salvar
+        </button>
+      </div>
+    </div>
+  </form>
+</div>
+<script>
+  // --- Tutor selected count and row highlight ---
+  function updateTutorSelectedCount() {
+    const checkboxes = document.querySelectorAll('.tutor-checkbox');
+    let count = 0;
+    checkboxes.forEach(cb => {
+      if (cb.checked) count++;
+      cb.closest('.doc-row').classList.toggle('selected', cb.checked);
+    });
+    document.getElementById('tutor-selected-count').textContent = `${count} selecionados`;
+  }
+  document.querySelectorAll('.tutor-checkbox').forEach(cb => {
+    cb.addEventListener('change', updateTutorSelectedCount);
+  });
+  updateTutorSelectedCount();
+
+  // --- Pet tabs and selected count ---
+  const petTabs = document.querySelectorAll('.pet-tab');
+  const petDocLists = document.querySelectorAll('.pet-doc-list');
+  petTabs.forEach(tab => {
+    tab.addEventListener('click', function () {
+      petTabs.forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+      const petId = tab.getAttribute('data-pet-id');
+      petDocLists.forEach(list => {
+        if (list.id === `pet-doc-list-${petId}`) {
+          list.classList.remove('hidden');
+        } else {
+          list.classList.add('hidden');
+        }
+      });
+    });
+  });
+
+  function updatePetSelectedCounts() {
+    document.querySelectorAll('.pet-doc-list').forEach(list => {
+      const petId = list.id.replace('pet-doc-list-', '');
+      const checkboxes = list.querySelectorAll('.pet-checkbox');
+      let count = 0;
+      checkboxes.forEach(cb => {
+        if (cb.checked) count++;
+        cb.closest('.doc-row').classList.toggle('selected', cb.checked);
+      });
+      document.getElementById(`pet-badge-${petId}`).textContent = count;
+    });
+  }
+  document.querySelectorAll('.pet-checkbox').forEach(cb => {
+    cb.addEventListener('change', updatePetSelectedCounts);
+  });
+  updatePetSelectedCounts();
+</script>
+{% endblock %}

@@ -1,0 +1,288 @@
+{
+  "_comentario": "Arquivo de traduções em português (pt-BR). Estruturado por seções: models (modelos de dados) e ui (interface de usuário).",
+  "languages": {
+    "pt": {
+      "name": "Português"
+    },
+    "en": {
+      "name": "English"
+    },
+    "es": {
+      "name": "Español"
+    }
+  },
+  "models": {
+    "Pet": {
+      "fields": {
+        "name": "Nome do Pet",
+        "species": "Espécie",
+        "breed": "Raça",
+        "gender": "Sexo",
+        "birth_date": "Data de Nascimento",
+        "microchip": "Código do Microchip",
+        "weight": "Peso do Animal (kg)",
+        "fur_color": "Cor da pelagem",
+        "photo": "Foto do Pet"
+      },
+      "enums": {
+        "species": {
+          "canine": "Cachorro",
+          "feline": "Gato",
+          "bird": "Pássaro",
+          "rodent": "Roedor",
+          "other": "Outros"
+        },
+        "gender": {
+          "male": "Macho",
+          "female": "Fêmea"
+        }
+      },
+      "validations": {
+        "microchip_format": "Microchip deve conter até 15 dígitos.",
+        "gender_invalid": "Gênero deve ser \"macho\" ou \"fêmea\".",
+        "species_invalid": "Espécie deve ser uma das seguintes: Cachorro, Gato, Pássaro, Roedor ou Outros."
+      }
+    },
+    "User": {
+      "fields": {
+        "username": "Nome de Usuário",
+        "owner_name": "Nome Completo",
+        "password": "Senha",
+        "email": "Email",
+        "contact_number": "Número para Contato",
+        "has_cpf": "Possui CPF?",
+        "cpf": "CPF",
+        "passport_number": "Número do Passaporte",
+        "has_special_needs": "Possui Necessidades Especiais?",
+        "special_needs_details": "Detalhes das Necessidades Especiais",
+        "how_did_you_know": "Como conheceu o nosso serviço?",
+        "residential_address": "Endereço Residencial",
+        "delivery_address": "Endereço de Entrega",
+        "registration_date": "Data de Cadastro",
+        "last_access": "Último Acesso",
+        "allowed_pages": "Páginas Permitidas",
+        "pets": "Pets"
+      },
+      "enums": {
+        "how_did_you_know": {
+          "instagram": "Instagram",
+          "facebook": "Facebook",
+          "google": "Google",
+          "youtube": "Youtube",
+          "recommendation": "Indicação",
+          "other": "Outro"
+        },
+        "boolean": {
+          "yes": "Sim",
+          "no": "Não"
+        }
+      },
+      "validations": {
+        "cpf_required": "CPF é obrigatório quando possui CPF é Sim.",
+        "cpf_format": "CPF deve conter 11 dígitos.",
+        "passport_required": "Número do passaporte é obrigatório quando possui CPF é Não.",
+        "passport_format": "Passaporte deve conter 8-9 caracteres alfanuméricos (A-Z, 0-9).",
+        "special_needs_details_required": "Detalhes de necessidades especiais são obrigatórios quando possui necessidades especiais é Sim."
+      }
+    },
+    "Address": {
+      "fields": {
+        "lat": "Latitude",
+        "lng": "Longitude",
+        "formatted": "Endereço Formatado",
+        "city": "Cidade",
+        "state": "Estado",
+        "zip_code": "CEP"
+      }
+    },
+    "PetDocument": {
+      "fields": {
+        "vaccinationCard": "Carteira de Vacinação",
+        "microchipCertificate": "Certificado Microchip",
+        "rabiesSerologyReport": "Laudo Sorologia - Raiva",
+        "leishmaniasisSerologyReport": "Laudo Sorologia - Leishmaniose",
+        "importPermit": "Import Permit",
+        "petPassport": "Passaporte do Pet",
+        "cvi": "CVI",
+        "exportAuthorization": "Autorização de Exportação",
+        "arrivalNotice": "Aviso de Chegada (Só PDF)",
+        "endorsedCvi": "CVI Chancelado",
+        "awbCargo": "AWB Cargo",
+        "petFacilities": "Pet Facilities",
+        "otherPetDocuments": "Outros"
+      },
+      "descriptions": {
+        "vaccinationCard": "Documento que comprova a vacinação do animal contendo informações como as vacinas aplicadas, datas e veterinário responsável.",
+        "microchipCertificate": "Declaração que comprova o implante do microchip de identificação no animal, contendo o número e informações sobre a aplicação.",
+        "rabiesSerologyReport": "Exame laboratorial que atesta a presença de anticorpos contra o vírus da raiva.",
+        "leishmaniasisSerologyReport": "Exame laboratorial que atesta a presença de anticorpos contra leishmaniose.",
+        "importPermit": "Autorização oficial emitida pelo país de destino permitindo a entrada do animal.",
+        "petPassport": "Documento oficial que registra a identidade, vacinas e histórico de saúde do animal para viagens.",
+        "cvi": "Certificado Veterinário Internacional emitido pelo veterinário oficial do país de origem.",
+        "exportAuthorization": "Documento que comprova permissão oficial para exportar o animal, emitido pela autoridade competente.",
+        "arrivalNotice": "Notificação às autoridades sobre a chegada do animal.",
+        "endorsedCvi": "Certificado Veterinário Internacional que recebeu aval e endosso das autoridades sanitárias competentes.",
+        "awbCargo": "Air Waybill: documento de embarque aéreo que acompanha cargas vivas, incluindo animais, contendo detalhes do transporte.",
+        "petFacilities": "Registro de reserva do centro de instalação autorizada pelos EUA.",
+        "otherPetDocuments": "Qualquer outro documento relevante que não se enquadre nas categorias acima."
+      }
+    },
+    "HumanDocument": {
+      "fields": {
+        "identityDocument": "Documento com Foto",
+        "cviIssuanceAuthorization": "Autorização de Emissão do CVI",
+        "passport": "Passaporte",
+        "travelTicket": "Passagem",
+        "travelAuthorization": "Autorização de Viagem",
+        "carDocument": "Documento do Carro",
+        "addressProof": "Comprovante de Endereço",
+        "otherHumanDocuments": "Outros"
+      },
+      "descriptions": {
+        "identityDocument": "Documento oficial de identificação com foto (RG, CNH ou similar).",
+        "cviIssuanceAuthorization": "Termo que autoriza a emissão do Certificado Veterinário Internacional em nome do proprietário ou tutor.",
+        "passport": "Passaporte do viajante, exigido para viagens internacionais.",
+        "travelTicket": "Passagem aérea, rodoviária ou ferroviária do passageiro.",
+        "travelAuthorization": "Autorização de viagem, geralmente exigida quando há menores desacompanhados ou exigências legais específicas.",
+        "carDocument": "Documento do veículo, caso seja parte da viagem (ex.: CRLV no Brasil).",
+        "addressProof": "Documento que comprova o endereço residencial (conta de luz, água, etc.).",
+        "otherHumanDocuments": "Qualquer outro documento que não se enquadre nas categorias acima."
+      }
+    },
+    "Travel": {
+      "fields": {
+        "origin": "Origem",
+        "destination": "Destino",
+        "travelTicketFile": "Passagem",
+        "travelTicketDate": "Data da passagem",
+        "estimatedDate": "Data estimada",
+        "travelingPets": "Pets viajantes",
+        "destinationAddress": "Endereço de destino",
+        "travelMethod": "Método da viagem",
+        "borderCity": "Cidade de Fronteira",
+        "vehiclePlate": "Placa do Veículo"
+      },
+      "descriptions": {
+        "origin": "Cidade e país de onde inicia a viagem, seguindo a padronização das companhias aéreas.",
+        "destination": "Cidade e país de destino, seguindo a padronização das companhias aéreas.",
+        "travelTicketFile": "Arquivo contendo a passagem (pode ser PDF ou imagem).",
+        "travelTicketDate": "Data e hora exatos referentes à passagem adquirida.",
+        "estimatedDate": "Data aproximada ou previsão de embarque (ano e mês).",
+        "travelingPets": "Identificadores dos pets que irão viajar (pode ser um índice ou ID gerado internamente).",
+        "destinationAddress": "Endereço completo onde o pet/pessoa irá se hospedar ou residir no destino.",
+        "travelMethod": "Forma de transporte utilizada (ex.: Avião, Ônibus, Veículo Próprio, Petransport).",
+        "borderCity": "Cidade que faz fronteira em viagens terrestres ou mistas, se aplicável.",
+        "vehiclePlate": "Placa do veículo usado na viagem (até 7 dígitos)."
+      },
+      "enums": {
+        "travelMethod": {
+          "plane": "Avião",
+          "bus": "Ônibus",
+          "car": "Veículo Próprio",
+          "petTransport": "Petransport",
+          "other": "Outro"
+        }
+      }
+    }
+  },
+  "ui": {
+    "buttons": {
+      "save": "Salvar",
+      "cancel": "Cancelar",
+      "add": "Adicionar",
+      "remove": "Remover",
+      "edit": "Editar",
+      "update": "Atualizar",
+      "delete": "Excluir",
+      "search": "Buscar",
+      "filter": "Filtrar",
+      "close": "Fechar",
+      "back": "Voltar",
+      "next": "Próximo",
+      "login": "Entrar"
+    },
+    "titles": {
+      "pet_registration": "Cadastro de Pet",
+      "user_registration": "Cadastro de Responsável",
+      "pet_list": "Lista de Pets",
+      "user_list": "Lista de Usuários",
+      "pet_details": "Detalhes do Pet",
+      "user_details": "Detalhes do Usuário"
+    },
+    "messages": {
+      "success": {
+        "user_created": "Usuário criado com sucesso!",
+        "user_updated": "Usuário atualizado com sucesso!",
+        "pet_created": "Pet adicionado com sucesso!",
+        "pet_updated": "Pet atualizado com sucesso!",
+        "pet_photo_updated": "Foto do pet atualizada com sucesso!"
+      },
+      "errors": {
+        "general": "Ocorreu um erro. Por favor, tente novamente.",
+        "user_not_found": "Usuário não encontrado.",
+        "pet_not_found": "Pet não encontrado.",
+        "form_invalid": "Por favor, corrija os erros no formulário.",
+        "file_size": "O arquivo é muito grande. Tamanho máximo: 5MB.",
+        "file_type": "Tipo de arquivo não permitido. Formatos aceitos: JPG, PNG, GIF."
+      },
+      "confirmations": {
+        "delete_pet": "Tem certeza que deseja excluir este pet?",
+        "delete_user": "Tem certeza que deseja excluir este usuário?"
+      }
+    },
+    "placeholders": {
+      "owner_name": "Insira seu nome completo",
+      "password": "Insira uma senha",
+      "search_user": "Buscar por nome, email ou username...",
+      "search_pet": "Buscar por nome do pet...",
+      "email": "email@exemplo.com",
+      "phone": "+55 11 99999-9999",
+      "date": "DD/MM/AAAA",
+      "no_passport": "Não informado",
+      "no_address": "Endereço não informado",
+      "no_delivery_address": "Endereço de entrega não definido",
+      "pet_name": "Nome do Pet",
+      "pet_breed": "Raça do Pet",
+      "pet_fur_color": "Cor da pelagem"
+    },
+    "tooltips": {
+      "add_pet": "Adicionar um novo pet",
+      "edit_pet": "Editar informações do pet",
+      "update_photo": "Atualizar foto do pet",
+      "required_field": "Este campo é obrigatório"
+    },
+    "help_texts": {
+      "cpf": "Digite apenas números (11 dígitos)",
+      "passport": "Letras maiúsculas e números (8-9 caracteres)",
+      "microchip": "Máximo 15 dígitos",
+      "photo": "Formatos aceitos: JPG, PNG, GIF. Tamanho máximo: 5MB"
+    },
+    "common": {
+      "yes": "Sim",
+      "no": "Não",
+      "select_referral": "Selecione uma opção",
+      "select_species": "Selecione a espécie",
+      "select_gender": "Selecione o sexo"
+    },
+    "pages": {
+      "owner_registration": {
+        "title": "Cadastro de Responsável",
+        "owner_info": "Informações do Responsável",
+        "has_cpf": "Possui CPF?",
+        "use_different_address": "Usar um endereço diferente para entrega",
+        "address_map": "Visualização do Endereço no Mapa",
+        "residential": "Residencial",
+        "delivery": "Entrega",
+        "has_special_needs": "Possui necessidades especiais?",
+        "for_disabled": "Para atendimento a pessoas com deficiência",
+        "special_needs_details": "Detalhes das necessidades especiais",
+        "pets": "Pets",
+        "pet_number": "Pet",
+        "max_15_digits": "Máximo 15 dígitos",
+        "accepted_formats": "Formatos aceitos: JPG, PNG, GIF. Tamanho máximo: 5MB",
+        "add_pet": "Adicionar Pet",
+        "register": "Cadastrar"
+      }
+    }
+  }
+}

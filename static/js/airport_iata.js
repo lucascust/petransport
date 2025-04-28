@@ -1,0 +1,154 @@
+// Shared IATA airport data and lookup functions
+
+// List of airports (IATA code, city, country)
+const airportData = [
+  // Aeroportos do Brasil
+  { code: "GRU", city: "São Paulo (Guarulhos)", country: "BR" },
+  { code: "CGH", city: "São Paulo (Congonhas)", country: "BR" },
+  { code: "VCP", city: "Campinas", country: "BR" },
+  { code: "SDU", city: "Rio de Janeiro (S. Dumont)", country: "BR" },
+  { code: "GIG", city: "Rio de Janeiro (Galeão)", country: "BR" },
+  { code: "BSB", city: "Brasília", country: "BR" },
+  { code: "CNF", city: "Belo Horizonte (Confins)", country: "BR" },
+  { code: "PLU", city: "Belo Horizonte (Pampulha)", country: "BR" },
+  { code: "POA", city: "Porto Alegre", country: "BR" },
+  { code: "SSA", city: "Salvador", country: "BR" },
+  { code: "REC", city: "Recife", country: "BR" },
+  { code: "FOR", city: "Fortaleza", country: "BR" },
+  { code: "CWB", city: "Curitiba (Afonso Pena)", country: "BR" },
+  { code: "BEL", city: "Belém", country: "BR" },
+  { code: "MAO", city: "Manaus", country: "BR" },
+  { code: "FLN", city: "Florianópolis", country: "BR" },
+  { code: "NAT", city: "Natal", country: "BR" },
+  { code: "MCZ", city: "Maceió", country: "BR" },
+  { code: "CGB", city: "Cuiabá", country: "BR" },
+  { code: "GYN", city: "Goiânia", country: "BR" },
+  { code: "VIX", city: "Vitória", country: "BR" },
+  { code: "AJU", city: "Aracaju", country: "BR" },
+  { code: "JPA", city: "João Pessoa", country: "BR" },
+  { code: "SLZ", city: "São Luís", country: "BR" },
+  { code: "THE", city: "Teresina", country: "BR" },
+  { code: "PMW", city: "Palmas", country: "BR" },
+  { code: "BPS", city: "Porto Seguro", country: "BR" },
+  { code: "LDB", city: "Londrina", country: "BR" },
+  { code: "RBR", city: "Rio Branco", country: "BR" },
+  { code: "MGF", city: "Maringá", country: "BR" },
+  { code: "JOI", city: "Joinville", country: "BR" },
+  { code: "IGU", city: "Foz do Iguaçu", country: "BR" },
+
+  // Aeroportos dos EUA
+  { code: "JFK", city: "New York (Kennedy)", country: "US" },
+  { code: "LGA", city: "New York (LaGuardia)", country: "US" },
+  { code: "EWR", city: "New York (Newark)", country: "US" },
+  { code: "LAX", city: "Los Angeles", country: "US" },
+  { code: "ORD", city: "Chicago (O'Hare)", country: "US" },
+  { code: "MDW", city: "Chicago (Midway)", country: "US" },
+  { code: "ATL", city: "Atlanta", country: "US" },
+  { code: "DFW", city: "Dallas", country: "US" },
+  { code: "MIA", city: "Miami", country: "US" },
+  { code: "SFO", city: "San Francisco", country: "US" },
+  { code: "LAS", city: "Las Vegas", country: "US" },
+  { code: "MCO", city: "Orlando", country: "US" },
+  { code: "SEA", city: "Seattle", country: "US" },
+  { code: "BOS", city: "Boston", country: "US" },
+  { code: "IAD", city: "Washington (Dulles)", country: "US" },
+  { code: "DCA", city: "Washington (Reagan)", country: "US" },
+
+  // Aeroportos da Europa
+  { code: "LHR", city: "London (Heathrow)", country: "GB" },
+  { code: "LGW", city: "London (Gatwick)", country: "GB" },
+  { code: "LCY", city: "London (City)", country: "GB" },
+  { code: "CDG", city: "Paris (C. de Gaulle)", country: "FR" },
+  { code: "ORY", city: "Paris (Orly)", country: "FR" },
+  { code: "FRA", city: "Frankfurt", country: "DE" },
+  { code: "AMS", city: "Amsterdam", country: "NL" },
+  { code: "MAD", city: "Madrid", country: "ES" },
+  { code: "BCN", city: "Barcelona", country: "ES" },
+  { code: "FCO", city: "Rome (Fiumicino)", country: "IT" },
+  { code: "CIA", city: "Rome (Ciampino)", country: "IT" },
+  { code: "MXP", city: "Milan (Malpensa)", country: "IT" },
+  { code: "LIN", city: "Milan (Linate)", country: "IT" },
+  { code: "VIE", city: "Vienna", country: "AT" },
+  { code: "ZRH", city: "Zurich", country: "CH" },
+  { code: "GVA", city: "Geneva", country: "CH" },
+  { code: "CPH", city: "Copenhagen", country: "DK" },
+  { code: "ARN", city: "Stockholm", country: "SE" },
+  { code: "OSL", city: "Oslo", country: "NO" },
+  { code: "HEL", city: "Helsinki", country: "FI" },
+  { code: "DUB", city: "Dublin", country: "IE" },
+  { code: "MUC", city: "Munich", country: "DE" },
+  { code: "BRU", city: "Brussels", country: "BE" },
+  { code: "ATH", city: "Athens", country: "GR" },
+  { code: "LIS", city: "Lisbon", country: "PT" },
+  { code: "OPO", city: "Porto", country: "PT" },
+
+  // Aeroportos da América Latina
+  { code: "MEX", city: "Mexico City", country: "MX" },
+  { code: "CUN", city: "Cancun", country: "MX" },
+  { code: "EZE", city: "B. Aires (Ezeiza)", country: "AR" },
+  { code: "AEP", city: "B. Aires (Aeroparque)", country: "AR" },
+  { code: "SCL", city: "Santiago", country: "CL" },
+  { code: "LIM", city: "Lima", country: "PE" },
+  { code: "BOG", city: "Bogotá", country: "CO" },
+  { code: "CCS", city: "Caracas", country: "VE" },
+  { code: "MVD", city: "Montevideo", country: "UY" },
+  { code: "ASU", city: "Asunción", country: "PY" },
+  { code: "PTY", city: "Panama City", country: "PA" },
+  { code: "HAV", city: "Havana", country: "CU" },
+  { code: "SDQ", city: "Santo Domingo", country: "DO" },
+  { code: "SJO", city: "San José", country: "CR" },
+
+  // Aeroportos da Ásia e Oceania
+  { code: "SYD", city: "Sydney", country: "AU" },
+  { code: "MEL", city: "Melbourne", country: "AU" },
+  { code: "BNE", city: "Brisbane", country: "AU" },
+  { code: "PER", city: "Perth", country: "AU" },
+  { code: "AKL", city: "Auckland", country: "NZ" },
+  { code: "SIN", city: "Singapore", country: "SG" },
+  { code: "HKG", city: "Hong Kong", country: "HK" },
+  { code: "PVG", city: "Shanghai (Pudong)", country: "CN" },
+  { code: "PEK", city: "Beijing (Capital)", country: "CN" },
+  { code: "NRT", city: "Tokyo (Narita)", country: "JP" },
+  { code: "HND", city: "Tokyo (Haneda)", country: "JP" },
+  { code: "ICN", city: "Seoul (Incheon)", country: "KR" },
+  { code: "BKK", city: "Bangkok", country: "TH" },
+  { code: "KUL", city: "Kuala Lumpur", country: "MY" },
+  { code: "DEL", city: "Delhi", country: "IN" },
+  { code: "BOM", city: "Mumbai", country: "IN" },
+  { code: "DXB", city: "Dubai", country: "AE" },
+  { code: "DOH", city: "Doha", country: "QA" },
+  { code: "IST", city: "Istanbul", country: "TR" },
+
+  // Aeroportos da África
+  { code: "JNB", city: "Johannesburg", country: "ZA" },
+  { code: "CPT", city: "Cape Town", country: "ZA" },
+  { code: "CAI", city: "Cairo", country: "EG" },
+  { code: "CMN", city: "Casablanca", country: "MA" },
+  { code: "LOS", city: "Lagos", country: "NG" },
+  { code: "NBO", city: "Nairobi", country: "KE" }
+];
+
+// Lookup airport object by IATA code
+function getAirportByCode(code) {
+  if (!code) return null;
+  return airportData.find(airport => airport.code === code);
+}
+
+// Get city name by IATA code
+function getAirportCityByCode(code) {
+  const airport = getAirportByCode(code);
+  if (!airport) return code;
+  // Remove parentheses for cleaner city name
+  return airport.city.replace(/\s*\([^)]*\)/g, "");
+}
+
+// Get flag URL by country code
+function getAirportFlagUrl(countryCode) {
+  if (!countryCode) return null;
+  return `https://flagicons.lipis.dev/flags/4x3/${countryCode.toLowerCase()}.svg`;
+}
+
+// Export for module usage (if needed)
+if (typeof module !== 'undefined') {
+  module.exports = { airportData, getAirportByCode, getAirportCityByCode, getAirportFlagUrl };
+} 
