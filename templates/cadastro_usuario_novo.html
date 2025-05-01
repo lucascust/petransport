@@ -254,7 +254,7 @@
               {{ t_field("User", "password", current_lang) }}
             </label>
             <div class="relative">
-              <input type="password" id="password" name="password" required
+              <input type="password" id="password" name="password"
                 class="block w-full rounded-lg border border-input bg-background px-3 py-2 ps-9 text-sm text-foreground shadow-sm shadow-black/5 transition-shadow placeholder:text-muted-foreground/70 focus-visible:border-ring focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/20 disabled:cursor-not-allowed disabled:opacity-50 pr-12"
                 placeholder="{{ t_ui('placeholders', 'password', '', current_lang) }}">
               <div
@@ -1196,7 +1196,8 @@
     future_date: "A data não pode ser no futuro",
     invalid_weight: "Por favor, digite um peso válido",
     weight_range: "O peso deve estar entre 0 e 100 kg",
-    invalid_phone: "Por favor, digite um número de telefone válido"
+    invalid_phone: "Por favor, digite um número de telefone válido",
+    password_too_short: "A senha deve ter pelo menos 6 caracteres"
   };
 
   // Cache de elementos DOM
@@ -1909,6 +1910,12 @@
         valido = false;
       }
 
+      // Password
+      const senha = document.getElementById('password');
+      if (!this.validarSenha(senha)) {
+        valido = false;
+      }
+
       // Telefone (já validado pelo intlTelInput)
 
       // Validar se o radiobutton "Possui CPF?" foi selecionado
@@ -2042,6 +2049,22 @@
 
       return true;
     }
+
+    validarSenha(campo) {
+      if (!campo) return true;
+
+      if (!this.validarCampoObrigatorio(campo)) {
+        return false;
+      }
+
+      if (campo.value.length < 6) {
+        this.mostrarErro(campo, validationMessages.password_too_short);
+        return false;
+      }
+
+      return true;
+    }
+
 
     validarEmail(campo) {
       if (!campo) return true;

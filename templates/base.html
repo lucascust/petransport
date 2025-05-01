@@ -56,6 +56,11 @@
       </div>
       <!-- Desktop Menu -->
       <div class="hidden md:flex items-center space-x-6">
+        {% if session.get('admin_logged_in') %}
+        <a href="{{ url_for('admin') }}" class="flex items-center text-gray-700 hover:text-primary transition-colors">
+          Admin
+        </a>
+        {% endif %}
         <!-- Seletor de Idioma -->
         <div class="dropdown relative inline-block text-left" id="global-language-selector">
           <button type="button" id="language-selector-btn"
@@ -191,7 +196,8 @@
           </div>
         </div>
         <!-- Contato -->
-        <a href="#contato" class="flex items-center text-gray-700 hover:text-primary transition-colors">
+        <a href="{{ url_for('obrigado') }}"
+          class="flex items-center text-gray-700 hover:text-primary transition-colors">
           <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24"
             stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -199,7 +205,13 @@
           </svg>
           Contato
         </a>
-        <!-- Login -->
+        <!-- Login/User -->
+        {% if session.get('user_logged_in') and session.get('username') %}
+        <a href="{{ url_for('usuario_home', usuario=session['username']) }}"
+          class="bg-primary text-white px-6 py-2 rounded-full hover:bg-opacity-90 transition-all flex items-center">
+          {{ session['username'] }}
+        </a>
+        {% else %}
         <a href="{{ url_for('user_login') }}"
           class="bg-primary text-white px-6 py-2 rounded-full hover:bg-opacity-90 transition-all flex items-center">
           <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24"
@@ -209,6 +221,7 @@
           </svg>
           Login
         </a>
+        {% endif %}
       </div>
       <!-- Mobile Menu Button -->
       <div class="md:hidden flex items-center space-x-4">
@@ -348,27 +361,6 @@
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
           </svg>
         </button>
-      </div>
-    </div>
-    <!-- Mobile Menu (Hidden by default) -->
-    <div id="mobile-menu" class="hidden bg-white px-4 py-4 shadow-md">
-      <div class="flex flex-col space-y-4">
-        <a href="#contato" class="flex items-center text-gray-700 py-2">
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24"
-            stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-              d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-          </svg>
-          Contato
-        </a>
-        <a href="{{ url_for('user_login') }}" class="flex items-center text-gray-700 py-2">
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24"
-            stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-              d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
-          </svg>
-          Login
-        </a>
       </div>
     </div>
   </header>
