@@ -77,7 +77,7 @@
           <div id="language-dropdown"
             class="dropdown-content absolute right-0 mt-2 w-32 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 hidden z-10">
             {% for lang_code, lang_name in available_languages %}
-            <a href="{% if session.username %}{{ url_for('alterar_idioma', usuario=session.username, lang=lang_code) }}{% else %}/?lang={{ lang_code }}{% endif %}"
+            <a href="javascript:void(0);" onclick="changeLanguage('{{ lang_code }}')"
               class="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-primary flex items-center">
               {% if lang_code == 'pt' %}
               <span class="inline-block align-middle mr-2 w-5 h-5">
@@ -227,18 +227,18 @@
       <div class="md:hidden flex items-center space-x-4">
         <!-- Seletor de Idioma Mobile -->
         <div class="dropdown relative inline-block text-left">
-          <button class="text-gray-700">
+          <button id="mobile-language-selector-btn" class="text-gray-700 hover:text-primary transition-colors">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24"
               stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                 d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
           </button>
-          <div
+          <div id="mobile-language-dropdown"
             class="dropdown-content absolute right-0 mt-2 w-32 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 hidden z-10">
             {% for lang_code, lang_name in available_languages %}
-            <a href="{% if session.username %}{{ url_for('alterar_idioma', usuario=session.username, lang=lang_code) }}{% else %}/?lang={{ lang_code }}{% endif %}"
-              class="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 flex items-center">
+            <a href="javascript:void(0);" onclick="changeLanguage('{{ lang_code }}')"
+              class="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-primary flex items-center">
               {% if lang_code == 'pt' %}
               <span class="inline-block align-middle mr-2 w-5 h-5">
                 <svg class="w-full h-full" viewBox="0 0 51 51" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -373,30 +373,67 @@
     </div>
   </footer>
   <script>
-    // Script for mobile menu toggle and language dropdown
+    // Function to change language by updating session via AJAX
+    function changeLanguage(langCode) {
+      fetch('/set_language', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Requested-With': 'XMLHttpRequest'
+        },
+        body: JSON.stringify({ lang: langCode })
+      })
+        .then(() => window.location.reload());
+    }
+
     document.addEventListener('DOMContentLoaded', function () {
       const mobileMenuButton = document.getElementById('mobile-menu-button');
-      const mobileMenu = document.getElementById('mobile-menu');
+      const mobileMenu = document.getElementById('mobile-menu'); // Assuming #mobile-menu exists elsewhere or this is for future use
       if (mobileMenuButton && mobileMenu) {
         mobileMenuButton.addEventListener('click', function () {
           mobileMenu.classList.toggle('hidden');
         });
       }
-      // Language dropdown
-      const languageSelector = document.getElementById('language-selector-btn');
-      const languageDropdown = document.getElementById('language-dropdown');
-      if (languageSelector && languageDropdown) {
-        languageSelector.addEventListener('click', function (event) {
+
+      // Language dropdowns
+      const desktopLangButton = document.getElementById('language-selector-btn');
+      const desktopLangDropdown = document.getElementById('language-dropdown');
+      const mobileLangButton = document.getElementById('mobile-language-selector-btn');
+      const mobileLangDropdown = document.getElementById('mobile-language-dropdown');
+
+      if (desktopLangButton && desktopLangDropdown) {
+        desktopLangButton.addEventListener('click', function (event) {
           event.preventDefault();
           event.stopPropagation();
-          languageDropdown.classList.toggle('hidden');
-        });
-        document.addEventListener('click', function (event) {
-          if (languageDropdown && !languageSelector.contains(event.target)) {
-            languageDropdown.classList.add('hidden');
+          desktopLangDropdown.classList.toggle('hidden');
+          // Hide mobile dropdown if it's open and we are toggling desktop
+          if (mobileLangDropdown && !desktopLangDropdown.classList.contains('hidden')) {
+            mobileLangDropdown.classList.add('hidden');
           }
         });
       }
+
+      if (mobileLangButton && mobileLangDropdown) {
+        mobileLangButton.addEventListener('click', function (event) {
+          event.preventDefault();
+          event.stopPropagation();
+          mobileLangDropdown.classList.toggle('hidden');
+          // Hide desktop dropdown if it's open and we are toggling mobile
+          if (desktopLangDropdown && !mobileLangDropdown.classList.contains('hidden')) {
+            desktopLangDropdown.classList.add('hidden');
+          }
+        });
+      }
+
+      // Global click listener to close dropdowns when clicking outside
+      document.addEventListener('click', function (event) {
+        if (desktopLangButton && desktopLangDropdown && !desktopLangButton.contains(event.target) && !desktopLangDropdown.contains(event.target)) {
+          desktopLangDropdown.classList.add('hidden');
+        }
+        if (mobileLangButton && mobileLangDropdown && !mobileLangButton.contains(event.target) && !mobileLangDropdown.contains(event.target)) {
+          mobileLangDropdown.classList.add('hidden');
+        }
+      });
     });
   </script>
   {% block scripts %}{% endblock %}

@@ -18,7 +18,8 @@
         </svg>
       </button>
     </div>
-    <div class="p-4 overflow-y-auto flex-1" x-data="{ editMode: false }">
+    <div class="p-4 overflow-y-auto flex-1"
+      x-data="{ editMode: false, hasCpf: '{{ 'yes' if usuario.cpf else 'no' }}', hasSpecialNeeds: '{{ 'yes' if usuario.special_needs_details else 'no' }}' }">
       <div class="flex justify-end mb-4">
         <button @click="editMode = !editMode"
           :class="editMode ? 'bg-gray-600 hover:bg-gray-700' : 'bg-blue-600 hover:bg-blue-700'"
@@ -40,12 +41,14 @@
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
           <!-- Nome Completo -->
           <div class="col-span-2 sm:col-span-1">
-            <label for="owner_name" class="block text-sm font-medium text-gray-700 mb-1">
+            <label for="review_owner_name" class="block text-sm font-medium text-gray-700 mb-1">
               {{ t_field("User", "owner_name", current_lang)|default("Nome Completo") }}
             </label>
-            <div class="relative">
-              <input type="text" id="owner_name" name="owner_name" x-bind:disabled="!editMode"
-                class="block w-full rounded-lg border border-input bg-background px-3 py-2 ps-9 text-sm text-foreground shadow-sm shadow-black/5 transition-shadow placeholder:text-muted-foreground/70 focus-visible:border-ring focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/20 disabled:cursor-not-allowed disabled:opacity-50"
+            <div class="relative" x-data="{ showTooltip: false }">
+              <input type="text" id="review_owner_name" name="owner_name" x-bind:disabled="!editMode"
+                @mouseenter="if (!editMode) showTooltip = true" @mouseleave="showTooltip = false"
+                @focus="if (!editMode) showTooltip = true" @blur="showTooltip = false"
+                class="block w-full rounded-lg border border-input bg-background px-3 py-2 ps-9 text-sm text-foreground shadow-sm shadow-black/5 transition-shadow placeholder:text-muted-foreground/70 focus-visible:border-ring focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/20 disabled:cursor-not-allowed disabled:bg-gray-100 disabled:opacity-70"
                 value="{{ usuario.owner_name }}">
               <div
                 class="pointer-events-none absolute inset-y-0 start-0 flex items-center justify-center ps-3 text-muted-foreground/80 peer-disabled:opacity-50">
@@ -56,19 +59,69 @@
                   <circle cx="12" cy="7" r="4"></circle>
                 </svg>
               </div>
+              <div x-show="showTooltip && !editMode" x-transition
+                class="absolute whitespace-nowrap -top-2 left-1/2 -translate-x-1/2 -translate-y-full px-2 py-1 bg-gray-800 text-white text-xs rounded-md shadow-lg z-20">
+                {{ t_ui("common", "click_edit_to_enable", "", current_lang)}}
+                <div
+                  class="absolute left-1/2 -translate-x-1/2 top-full w-0 h-0 border-x-4 border-x-transparent border-t-4 border-t-gray-800">
+                </div>
+              </div>
             </div>
+            <div class="error-message text-red-600 text-xs mt-1 hidden"></div>
           </div>
 
-          <div class="hidden sm:block sm:col-span-1"></div>
-
-          <!-- Email e Contato -->
-          <div>
-            <label for="email" class="block text-sm font-medium text-gray-700 mb-1">
-              {{ t_field("User", "email", current_lang)|default("Email") }}
+          <!-- Password Placeholder - Actual change should be a separate secure flow -->
+          <div x-show="!editMode">
+            <label for="review_password_placeholder" class="block text-sm font-medium text-gray-700 mb-1">
+              {{ t_field("User", "password", current_lang) }}
             </label>
             <div class="relative">
-              <input type="email" id="email" name="email" x-bind:disabled="!editMode"
-                class="block w-full rounded-lg border border-input bg-background px-3 py-2 ps-9 text-sm text-foreground shadow-sm shadow-black/5 transition-shadow placeholder:text-muted-foreground/70 focus-visible:border-ring focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/20 disabled:cursor-not-allowed disabled:opacity-50"
+              <input type="text" id="review_password_placeholder" name="password_placeholder" disabled
+                class="block w-full align-middle rounded-lg border border-input bg-gray-100 px-3 py-2 ps-9 text-sm text-gray-500 shadow-sm shadow-black/5"
+                value="********">
+              <div
+                class="pointer-events-none absolute inset-y-0 start-0 flex items-center justify-center ps-3 text-muted-foreground/80">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                  stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                  aria-hidden="true">
+                  <rect x="3" y="11" width="18" height="11" rx="2"></rect>
+                  <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                </svg>
+              </div>
+            </div>
+          </div>
+          <!-- Password Edition -->
+          <div x-show="editMode">
+            <label for="review_new_password" class="block text-sm font-medium text-gray-700 mb-1">Nova Senha (deixe em
+              branco para não alterar)</label>
+            <div class="relative">
+              <input type="password" id="review_new_password" name="new_password"
+                class="block w-full rounded-lg border border-input bg-background px-3  ps-9 py-2 text-sm text-foreground shadow-sm shadow-black/5"
+                placeholder="Digite a nova senha">
+              <div
+                class="pointer-events-none absolute inset-y-0 start-0 flex items-center justify-center ps-3 text-muted-foreground/80">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                  stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                  aria-hidden="true">
+                  <rect x="3" y="11" width="18" height="11" rx="2"></rect>
+                  <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                </svg>
+              </div>
+            </div>
+
+            <div class="error-message text-red-600 text-xs mt-1 hidden"></div>
+          </div>
+
+          <!-- Email -->
+          <div>
+            <label for="review_email" class="block text-sm font-medium text-gray-700 mb-1">
+              {{ t_field("User", "email", current_lang)|default("Email") }}
+            </label>
+            <div class="relative" x-data="{ showTooltip: false }">
+              <input type="email" id="review_email" name="email" x-bind:disabled="!editMode"
+                @mouseenter="if (!editMode) showTooltip = true" @mouseleave="showTooltip = false"
+                @focus="if (!editMode) showTooltip = true" @blur="showTooltip = false"
+                class="block w-full rounded-lg border border-input bg-background px-3 py-2 ps-9 text-sm text-foreground shadow-sm shadow-black/5 transition-shadow placeholder:text-muted-foreground/70 focus-visible:border-ring focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/20 disabled:cursor-not-allowed disabled:bg-gray-100 disabled:opacity-70"
                 value="{{ usuario.email }}">
               <div
                 class="pointer-events-none absolute inset-y-0 start-0 flex items-center justify-center ps-3 text-muted-foreground/80 peer-disabled:opacity-50">
@@ -79,17 +132,30 @@
                   <path d="M16 8v5a3 3 0 0 0 6 0v-1a10 10 0 1 0-3.92 7.94"></path>
                 </svg>
               </div>
+              <div x-show="showTooltip && !editMode" x-transition
+                class="absolute whitespace-nowrap -top-2 left-1/2 -translate-x-1/2 -translate-y-full px-2 py-1 bg-gray-800 text-white text-xs rounded-md shadow-lg z-20">
+                {{ t_ui("common", "click_edit_to_enable", "", current_lang)}}
+                <div
+                  class="absolute left-1/2 -translate-x-1/2 top-full w-0 h-0 border-x-4 border-x-transparent border-t-4 border-t-gray-800">
+                </div>
+              </div>
             </div>
+            <div class="error-message text-red-600 text-xs mt-1 hidden"></div>
           </div>
 
+          <!-- Contact Number -->
           <div>
-            <label for="contact_number" class="block text-sm font-medium text-gray-700 mb-1">
+            <label for="review_contact_number" class="block text-sm font-medium text-gray-700 mb-1">
               {{ t_field("User", "contact_number", current_lang)|default("Telefone") }}
             </label>
-            <div class="relative">
-              <input type="text" id="contact_number" name="contact_number" x-bind:disabled="!editMode"
-                class="block w-full rounded-lg border border-input bg-background px-3 py-2 ps-9 text-sm text-foreground shadow-sm shadow-black/5 transition-shadow placeholder:text-muted-foreground/70 focus-visible:border-ring focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/20 disabled:cursor-not-allowed disabled:opacity-50"
+            <div class="relative" x-data="{ showTooltip: false }">
+              <input type="tel" id="review_contact_number" name="contact_number" x-bind:disabled="!editMode"
+                @mouseenter="if (!editMode) showTooltip = true" @mouseleave="showTooltip = false"
+                @focus="if (!editMode) showTooltip = true" @blur="showTooltip = false"
+                class="block w-full rounded-lg border border-input bg-background px-3 py-2 ps-9 text-sm text-foreground shadow-sm shadow-black/5 transition-shadow placeholder:text-muted-foreground/70 focus-visible:border-ring focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/20 disabled:cursor-not-allowed disabled:bg-gray-100 disabled:opacity-70"
                 value="{{ usuario.contact_number }}">
+              <input type="hidden" id="review_fullPhoneWithCode" name="full_phone_with_code"
+                value="{{ usuario.full_phone_with_code or usuario.contact_number }}">
               <div
                 class="pointer-events-none absolute inset-y-0 start-0 flex items-center justify-center ps-3 text-muted-foreground/80 peer-disabled:opacity-50">
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
@@ -99,106 +165,268 @@
                     d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z">
                 </svg>
               </div>
+              <div x-show="showTooltip && !editMode" x-transition
+                class="absolute whitespace-nowrap -top-2 left-1/2 -translate-x-1/2 -translate-y-full px-2 py-1 bg-gray-800 text-white text-xs rounded-md shadow-lg z-20">
+                {{ t_ui("common", "click_edit_to_enable", "", current_lang)}}
+                <div
+                  class="absolute left-1/2 -translate-x-1/2 top-full w-0 h-0 border-x-4 border-x-transparent border-t-4 border-t-gray-800">
+                </div>
+              </div>
+            </div>
+            <div class="error-message text-red-600 text-xs mt-1 hidden"></div>
+          </div>
+
+          <!-- CPF or Passport Section -->
+          <div class="col-span-2 sm:col-span-1">
+            <label class="block text-sm font-medium text-gray-700 mb-2">
+              {{ t_ui("pages", "owner_registration", "has_cpf", current_lang) }}
+            </label>
+            <div class="relative flex items-center rounded-md bg-gray-50 p-0.5 shadow-inner" data-name="review_hasCpf">
+              <button type="button"
+                @click="if(editMode) { hasCpf = 'yes'; $nextTick(() => inicializarInputsVisiveis()); }"
+                :class="{ 'bg-blue-500 text-white': hasCpf === 'yes', 'text-gray-700 hover:bg-white': hasCpf !== 'yes' && editMode, 'text-gray-500 cursor-not-allowed': !editMode && hasCpf !== 'yes' }"
+                class="toggle-btn radio-button flex-1 py-1.5 px-4 rounded-md text-sm font-medium transition-all duration-200 relative z-10"
+                :disabled="!editMode && hasCpf !== 'yes'">
+                {{ t_ui("common", "yes", "", current_lang) }}
+              </button>
+              <button type="button"
+                @click="if(editMode) { hasCpf = 'no'; $nextTick(() => inicializarInputsVisiveis()); }"
+                :class="{ 'bg-blue-500 text-white': hasCpf === 'no', 'text-gray-700 hover:bg-white': hasCpf !== 'no' && editMode, 'text-gray-500 cursor-not-allowed': !editMode && hasCpf !== 'no' }"
+                class="toggle-btn radio-button flex-1 py-1.5 px-4 rounded-md text-sm font-medium transition-all duration-200 relative z-10"
+                :disabled="!editMode && hasCpf !== 'no'">
+                {{ t_ui("common", "no", "", current_lang) }}
+              </button>
+              <span id="review_hasCpf-indicator"
+                :class="{'opacity-100': editMode || hasCpf === 'yes' || hasCpf === 'no', 'opacity-0': !editMode && hasCpf !== 'yes' && hasCpf !== 'no'}"
+                :style="hasCpf === 'yes' ? {left: '0.5px', right: 'auto'} : {left: 'auto', right: '0.5px'}"
+                class="indicator-pill absolute w-[calc(50%-1px)] bg-white rounded-md shadow-sm transition-all duration-200"
+                style="top: 0.5px; bottom: 0.5px;"></span>
+            </div>
+            <input type="hidden" name="hasCpf" :value="hasCpf">
+            <div class="error-message text-red-600 text-xs mt-1 hidden"></div>
+          </div>
+
+          <div class="col-span-2 sm:col-span-1">
+            <div id="review_cpf-group" x-show="hasCpf === 'yes'">
+              <label for="review_cpf" class="block text-sm font-medium text-gray-700 mb-1">
+                {{ t_field("User", "cpf", current_lang) }}
+              </label>
+              <div class="relative" x-data="{ showTooltip: false }">
+                <input type="text" id="review_cpf" name="cpf" x-bind:disabled="!editMode"
+                  @mouseenter="if (!editMode) showTooltip = true" @mouseleave="showTooltip = false"
+                  @focus="if (!editMode) showTooltip = true" @blur="showTooltip = false"
+                  class="block w-full rounded-lg border border-input bg-background px-3 py-2 ps-9 text-sm text-foreground shadow-sm shadow-black/5 transition-shadow placeholder:text-muted-foreground/70 focus-visible:border-ring focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/20 disabled:cursor-not-allowed disabled:bg-gray-100 disabled:opacity-70"
+                  value="{{ usuario.cpf or '' }}" oninput="formatarCPF(this)">
+                <div
+                  class="pointer-events-none absolute inset-y-0 start-0 flex items-center justify-center ps-3 text-muted-foreground/80 peer-disabled:opacity-50">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                    aria-hidden="true">
+                    <rect x="3" y="4" width="18" height="16" rx="2"></rect>
+                    <line x1="7" y1="12" x2="17" y2="12"></line>
+                    <line x1="7" y1="8" x2="10" y2="8"></line>
+                    <line x1="7" y1="16" x2="13" y2="16"></line>
+                  </svg>
+                </div>
+                <div x-show="showTooltip && !editMode" x-transition
+                  class="absolute whitespace-nowrap -top-2 left-1/2 -translate-x-1/2 -translate-y-full px-2 py-1 bg-gray-800 text-white text-xs rounded-md shadow-lg z-20">
+                  {{ t_ui("common", "click_edit_to_enable", "", current_lang)}}
+                </div>
+              </div>
+              <div class="error-message text-red-600 text-xs mt-1 hidden"></div>
+            </div>
+            <div id="review_passport-group" x-show="hasCpf === 'no'">
+              <label for="review_passportNumber" class="block text-sm font-medium text-gray-700 mb-1">
+                {{ t_field("User", "passport_number", current_lang) }}
+              </label>
+              <div class="relative" x-data="{ showTooltip: false }">
+                <input type="text" id="review_passportNumber" name="passport_number" maxlength="9"
+                  x-bind:disabled="!editMode" @mouseenter="if (!editMode) showTooltip = true"
+                  @mouseleave="showTooltip = false" @focus="if (!editMode) showTooltip = true"
+                  @blur="showTooltip = false"
+                  class="block w-full rounded-lg border border-input bg-background px-3 py-2 ps-9 text-sm text-foreground shadow-sm shadow-black/5 transition-shadow placeholder:text-muted-foreground/70 focus-visible:border-ring focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/20 disabled:cursor-not-allowed disabled:bg-gray-100 disabled:opacity-70"
+                  value="{{ usuario.passport_number or '' }}" oninput="formatPassport(this)">
+                <div
+                  class="pointer-events-none absolute inset-y-0 start-0 flex items-center justify-center ps-3 text-muted-foreground/80 peer-disabled:opacity-50">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 448 512"
+                    fill="currentColor" aria-hidden="true">
+                    <path
+                      d="M129.62 176h39.09c1.49-27.03 6.54-51.35 14.21-70.41-27.71 13.24-48.02 39.19-53.3 70.41zm0 32c5.29 31.22 25.59 57.17 53.3 70.41-7.68-19.06-12.72-43.38-14.21-70.41h-39.09zM224 286.69c7.69-7.45 20.77-34.42 23.43-78.69h-46.87c2.67 44.26 15.75 71.24 23.44 78.69zM200.57 176h46.87c-2.66-44.26-15.74-71.24-23.43-78.69-7.7 7.45-20.78 34.43-23.44 78.69zm64.51 102.41c27.71-13.24 48.02-39.19 53.3-70.41h-39.09c-1.49 27.03-6.53 51.35-14.21 70.41zM416 0H64C28.65 0 0 28.65 0 64v384c0 35.35 28.65 64 64 64h352c17.67 0 32-14.33 32-32V32c0-17.67-14.33-32-32-32zm-80 416H112c-8.8 0-16-7.2-16-16s7.2-16 16-16h224c8.8 0 16 7.2 16 16s-7.2 16-16 16zm-112-96c-70.69 0-128-57.31-128-128S153.31 64 224 64s128 57.31 128 128-57.31 128-128 128zm41.08-214.41c7.68 19.06 12.72 43.38 14.21 70.41h39.09c-5.28-31.22-25.59-57.17-53.3-70.41z" />
+                  </svg>
+                </div>
+                <div x-show="showTooltip && !editMode" x-transition
+                  class="absolute whitespace-nowrap -top-2 left-1/2 -translate-x-1/2 -translate-y-full px-2 py-1 bg-gray-800 text-white text-xs rounded-md shadow-lg z-20">
+                  {{ t_ui("common", "click_edit_to_enable", "", current_lang)}}
+                </div>
+              </div>
+              <div class="error-message text-red-600 text-xs mt-1 hidden"></div>
             </div>
           </div>
 
-          <!-- CPF ou Passaporte -->
-          <div>
-            <label for="identification" class="block text-sm font-medium text-gray-700 mb-1">
-              {{ t_field("User", "cpf", current_lang)|default("CPF") }}
+          <!-- Residential Address -->
+          <div class="col-span-2">
+            <label for="review_residential_address" class="block text-sm font-medium text-gray-700 mb-1">
+              {{ t_field("User", "residential_address", current_lang)|default("Endereço Residencial") }}
             </label>
-            <div class="relative">
-              <input type="text" id="identification" name="cpf" x-bind:disabled="!editMode"
-                class="block w-full rounded-lg border border-input bg-background px-3 py-2 ps-9 text-sm text-foreground shadow-sm shadow-black/5 transition-shadow placeholder:text-muted-foreground/70 focus-visible:border-ring focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/20 disabled:cursor-not-allowed disabled:opacity-50"
-                value="{{ usuario.cpf }}" oninput="formatarCPF(this)">
+            <div class="relative" x-data="{ showTooltip: false }">
+              <input type="text" id="review_residential_address" name="residential_address" x-bind:disabled="!editMode"
+                @mouseenter="if (!editMode) showTooltip = true" @mouseleave="showTooltip = false"
+                @focus="if (!editMode) showTooltip = true" @blur="showTooltip = false"
+                class="block w-full rounded-lg border border-input bg-background px-3 py-2 ps-9 text-sm text-foreground shadow-sm shadow-black/5 transition-shadow placeholder:text-muted-foreground/70 focus-visible:border-ring focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/20 disabled:cursor-not-allowed disabled:bg-gray-100 disabled:opacity-70"
+                value="{{ usuario.residential_address.formatted if usuario.residential_address and usuario.residential_address.formatted else usuario.residential_address or '' }}">
               <div
                 class="pointer-events-none absolute inset-y-0 start-0 flex items-center justify-center ps-3 text-muted-foreground/80 peer-disabled:opacity-50">
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
                   stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-                  aria-hidden="true">
-                  <rect x="3" y="4" width="18" height="16" rx="2"></rect>
-                  <line x1="7" y1="12" x2="17" y2="12"></line>
-                  <line x1="7" y1="8" x2="10" y2="8"></line>
-                  <line x1="7" y1="16" x2="13" y2="16"></line>
+                  class="lucide lucide-map-pin-house-icon lucide-map-pin-house">
+                  <path
+                    d="M15 22a1 1 0 0 1-1-1v-4a1 1 0 0 1 .445-.832l3-2a1 1 0 0 1 1.11 0l3 2A1 1 0 0 1 22 17v4a1 1 0 0 1-1 1z" />
+                  <path
+                    d="M18 10a8 8 0 0 0-16 0c0 4.993 5.539 10.193 7.399 11.799a1 1 0 0 0 1.202 0 32 32 0 0 0 .824-.738" />
+                  <path d="M18 22v-3" />
+                  <circle cx="10" cy="10" r="3" />
                 </svg>
               </div>
+              <div x-show="showTooltip && !editMode" x-transition
+                class="absolute whitespace-nowrap -top-2 left-1/2 -translate-x-1/2 -translate-y-full px-2 py-1 bg-gray-800 text-white text-xs rounded-md shadow-lg z-20">
+                {{ t_ui("common", "click_edit_to_enable", "", current_lang)}}
+                <div
+                  class="absolute left-1/2 -translate-x-1/2 top-full w-0 h-0 border-x-4 border-x-transparent border-t-4 border-t-gray-800">
+                </div>
+              </div>
             </div>
+            <div class="error-message text-red-600 text-xs mt-1 hidden"></div>
+            <input type="hidden" name="endereco_residential_lat"
+              value="{{ usuario.residential_address.lat if usuario.residential_address and usuario.residential_address.lat else '' }}">
+            <input type="hidden" name="endereco_residential_lng"
+              value="{{ usuario.residential_address.lng if usuario.residential_address and usuario.residential_address.lng else '' }}">
+            <input type="hidden" name="endereco_residential_formatted"
+              value="{{ usuario.residential_address.formatted if usuario.residential_address and usuario.residential_address.formatted else '' }}">
+            <input type="hidden" name="endereco_residential_cidade"
+              value="{{ usuario.residential_address.cidade if usuario.residential_address and usuario.residential_address.cidade else '' }}">
+            <input type="hidden" name="endereco_residential_estado"
+              value="{{ usuario.residential_address.estado if usuario.residential_address and usuario.residential_address.estado else '' }}">
+            <input type="hidden" name="endereco_residential_pais"
+              value="{{ usuario.residential_address.pais if usuario.residential_address and usuario.residential_address.pais else '' }}">
+            <input type="hidden" name="endereco_residential_cep"
+              value="{{ usuario.residential_address.cep if usuario.residential_address and usuario.residential_address.cep else '' }}">
           </div>
 
-          <div>
-            <label for="passport" class="block text-sm font-medium text-gray-700 mb-1">
-              {{ t_field("User", "passport_number", current_lang)|default("Passaporte") }}
+          <!-- Delivery Address -->
+          <div class="col-span-2">
+            <label for="review_delivery_address" class="block text-sm font-medium text-gray-700 mb-1">
+              {{ t_field("User", "delivery_address", current_lang)|default("Endereço de Entrega") }}
             </label>
-            <div class="relative">
-              <input type="text" id="passport" name="passport_number" x-bind:disabled="!editMode"
-                class="block w-full rounded-lg border border-input bg-background px-3 py-2 ps-9 text-sm text-foreground shadow-sm shadow-black/5 transition-shadow placeholder:text-muted-foreground/70 focus-visible:border-ring focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/20 disabled:cursor-not-allowed disabled:opacity-50"
-                value="{% if usuario.passport_number and usuario.passport_number != 'None' and usuario.passport_number != None %}{{ usuario.passport_number }}{% endif %}"
-                placeholder="{{ t_ui('placeholders', 'no_passport', '', current_lang)|default('Número do passaporte (opcional)') }}">
+            <div class="relative" x-data="{ showTooltip: false }">
+              <input type="text" id="review_delivery_address" name="delivery_address" x-bind:disabled="!editMode"
+                @mouseenter="if (!editMode) showTooltip = true" @mouseleave="showTooltip = false"
+                @focus="if (!editMode) showTooltip = true" @blur="showTooltip = false"
+                class="block w-full rounded-lg border border-input bg-background px-3 py-2 ps-9 text-sm text-foreground shadow-sm shadow-black/5 transition-shadow placeholder:text-muted-foreground/70 focus-visible:border-ring focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/20 disabled:cursor-not-allowed disabled:bg-gray-100 disabled:opacity-70"
+                value="{{ usuario.delivery_address.formatted if usuario.delivery_address and usuario.delivery_address.formatted else usuario.delivery_address or '' }}"
+                placeholder="{{ 'Mesmo que o residencial' if not usuario.delivery_address else ''}}">
               <div
                 class="pointer-events-none absolute inset-y-0 start-0 flex items-center justify-center ps-3 text-muted-foreground/80 peer-disabled:opacity-50">
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 448 512" fill="currentColor"
-                  aria-hidden="true">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                  stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                  class="lucide lucide-map-pin-plus-icon lucide-map-pin-plus">
                   <path
-                    d="M129.62 176h39.09c1.49-27.03 6.54-51.35 14.21-70.41-27.71 13.24-48.02 39.19-53.3 70.41zm0 32c5.29 31.22 25.59 57.17 53.3 70.41-7.68-19.06-12.72-43.38-14.21-70.41h-39.09zM224 286.69c7.69-7.45 20.77-34.42 23.43-78.69h-46.87c2.67 44.26 15.75 71.24 23.44 78.69zM200.57 176h46.87c-2.66-44.26-15.74-71.24-23.43-78.69-7.7 7.45-20.78 34.43-23.44 78.69zm64.51 102.41c27.71-13.24 48.02-39.19 53.3-70.41h-39.09c-1.49 27.03-6.53 51.35-14.21 70.41zM416 0H64C28.65 0 0 28.65 0 64v384c0 35.35 28.65 64 64 64h352c17.67 0 32-14.33 32-32V32c0-17.67-14.33-32-32-32zm-80 416H112c-8.8 0-16-7.2-16-16s7.2-16 16-16h224c8.8 0 16 7.2 16 16s-7.2 16-16 16zm-112-96c-70.69 0-128-57.31-128-128S153.31 64 224 64s128 57.31 128 128-57.31 128-128 128zm41.08-214.41c7.68 19.06 12.72 43.38 14.21 70.41h39.09c-5.28-31.22-25.59-57.17-53.3-70.41z">
+                    d="M19.914 11.105A7.298 7.298 0 0 0 20 10a8 8 0 0 0-16 0c0 4.993 5.539 10.193 7.399 11.799a1 1 0 0 0 1.202 0 32 32 0 0 0 .824-.738" />
+                  <circle cx="12" cy="10" r="3" />
+                  <path d="M16 18h6" />
+                  <path d="M19 15v6" />
                 </svg>
               </div>
+              <div x-show="showTooltip && !editMode" x-transition
+                class="absolute whitespace-nowrap -top-2 left-1/2 -translate-x-1/2 -translate-y-full px-2 py-1 bg-gray-800 text-white text-xs rounded-md shadow-lg z-20">
+                {{ t_ui("common", "click_edit_to_enable", "", current_lang)}}
+                <div
+                  class="absolute left-1/2 -translate-x-1/2 top-full w-0 h-0 border-x-4 border-x-transparent border-t-4 border-t-gray-800">
+                </div>
+              </div>
             </div>
+            <div class="error-message text-red-600 text-xs mt-1 hidden"></div>
+            <input type="hidden" name="endereco_delivery_lat"
+              value="{{ usuario.delivery_address.lat if usuario.delivery_address and usuario.delivery_address.lat else '' }}">
+            <input type="hidden" name="endereco_delivery_lng"
+              value="{{ usuario.delivery_address.lng if usuario.delivery_address and usuario.delivery_address.lng else '' }}">
+            <input type="hidden" name="endereco_delivery_formatted"
+              value="{{ usuario.delivery_address.formatted if usuario.delivery_address and usuario.delivery_address.formatted else '' }}">
+            <input type="hidden" name="endereco_delivery_cidade"
+              value="{{ usuario.delivery_address.cidade if usuario.delivery_address and usuario.delivery_address.cidade else '' }}">
+            <input type="hidden" name="endereco_delivery_estado"
+              value="{{ usuario.delivery_address.estado if usuario.delivery_address and usuario.delivery_address.estado else '' }}">
+            <input type="hidden" name="endereco_delivery_pais"
+              value="{{ usuario.delivery_address.pais if usuario.delivery_address and usuario.delivery_address.pais else '' }}">
+            <input type="hidden" name="endereco_delivery_cep"
+              value="{{ usuario.delivery_address.cep if usuario.delivery_address and usuario.delivery_address.cep else '' }}">
           </div>
-        </div>
 
-        <!-- Endereços -->
-        <div>
-          <label for="residential_address" class="block text-sm font-medium text-gray-700 mb-1">
-            {{ t_field("User", "residential_address", current_lang)|default("Endereço Residencial") }}
-          </label>
-          <div class="relative">
-            <input type="text" id="residential_address" name="residential_address" x-bind:disabled="!editMode"
-              class="block w-full rounded-lg border border-input bg-background px-3 py-2 ps-9 text-sm text-foreground shadow-sm shadow-black/5 transition-shadow placeholder:text-muted-foreground/70 focus-visible:border-ring focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/20 disabled:cursor-not-allowed disabled:opacity-50"
-              value="{% if usuario.residential_address and usuario.residential_address != 'None' and usuario.residential_address != None %}{% if usuario.residential_address.formatted %}{{ usuario.residential_address.formatted }}{% else %}{{ usuario.residential_address }}{% endif %}{% endif %}"
-              placeholder="{{ t_ui('placeholders', 'no_address', '', current_lang)|default('Informe seu endereço residencial') }}">
-            <div
-              class="pointer-events-none absolute inset-y-0 start-0 flex items-center justify-center ps-3 text-muted-foreground/80 peer-disabled:opacity-50">
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
-                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-                class="lucide lucide-map-pin-house-icon lucide-map-pin-house">
-                <path
-                  d="M15 22a1 1 0 0 1-1-1v-4a1 1 0 0 1 .445-.832l3-2a1 1 0 0 1 1.11 0l3 2A1 1 0 0 1 22 17v4a1 1 0 0 1-1 1z" />
-                <path
-                  d="M18 10a8 8 0 0 0-16 0c0 4.993 5.539 10.193 7.399 11.799a1 1 0 0 0 1.202 0 32 32 0 0 0 .824-.738" />
-                <path d="M18 22v-3" />
-                <circle cx="10" cy="10" r="3" />
-              </svg>
+          <!-- Has Special Needs Section -->
+          <div class="col-span-2 sm:col-span-1">
+            <label class="block text-sm font-medium text-gray-700 mb-1">
+              {{ t_ui("pages", "owner_registration", "has_special_needs", current_lang) }}
+            </label>
+            <p class="text-xs text-gray-500 mb-2">{{ t_ui("pages", "owner_registration", "for_disabled", current_lang)
+              }}</p>
+            <div class="relative flex items-center rounded-md bg-gray-50 p-0.5 shadow-inner"
+              data-name="review_hasSpecialNeeds">
+              <button type="button" @click="if(editMode) hasSpecialNeeds = 'yes'"
+                :class="{ 'bg-blue-500 text-white': hasSpecialNeeds === 'yes', 'text-gray-700 hover:bg-white': hasSpecialNeeds !== 'yes' && editMode, 'text-gray-500 cursor-not-allowed': !editMode && hasSpecialNeeds !== 'yes' }"
+                class="toggle-btn radio-button flex-1 py-1.5 px-4 rounded-md text-sm font-medium transition-all duration-200 relative z-10"
+                :disabled="!editMode && hasSpecialNeeds !== 'yes'">
+                {{ t_ui("common", "yes", "", current_lang) }}
+              </button>
+              <button type="button" @click="if(editMode) hasSpecialNeeds = 'no'"
+                :class="{ 'bg-blue-500 text-white': hasSpecialNeeds === 'no', 'text-gray-700 hover:bg-white': hasSpecialNeeds !== 'no' && editMode, 'text-gray-500 cursor-not-allowed': !editMode && hasSpecialNeeds !== 'no' }"
+                class="toggle-btn radio-button flex-1 py-1.5 px-4 rounded-md text-sm font-medium transition-all duration-200 relative z-10"
+                :disabled="!editMode && hasSpecialNeeds !== 'no'">
+                {{ t_ui("common", "no", "", current_lang) }}
+              </button>
+              <span id="review_hasSpecialNeeds-indicator"
+                :class="{'opacity-100': editMode || hasSpecialNeeds === 'yes' || hasSpecialNeeds === 'no', 'opacity-0': !editMode && hasSpecialNeeds !== 'yes' && hasSpecialNeeds !== 'no'}"
+                :style="hasSpecialNeeds === 'yes' ? {left: '0.5px', right: 'auto'} : {left: 'auto', right: '0.5px'}"
+                class="indicator-pill absolute w-[calc(50%-1px)] bg-white rounded-md shadow-sm transition-all duration-200"
+                style="top: 0.5px; bottom: 0.5px;"></span>
             </div>
+            <input type="hidden" name="has_special_needs" :value="hasSpecialNeeds">
+            <div class="error-message text-red-600 text-xs mt-1 hidden"></div>
           </div>
-          <div id="residential_address-details" class="address-details text-sm text-gray-500 mt-1"></div>
-        </div>
 
-        <div>
-          <label for="delivery_address" class="block text-sm font-medium text-gray-700 mb-1">
-            {{ t_field("User", "delivery_address", current_lang)|default("Endereço de Entrega") }}
-          </label>
-          <div class="relative">
-            <input type="text" id="delivery_address" name="delivery_address" x-bind:disabled="!editMode"
-              class="block w-full rounded-lg border border-input bg-background px-3 py-2 ps-9 text-sm text-foreground shadow-sm shadow-black/5 transition-shadow placeholder:text-muted-foreground/70 focus-visible:border-ring focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/20 disabled:cursor-not-allowed disabled:opacity-50"
-              value="{% if usuario.delivery_address and usuario.delivery_address != 'None' and usuario.delivery_address != None %}{% if usuario.delivery_address.formatted %}{{ usuario.delivery_address.formatted }}{% else %}{{ usuario.delivery_address }}{% endif %}{% endif %}"
-              placeholder="{{ t_ui('placeholders', 'no_delivery_address', '', current_lang)|default('Informe seu endereço de entrega') }}">
-            <div
-              class="pointer-events-none absolute inset-y-0 start-0 flex items-center justify-center ps-3 text-muted-foreground/80 peer-disabled:opacity-50">
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
-                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-                class="lucide lucide-map-pin-plus-icon lucide-map-pin-plus">
-                <path
-                  d="M19.914 11.105A7.298 7.298 0 0 0 20 10a8 8 0 0 0-16 0c0 4.993 5.539 10.193 7.399 11.799a1 1 0 0 0 1.202 0 32 32 0 0 0 .824-.738" />
-                <circle cx="12" cy="10" r="3" />
-                <path d="M16 18h6" />
-                <path d="M19 15v6" />
-              </svg>
+          <div class="col-span-2 sm:col-span-1" id="review_specialNeedsDetails-group"
+            x-show="hasSpecialNeeds === 'yes'">
+            <label for="review_specialNeedsDetails" class="block text-sm font-medium text-gray-700 mb-1">
+              {{ t_ui("pages", "owner_registration", "special_needs_details", current_lang) }}
+            </label>
+            <div class="relative" x-data="{ showTooltip: false }">
+              <textarea id="review_specialNeedsDetails" name="special_needs_details" rows="2"
+                x-bind:disabled="!editMode" @mouseenter="if (!editMode) showTooltip = true"
+                @mouseleave="showTooltip = false" @focus="if (!editMode) showTooltip = true" @blur="showTooltip = false"
+                class="block w-full rounded-lg border border-input bg-background px-3 py-2 ps-9 text-sm text-foreground shadow-sm shadow-black/5 transition-shadow placeholder:text-muted-foreground/70 focus-visible:border-ring focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/20 disabled:cursor-not-allowed disabled:bg-gray-100 disabled:opacity-70"
+                style="resize: none;">{{ usuario.special_needs_details or '' }}</textarea>
+              <div
+                class="pointer-events-none absolute top-2 start-0 flex items-start justify-center ps-3 text-muted-foreground/80 peer-disabled:opacity-50">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                  stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                  class="lucide lucide-person-standing-icon lucide-person-standing">
+                  <circle cx="12" cy="5" r="1" />
+                  <path d="m9 20 3-6 3 6" />
+                  <path d="m6 8 6 2 6-2" />
+                  <path d="M12 10v4" />
+                </svg>
+              </div>
+              <div x-show="showTooltip && !editMode" x-transition
+                class="absolute whitespace-nowrap -top-2 left-1/2 -translate-x-1/2 -translate-y-full px-2 py-1 bg-gray-800 text-white text-xs rounded-md shadow-lg z-20">
+                {{ t_ui("common", "click_edit_to_enable", "", current_lang)}}
+                <div
+                  class="absolute left-1/2 -translate-x-1/2 top-full w-0 h-0 border-x-4 border-x-transparent border-t-4 border-t-gray-800">
+                </div>
+              </div>
             </div>
+            <div class="error-message text-red-600 text-xs mt-1 hidden"></div>
           </div>
-          <div id="delivery_address-details" class="address-details text-sm text-gray-500 mt-1"></div>
         </div>
+      </form>
     </div>
-    </form>
     <div class="px-4 py-3 bg-gray-50 border-t border-gray-200 flex justify-end space-x-3">
       <button type="button" onclick="fecharModal('modal-revisar-cadastro')"
         class="px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 transition-colors">
@@ -211,4 +439,35 @@
     </div>
   </div>
 </div>
-</div>
+
+<script>
+  function inicializarInputsVisiveis() {
+    // This function can be used to reinitialize intlTelInput or other logic
+    // when relevant fields (like CPF/Passport) become visible or editable.
+    // For example, if the phone field needs to be re-initialized with intlTelInput:
+    const contactNumberInput = document.getElementById('review_contact_number');
+    if (contactNumberInput && typeof inicializarTelefoneModal === 'function') {
+      // The inicializarTelefoneModal function would need to be defined and adapted
+      // for the review modal context.
+      // inicializarTelefoneModal(contactNumberInput, 'review_fullPhoneWithCode');
+    }
+  }
+
+  // Ensure Alpine.js x-data is initialized with correct values when the modal is opened.
+  // This can be done by listening to a modal opening event if available.
+  // Or, if the modal is always part of the DOM, the `usuario` values should be available at render time.
+  document.addEventListener('DOMContentLoaded', () => {
+    const modal = document.getElementById('modal-revisar-cadastro');
+    // If you have a way to know when the modal is shown (e.g., MutationObserver or custom event)
+    // you might want to re-initialize Alpine's state here if `usuario` data can change
+    // between modal openings.
+    // Ex: modal.addEventListener('modal-shown', () => { ... });
+    // In x-data, we are already using `usuario` directly, which should work if `usuario` is up-to-date.
+
+    // Initialize intl-tel-input for the review contact number when the modal becomes visible and is in edit mode.
+    // This requires the 'intl-tel-input' library to be loaded and a function like 'initializeReviewPhoneInput'.
+    // For now, this is a placeholder for where such initialization would go.
+    // You might need a MutationObserver to detect when the modal (`modal-revisar-cadastro`) is no longer hidden
+    // and then check `editMode`.
+  });
+</script>

@@ -237,6 +237,10 @@
       "confirmations": {
         "delete_pet": "Are you sure you want to delete this pet?",
         "delete_user": "Are you sure you want to delete this user?"
+      },
+      "history": {
+        "empty": "No history available",
+        "empty_hint": "This travel history will be automatically updated as you add documents."
       }
     },
     "placeholders": {
@@ -273,7 +277,8 @@
       "no": "No",
       "select_referral": "Select an option",
       "select_species": "Select species",
-      "select_gender": "Select gender"
+      "select_gender": "Select gender",
+      "click_edit_to_enable": "Click on \"Edit Data\" to edit your data"
     },
     "pages": {
       "owner_registration": {

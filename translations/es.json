@@ -227,6 +227,10 @@
       "confirmations": {
         "delete_pet": "¿Está seguro de que desea eliminar esta mascota?",
         "delete_user": "¿Está seguro de que desea eliminar este usuario?"
+      },
+      "history": {
+        "empty": "No hay historial disponible",
+        "empty_hint": "El historial de este viaje se actualizará automáticamente a medida que agregue documentos."
       }
     },
     "placeholders": {
@@ -263,7 +267,8 @@
       "no": "No",
       "select_referral": "Seleccione una opción",
       "select_species": "Seleccione la especie",
-      "select_gender": "Seleccione el sexo"
+      "select_gender": "Seleccione el sexo",
+      "click_edit_to_enable": "Haga clic en \"Editar Datos\" para editar sus datos"
     },
     "pages": {
       "owner_registration": {
