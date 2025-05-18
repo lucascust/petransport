@@ -758,7 +758,7 @@
   <!-- Histórico e Notas -->
   <div class="bg-white shadow rounded-lg overflow-hidden mb-8">
     <div class="px-4 py-5 sm:px-6 border-b border-gray-200">
-      <h2 class="text-lg leading-6 font-medium text-gray-900">Histórico e Notas</h2>
+      <h2 class="text-lg leading-6 font-medium text-gray-900">Histórico de Atualizações</h2>
     </div>
     <div class="px-4 py-5 sm:p-6">
       {% if travel.history %}
@@ -827,19 +827,23 @@
         {% endfor %}
       </ul>
       {% else %}
-      <div class="text-center py-8">
-        <svg xmlns="http://www.w3.org/2000/svg" class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24"
-          stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-            d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-        </svg>
-        <h3 class="mt-2 text-sm font-medium text-gray-900">
-          {{ t_ui('messages', 'history', 'empty', lang=current_lang) or 'Nenhum histórico disponível' }}
-        </h3>
-        <p class="mt-1 text-sm text-gray-500">
-          {{ t_ui('messages', 'history', 'empty_hint', lang=current_lang) or 'O histórico desta viagem será exibido aqui
-          conforme as atualizações acontecem.' }}
-        </p>
+      <div class="text-center py-10 px-4 sm:px-6">
+        <div class="bg-gray-50 rounded-xl p-6 max-w-md mx-auto border border-gray-100 shadow-sm">
+          <div class="relative mx-auto w-16 h-16 flex items-center justify-center rounded-full bg-blue-50 mb-4">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-blue-400" fill="none" viewBox="0 0 24 24"
+              stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+            </svg>
+          </div>
+          <h3 class="text-base font-semibold text-gray-900 mb-1">
+            {{ t_ui('messages', 'history', 'empty', lang=current_lang) or 'Nenhum histórico disponível' }}
+          </h3>
+          <p class="text-sm text-gray-500 max-w-sm mx-auto">
+            {{ t_ui('messages', 'history', 'empty_hint', lang=current_lang) or 'O histórico desta viagem será atualizado
+            automaticamente conforme você adiciona documentos.' }}
+          </p>
+        </div>
       </div>
       {% endif %}
     </div>

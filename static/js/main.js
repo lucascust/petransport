@@ -283,6 +283,7 @@ function inicializarUploadFoto() {
     uploadIcon.classList.remove('hidden');
     fileNameDisplay.classList.add('hidden');
     confirmButton.disabled = true;
+    window.isFileDialogOpen = false;
   }
 
   // Confirmar a foto

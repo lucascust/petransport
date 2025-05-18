@@ -374,7 +374,6 @@ def usuario_home(usuario):
         travels=travels,
         travel_doc_progress=travel_doc_progress,
         google_maps_api_key=google_maps_api_key,
-        current_lang=session.get("lang", "pt"),
         greeting=greeting,
     )
 
@@ -678,7 +677,6 @@ def criar_viagem(usuario):
         "criar_viagem.html",
         usuario=user_data,
         pets=pets,
-        current_lang=session.get("lang", "pt"),
     )
 
 
@@ -1307,16 +1305,12 @@ def cadastro_usuario_novo():
     # Importa as funções de tradução
     import translations.translation_manager as tm
 
-    # Obtém o idioma da solicitação ou usa o padrão (português)
-    lang = request.args.get("lang", "pt")
-
     # Configuração do Google Maps API Key
     google_maps_api_key = app.config["GOOGLE_MAPS_API_KEY"]
 
     return render_template(
         "cadastro_usuario_novo.html",
         google_maps_api_key=google_maps_api_key,
-        current_lang=lang,
     )
 
 
@@ -2212,6 +2206,7 @@ def before_request():
     # Update session language if ?lang= is present in the URL
     lang = request.args.get("lang")
     if lang:
+        lang = lang.strip().lower()
         from translations.translation_manager import get_supported_languages
 
         if lang in get_supported_languages():
@@ -3282,6 +3277,17 @@ def user_logout():
 @app.route("/obrigado")
 def obrigado():
     return render_template("obrigado.html")
+
+
+@app.route("/set_language", methods=["POST"])
+def set_language():
+    import translations.translation_manager as translation_manager
+
+    data = request.get_json()
+    lang = data.get("lang", "").strip().lower()
+    if lang in translation_manager.get_supported_languages():
+        session["lang"] = lang
+    return jsonify(success=True)
 
 
 if __name__ == "__main__":

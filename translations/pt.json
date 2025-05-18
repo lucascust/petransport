@@ -228,6 +228,10 @@
       "confirmations": {
         "delete_pet": "Tem certeza que deseja excluir este pet?",
         "delete_user": "Tem certeza que deseja excluir este usuário?"
+      },
+      "history": {
+        "empty": "Nenhum histórico disponível",
+        "empty_hint": "O histórico desta viagem será atualizado automaticamente conforme você adiciona documentos."
       }
     },
     "placeholders": {
@@ -262,7 +266,8 @@
       "no": "Não",
       "select_referral": "Selecione uma opção",
       "select_species": "Selecione a espécie",
-      "select_gender": "Selecione o sexo"
+      "select_gender": "Selecione o sexo",
+      "click_edit_to_enable": "Clique em \"Editar Dados\" para editar seus dados"
     },
     "pages": {
       "owner_registration": {
