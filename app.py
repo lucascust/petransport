@@ -1300,7 +1300,6 @@ def criar_usuario_page():
 
 
 @app.route("/cadastro_usuario_novo", methods=["GET"])
-@admin_required
 def cadastro_usuario_novo():
     # Importa as funções de tradução
     import translations.translation_manager as tm
@@ -2214,7 +2213,14 @@ def before_request():
 
     if "lang" not in session:
         session["lang"] = "pt"  # Idioma padrão
-    allowed_routes = ["home", "user_login", "static", "admin_login", "admin_logout"]
+    allowed_routes = [
+        "home",
+        "user_login",
+        "static",
+        "admin_login",
+        "admin_logout",
+        "cadastro_usuario_novo",
+    ]
     if request.endpoint not in allowed_routes and not request.endpoint.startswith(
         "admin"
     ):
