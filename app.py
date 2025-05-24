@@ -2220,6 +2220,7 @@ def before_request():
         "admin_login",
         "admin_logout",
         "cadastro_usuario_novo",
+        "obrigado",
     ]
     if request.endpoint not in allowed_routes and not request.endpoint.startswith(
         "admin"
