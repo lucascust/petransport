@@ -1299,8 +1299,8 @@ def criar_usuario_page():
     )
 
 
-@app.route("/cadastro_usuario_novo", methods=["GET"])
-def cadastro_usuario_novo():
+@app.route("/register", methods=["GET"])  # Renamed route
+def register_user():  # Renamed function
     # Importa as funções de tradução
     import translations.translation_manager as tm
 
@@ -1308,7 +1308,7 @@ def cadastro_usuario_novo():
     google_maps_api_key = app.config["GOOGLE_MAPS_API_KEY"]
 
     return render_template(
-        "cadastro_usuario_novo.html",
+        "cadastro_usuario_novo.html",  # Template name remains the same for now
         google_maps_api_key=google_maps_api_key,
     )
 
@@ -1379,12 +1379,37 @@ def gerar_username_unico(owner_name):
 
 
 @app.route("/criar_usuario", methods=["POST"])
-@admin_required
 def criar_usuario():
     # Dados do usuário do formulário
+    owner_name_from_form = request.form.get("owner_name")
+    email_from_form = request.form.get("email")
+    password_from_form = request.form.get("password")
+
+    if not owner_name_from_form:
+        return (
+            jsonify(
+                {"error": "Owner name ('owner_name') is required and cannot be empty."}
+            ),
+            400,
+        )
+
+    if not email_from_form:
+        return (
+            jsonify({"error": "Email ('email') is required and cannot be empty."}),
+            400,
+        )
+
+    if not password_from_form:
+        return (
+            jsonify(
+                {"error": "Password ('password') is required and cannot be empty."}
+            ),
+            400,
+        )
+
     form_data = {
-        "owner_name": request.form.get("owner_name"),
-        "email": request.form.get("email"),
+        "owner_name": owner_name_from_form,
+        "email": email_from_form,
         "contact_number": request.form.get("contact_number"),
         "has_cpf": request.form.get("hasCpf") == "yes",
         "cpf": request.form.get("cpf") if request.form.get("hasCpf") == "yes" else None,
@@ -1400,19 +1425,70 @@ def criar_usuario():
             else None
         ),
         "how_did_you_know": request.form.get("how_did_you_know"),
-        "password": request.form.get("password"),  # Add password from form
+        "password": password_from_form,  # Add password from form
     }
 
     # Gera um username único
-    username = gerar_username_unico(form_data["owner_name"])
+    try:
+        username = gerar_username_unico(form_data["owner_name"])
+    except ValueError as e:  # Catch potential errors from gerar_username_unico
+        app.logger.error(
+            f"Error generating username for {form_data['owner_name']}: {str(e)}"
+        )
+        return jsonify({"error": f"Failed to generate username: {str(e)}"}), 400
+
     form_data["username"] = username
+
+    # Hash the password using bcrypt and update form_data
+    if "password" in form_data and form_data["password"]:
+        password_to_hash = form_data["password"].encode("utf-8")
+        salt = bcrypt.gensalt()
+        hashed_password = bcrypt.hashpw(password_to_hash, salt)
+        form_data["password_hash"] = hashed_password.decode("utf-8")  # Store as string
+        del form_data["password"]  # Remove plain password
+    else:
+        # This should have been caught by earlier validation, but good to be defensive
+        return jsonify({"error": "Password is required for hashing."}), 400
 
     # Cria o usuário usando o modelo User
     user = User(**form_data)
     user_id = users_db.create_user(user)
 
     if not user_id:
-        return jsonify({"error": "Erro ao criar usuário"}), 500
+        flash(
+            t_ui(
+                "messages",
+                "user_creation_error",
+                current_lang(),
+                "Erro ao criar usuário",
+            ),
+            "error",
+        )
+        return redirect(url_for("register_user"))  # Updated url_for
+
+    # Log in the newly created user
+    new_user = users_db.get_user_by_id(user_id)
+    if new_user:
+        session["user_logged_in"] = True
+        session["username"] = new_user["username"]
+        session["user_id"] = str(new_user["_id"])
+        session["owner_name"] = new_user.get(
+            "owner_name", ""
+        )  # Add owner_name to session
+        session["login_expiry"] = (datetime.now() + timedelta(days=60)).timestamp()
+        users_db.update_user_last_access(new_user["_id"])
+    else:
+        # This case should ideally not happen if user_id was successfully returned
+        flash(
+            t_ui(
+                "messages",
+                "user_login_error_post_creation",
+                current_lang(),
+                "Erro ao fazer login após criação. Tente fazer login manualmente.",
+            ),
+            "error",
+        )
+        return redirect(url_for("user_login"))
 
     # Processa o endereço residencial
     residential_address_data = {
@@ -1467,13 +1543,28 @@ def criar_usuario():
             except ValueError:
                 birth_date = datetime.now()
 
+        microchip_raw = request.form.get(f"pets[{i}][microchip]")
+        microchip_cleaned = None
+        if microchip_raw:
+            # Remove non-digit characters from microchip
+            microchip_cleaned = re.sub(r"[^\d]", "", microchip_raw)
+            if not microchip_cleaned or not validar_microchip(microchip_cleaned):
+                return (
+                    jsonify(
+                        {
+                            "error": f"Pet {i + 1}'s microchip '{microchip_raw}' is invalid. It should contain 1 to 15 digits."
+                        }
+                    ),
+                    400,
+                )
+
         pet_data = {
             "name": request.form.get(f"pets[{i}][name]"),
             "species": request.form.get(f"pets[{i}][species]"),
             "breed": request.form.get(f"pets[{i}][breed]"),
             "gender": request.form.get(f"pets[{i}][gender]"),
             "birth_date": birth_date,
-            "microchip": request.form.get(f"pets[{i}][microchip]"),
+            "microchip": microchip_cleaned,  # Use cleaned microchip
             "weight": request.form.get(f"pets[{i}][weight]"),
             "fur_color": request.form.get(f"pets[{i}][fur_color]"),
             "owner_id": user_id,
@@ -1527,7 +1618,16 @@ def criar_usuario():
                 print(f"Error uploading pet photo to Firebase: {e}")
                 # Continue without photo if upload fails
 
-    return jsonify({"message": "Usuário criado com sucesso", "username": username}), 200
+    flash(
+        t_ui(
+            "messages",
+            "user_creation_success",
+            current_lang(),
+            "Usuário criado com sucesso! Você foi logado automaticamente.",
+        ),
+        "success",
+    )
+    return redirect(url_for("usuario_home", usuario=new_user["username"]))
 
 
 @app.route("/admin")
@@ -2219,7 +2319,7 @@ def before_request():
         "static",
         "admin_login",
         "admin_logout",
-        "cadastro_usuario_novo",
+        "register_user",  # Updated route name
         "obrigado",
     ]
     if request.endpoint not in allowed_routes and not request.endpoint.startswith(
@@ -3265,6 +3365,9 @@ def user_login():
             session["user_logged_in"] = True
             session["username"] = user["username"]
             session["user_id"] = str(user["_id"])
+            session["owner_name"] = user.get(
+                "owner_name", ""
+            )  # Add owner_name to session
             session["login_expiry"] = (datetime.now() + timedelta(days=60)).timestamp()
             users_db.update_user_last_access(user["_id"])
             return redirect(url_for("usuario_home", usuario=user["username"]))

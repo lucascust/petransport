@@ -206,10 +206,17 @@
           Contato
         </a>
         <!-- Login/User -->
+        {% if not session.get('admin_logged_in') %}
         {% if session.get('user_logged_in') and session.get('username') %}
         <a href="{{ url_for('usuario_home', usuario=session['username']) }}"
           class="bg-primary text-white px-6 py-2 rounded-full hover:bg-opacity-90 transition-all flex items-center">
-          {{ session['username'] }}
+          <i class="fas fa-user mr-2"></i>
+          {% if session.get('owner_name') %}
+          {{ session.owner_name.split(' ')[0] }}
+          {% else %}
+          {{ 'Sua Página' }} {# Fallback text if owner_name is not available #}
+          {% endif %}
+
         </a>
         {% else %}
         <a href="{{ url_for('user_login') }}"
@@ -221,6 +228,7 @@
           </svg>
           Login
         </a>
+        {% endif %}
         {% endif %}
       </div>
       <!-- Mobile Menu Button -->
