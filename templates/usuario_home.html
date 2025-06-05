@@ -656,18 +656,64 @@
     document.getElementById('breed').value = button.getAttribute('data-pet-breed') || '';
     document.getElementById('fur_color').value = button.getAttribute('data-pet-fur-color') || '';
     document.getElementById('gender').value = button.getAttribute('data-pet-gender') || '';
-    document.getElementById('birth_date').value = button.getAttribute('data-pet-birth-date') || '';
+
+    // Format birth date from database datetime to DD/MM/YYYY
+    const birthDateRaw = button.getAttribute('data-pet-birth-date') || '';
+    let formattedBirthDate = '';
+    if (birthDateRaw) {
+      try {
+        // Parse the datetime string (e.g., "2021-01-04 00:00:00")
+        const date = new Date(birthDateRaw);
+        if (!isNaN(date.getTime())) {
+          // Format to DD/MM/YYYY
+          const day = date.getDate().toString().padStart(2, '0');
+          const month = (date.getMonth() + 1).toString().padStart(2, '0');
+          const year = date.getFullYear();
+          formattedBirthDate = `${day}/${month}/${year}`;
+        }
+      } catch (e) {
+        console.warn('Error formatting birth date:', e);
+      }
+    }
+    document.getElementById('birth_date').value = formattedBirthDate;
+
     document.getElementById('weight').value = button.getAttribute('data-pet-weight') || '';
     document.getElementById('microchip').value = button.getAttribute('data-pet-microchip') || '';
     document.getElementById('username_pet').value = '{{ usuario.username }}';
     document.getElementById('nome_original_pet').value = button.getAttribute('data-pet-name') || '';
-    // Set the photo preview if available
+
+    // Update the photo preview using the function from edit_pet_form.html if available
     var photoPath = button.getAttribute('data-pet-photo');
+    var fullPhotoUrl = '';
     if (photoPath) {
-      document.getElementById('foto_atual').src = '/static/uploads/' + photoPath;
-    } else {
-      document.getElementById('foto_atual').src = '';
+      if (photoPath.startsWith('static/')) { // Check if path already includes static/
+        fullPhotoUrl = '/' + photoPath;
+      } else {
+        fullPhotoUrl = '/static/uploads/' + photoPath;
+      }
     }
+
+    if (typeof updatePetPhoto === 'function') {
+      updatePetPhoto(fullPhotoUrl);
+    } else { // Fallback if function is not defined (e.g. script not loaded yet)
+      document.getElementById('foto_atual').src = fullPhotoUrl;
+      // Basic placeholder logic if updatePetPhoto is not available
+      const fotoAtual = document.getElementById('foto_atual');
+      const fotoPlaceholder = document.getElementById('foto_placeholder');
+      if (fotoAtual && fotoPlaceholder) {
+        if (fullPhotoUrl) {
+          fotoAtual.classList.remove('hidden');
+          fotoPlaceholder.classList.add('hidden');
+        } else {
+          fotoAtual.classList.add('hidden');
+          fotoPlaceholder.classList.remove('hidden');
+        }
+      }
+    }
+
+    // Dispatch the event AFTER all values are set and photo logic is handled
+    document.dispatchEvent(new CustomEvent('petFormModalOpened'));
+
     // Show the modal
     document.getElementById('modal-editar-pet').classList.remove('hidden');
     document.getElementById('modal-editar-pet').classList.add('flex');

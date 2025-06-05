@@ -51,13 +51,37 @@
             <!-- Espécie -->
             <div>
               <label for="species" class="block text-sm font-medium text-gray-700 mb-1">Espécie</label>
-              <div class="relative" x-data="{ open: false, selected: '' }">
+              <div class="relative" x-data="{
+                open: false,
+                selected: 'Selecione a espécie',
+                updateSelectedDisplay() {
+                  const hiddenSelect = document.getElementById('species');
+                  if (hiddenSelect && hiddenSelect.value) {
+                    const mapping = {
+                      'canine': 'Canino',
+                      'feline': 'Felino',
+                      'bird': 'Pássaro',
+                      'rodent': 'Roedor',
+                      'other': 'Outros'
+                    };
+                    this.selected = mapping[hiddenSelect.value] || 'Selecione a espécie';
+                  } else {
+                    this.selected = 'Selecione a espécie';
+                  }
+                },
+                init() {
+                  this.updateSelectedDisplay();
+                  document.addEventListener('petFormModalOpened', () => {
+                    this.updateSelectedDisplay();
+                  });
+                }
+              }">
                 <button type="button" @click="open = !open" @keydown.escape.window="open = false"
                   @click.outside="open = false"
                   class="flex w-full items-center justify-between rounded-lg border border-gray-300 bg-white px-3 py-2 ps-9 text-sm shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
                   aria-haspopup="listbox" aria-expanded="false">
                   <span x-text="selected || 'Selecione a espécie'"
-                    :class="selected ? 'block truncate text-gray-700' : 'block truncate text-gray-400'"></span>
+                    :class="selected && selected !== 'Selecione a espécie' ? 'block truncate text-gray-700' : 'block truncate text-gray-400'"></span>
                   <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
                     stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
                     class="-me-1 ms-2 opacity-60">
@@ -158,13 +182,34 @@
             <!-- Sexo -->
             <div>
               <label for="gender" class="block text-sm font-medium text-gray-700 mb-1">Sexo</label>
-              <div class="relative" x-data="{ open: false, selected: '' }">
+              <div class="relative" x-data="{
+                open: false,
+                selected: 'Selecione o sexo',
+                updateSelectedDisplay() {
+                  const hiddenSelect = document.getElementById('gender');
+                  if (hiddenSelect && hiddenSelect.value) {
+                    const mapping = {
+                      'male': 'Macho',
+                      'female': 'Fêmea'
+                    };
+                    this.selected = mapping[hiddenSelect.value] || 'Selecione o sexo';
+                  } else {
+                    this.selected = 'Selecione o sexo';
+                  }
+                },
+                init() {
+                  this.updateSelectedDisplay();
+                  document.addEventListener('petFormModalOpened', () => {
+                    this.updateSelectedDisplay();
+                  });
+                }
+              }">
                 <button type="button" @click="open = !open" @keydown.escape.window="open = false"
                   @click.outside="open = false"
                   class="flex w-full items-center justify-between rounded-lg border border-gray-300 bg-white px-3 py-2 ps-9 text-sm shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
                   aria-haspopup="listbox" aria-expanded="false">
                   <span x-text="selected || 'Selecione o sexo'"
-                    :class="selected ? 'block truncate text-gray-700' : 'block truncate text-gray-400'"></span>
+                    :class="selected && selected !== 'Selecione o sexo' ? 'block truncate text-gray-700' : 'block truncate text-gray-400'"></span>
                   <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
                     stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
                     class="-me-1 ms-2 opacity-60">
@@ -303,8 +348,18 @@
             <!-- Foto Atual -->
             <div>
               <label class="block text-sm font-medium text-gray-700 mb-1">Foto Atual</label>
-              <div class="w-24 h-24 bg-gray-100 border border-gray-200 rounded overflow-hidden">
-                <img id="foto_atual" src="" alt="Foto atual do pet" class="w-full h-full object-cover">
+              <div
+                class="w-24 h-24 bg-gray-100 border border-gray-200 rounded overflow-hidden flex items-center justify-center">
+                <img id="foto_atual" src="" alt="Foto atual do pet" class="w-full h-full object-cover hidden">
+                <div id="foto_placeholder" class="flex flex-col items-center justify-center text-gray-400">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 mb-1" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path
+                      d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z" />
+                    <circle cx="12" cy="13" r="3" />
+                  </svg>
+                  <span class="text-xs">Sem foto</span>
+                </div>
               </div>
               <div class="error-message text-red-600 text-xs mt-1 hidden"></div>
             </div>
@@ -451,6 +506,9 @@
       });
     }
 
+    // Initialize pet photo display
+    initializePetPhoto();
+
     // Inicialize o AlpineJS se necessário
     if (typeof Alpine === 'undefined') {
       const script = document.createElement('script');
@@ -459,4 +517,49 @@
       document.head.appendChild(script);
     }
   });
+
+  // Function to initialize pet photo display
+  function initializePetPhoto() {
+    const fotoAtual = document.getElementById('foto_atual');
+    const fotoPlaceholder = document.getElementById('foto_placeholder');
+
+    if (fotoAtual && fotoPlaceholder) {
+      // Handle image load success
+      fotoAtual.onload = function () {
+        if (this.src && this.src !== '' && this.src !== window.location.href) {
+          fotoAtual.classList.remove('hidden');
+          fotoPlaceholder.classList.add('hidden');
+        }
+      };
+
+      // Handle image load error
+      fotoAtual.onerror = function () {
+        fotoAtual.classList.add('hidden');
+        fotoPlaceholder.classList.remove('hidden');
+      };
+
+      // Check initial state
+      if (!fotoAtual.src || fotoAtual.src === '' || fotoAtual.src === window.location.href) {
+        fotoAtual.classList.add('hidden');
+        fotoPlaceholder.classList.remove('hidden');
+      }
+    }
+  }
+
+  // Function to update pet photo when editing
+  function updatePetPhoto(photoUrl) {
+    const fotoAtual = document.getElementById('foto_atual');
+    const fotoPlaceholder = document.getElementById('foto_placeholder');
+
+    if (fotoAtual && fotoPlaceholder) {
+      if (photoUrl && photoUrl !== '') {
+        fotoAtual.src = photoUrl;
+        // The onload event will handle showing/hiding elements
+      } else {
+        fotoAtual.src = '';
+        fotoAtual.classList.add('hidden');
+        fotoPlaceholder.classList.remove('hidden');
+      }
+    }
+  }
 </script>
