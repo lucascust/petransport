@@ -44,12 +44,11 @@ from models import (
     Address,
     EntityType,
     DocumentType,
-    TravelStatus,
     FileType,
-    PetSpecies,
-    Gender,
-    TravelMethod,
+    TravelStatus,
 )
+from translations.translation_manager import t_ui
+import unicodedata
 
 # Carrega as variáveis de ambiente
 load_dotenv()
@@ -77,9 +76,6 @@ ALLOWED_EXTENSIONS = {"png", "jpg", "jpeg", "gif", "pdf"}
 
 def allowed_file(filename):
     return "." in filename and filename.rsplit(".", 1)[1].lower() in ALLOWED_EXTENSIONS
-
-
-import unicodedata
 
 
 def admin_required(f):
@@ -1459,7 +1455,7 @@ def criar_usuario():
             t_ui(
                 "messages",
                 "user_creation_error",
-                current_lang(),
+                session.get("lang", "pt"),
                 "Erro ao criar usuário",
             ),
             "error",
@@ -1483,7 +1479,7 @@ def criar_usuario():
             t_ui(
                 "messages",
                 "user_login_error_post_creation",
-                current_lang(),
+                session.get("lang", "pt"),
                 "Erro ao fazer login após criação. Tente fazer login manualmente.",
             ),
             "error",
@@ -1564,7 +1560,7 @@ def criar_usuario():
             "breed": request.form.get(f"pets[{i}][breed]"),
             "gender": request.form.get(f"pets[{i}][gender]"),
             "birth_date": birth_date,
-            "microchip": microchip_cleaned,  # Use cleaned microchip
+            "microchip": microchip_cleaned,
             "weight": request.form.get(f"pets[{i}][weight]"),
             "fur_color": request.form.get(f"pets[{i}][fur_color]"),
             "owner_id": user_id,
@@ -1622,7 +1618,7 @@ def criar_usuario():
         t_ui(
             "messages",
             "user_creation_success",
-            current_lang(),
+            session.get("lang", "pt"),
             "Usuário criado com sucesso! Você foi logado automaticamente.",
         ),
         "success",

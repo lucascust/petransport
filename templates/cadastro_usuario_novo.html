@@ -743,7 +743,7 @@
                       @click.outside="open = false"
                       class="flex w-full items-center justify-between rounded-lg border border-gray-300 bg-white px-3 py-2 ps-9 text-sm shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
                       aria-haspopup="listbox" aria-expanded="false">
-                      <span x-text="selected || '{{ t_ui('common', 'select_species' , '' , current_lang) }}'"
+                      <span x-text="selected || '{{ t_ui('common', 'select_species', '', current_lang) }}'"
                         :class="selected ? 'block truncate text-gray-700' : 'block truncate text-gray-400'"></span>
                       <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
                         stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
@@ -756,23 +756,23 @@
                       style="display: none;">
                       <ul class="py-1 text-sm max-h-60 overflow-auto" role="listbox">
                         <li class="cursor-pointer px-3 py-2 hover:bg-blue-50" role="option"
-                          @click="selected = '{{ t_enum('Pet', 'species', 'canine', current_lang) }}'; open = false; this.closest('div').querySelector('select').value = 'canine';">
+                          @click="selected = '{{ t_enum('Pet', 'species', 'canine', current_lang) }}'; open = false; const sel = $el.closest('.relative').querySelector('select'); sel.value = 'canine';">
                           {{ t_enum('Pet', 'species', 'canine', current_lang) }}
                         </li>
                         <li class="cursor-pointer px-3 py-2 hover:bg-blue-50" role="option"
-                          @click="selected = '{{ t_enum('Pet', 'species', 'feline', current_lang) }}'; open = false; this.closest('div').querySelector('select').value = 'feline';">
+                          @click="selected = '{{ t_enum('Pet', 'species', 'feline', current_lang) }}'; open = false; const sel = $el.closest('.relative').querySelector('select'); sel.value = 'feline';">
                           {{ t_enum('Pet', 'species', 'feline', current_lang) }}
                         </li>
                         <li class="cursor-pointer px-3 py-2 hover:bg-blue-50" role="option"
-                          @click="selected = '{{ t_enum('Pet', 'species', 'bird', current_lang) }}'; open = false; this.closest('div').querySelector('select').value = 'bird';">
+                          @click="selected = '{{ t_enum('Pet', 'species', 'bird', current_lang) }}'; open = false; const sel = $el.closest('.relative').querySelector('select'); sel.value = 'bird';">
                           {{ t_enum('Pet', 'species', 'bird', current_lang) }}
                         </li>
                         <li class="cursor-pointer px-3 py-2 hover:bg-blue-50" role="option"
-                          @click="selected = '{{ t_enum('Pet', 'species', 'rodent', current_lang) }}'; open = false; this.closest('div').querySelector('select').value = 'rodent';">
+                          @click="selected = '{{ t_enum('Pet', 'species', 'rodent', current_lang) }}'; open = false; const sel = $el.closest('.relative').querySelector('select'); sel.value = 'rodent';">
                           {{ t_enum('Pet', 'species', 'rodent', current_lang) }}
                         </li>
                         <li class="cursor-pointer px-3 py-2 hover:bg-blue-50" role="option"
-                          @click="selected = '{{ t_enum('Pet', 'species', 'other', current_lang) }}'; open = false; this.closest('div').querySelector('select').value = 'other';">
+                          @click="selected = '{{ t_enum('Pet', 'species', 'other', current_lang) }}'; open = false; const sel = $el.closest('.relative').querySelector('select'); sel.value = 'other';">
                           {{ t_enum('Pet', 'species', 'other', current_lang) }}
                         </li>
                       </ul>
@@ -789,7 +789,7 @@
                     </div>
 
                     <select name="pets[0][species]" class="hidden">
-                      <option value="canine" selected>{{ t_enum("Pet", "species", "canine", current_lang) }}</option>
+                      <option value="canine">{{ t_enum("Pet", "species", "canine", current_lang) }}</option>
                       <option value="feline">{{ t_enum("Pet", "species", "feline", current_lang) }}</option>
                       <option value="bird">{{ t_enum("Pet", "species", "bird", current_lang) }}</option>
                       <option value="rodent">{{ t_enum("Pet", "species", "rodent", current_lang) }}</option>
@@ -843,11 +843,11 @@
                       style="display: none;">
                       <ul class="py-1 text-sm max-h-60 overflow-auto" role="listbox">
                         <li class="cursor-pointer px-3 py-2 hover:bg-blue-50" role="option"
-                          @click="selected = '{{ t_enum('Pet', 'gender', 'male', current_lang) }}'; open = false; this.closest('div').querySelector('select').value = 'male';">
+                          @click="selected = '{{ t_enum('Pet', 'gender', 'male', current_lang) }}'; open = false; const sel = $el.closest('.relative').querySelector('select'); sel.value = 'male';">
                           {{ t_enum("Pet", "gender", "male", current_lang) }}
                         </li>
                         <li class="cursor-pointer px-3 py-2 hover:bg-blue-50" role="option"
-                          @click="selected = '{{ t_enum('Pet', 'gender', 'female', current_lang) }}'; open = false; this.closest('div').querySelector('select').value = 'female';">
+                          @click="selected = '{{ t_enum('Pet', 'gender', 'female', current_lang) }}'; open = false; const sel = $el.closest('.relative').querySelector('select'); sel.value = 'female';">
                           {{ t_enum("Pet", "gender", "female", current_lang) }}
                         </li>
                       </ul>
@@ -866,7 +866,7 @@
                     </div>
 
                     <select name="pets[0][gender]" class="hidden">
-                      <option value="male" selected>{{ t_enum("Pet", "gender", "male", current_lang) }}</option>
+                      <option value="male">{{ t_enum("Pet", "gender", "male", current_lang) }}</option>
                       <option value="female">{{ t_enum("Pet", "gender", "female", current_lang) }}</option>
                     </select>
                   </div>
@@ -1309,23 +1309,23 @@
                   <div x-show="open" class="absolute z-10 mt-1 w-full rounded-lg bg-white shadow-lg" style="display: none;">
                     <ul class="py-1 text-sm max-h-60 overflow-auto" role="listbox">
                       <li class="cursor-pointer px-3 py-2 hover:bg-blue-50" role="option"
-                        @click="selected = '{{ t_enum('Pet', 'species', 'canine', current_lang) }}'; open = false; this.closest('div').querySelector('select').value = 'canine';">
+                        @click="selected = '{{ t_enum('Pet', 'species', 'canine', current_lang) }}'; open = false; const sel = $el.closest('.relative').querySelector('select'); sel.value = 'canine';">
                         {{ t_enum('Pet', 'species', 'canine', current_lang) }}
                       </li>
                       <li class="cursor-pointer px-3 py-2 hover:bg-blue-50" role="option"
-                        @click="selected = '{{ t_enum('Pet', 'species', 'feline', current_lang) }}'; open = false; this.closest('div').querySelector('select').value = 'feline';">
+                        @click="selected = '{{ t_enum('Pet', 'species', 'feline', current_lang) }}'; open = false; const sel = $el.closest('.relative').querySelector('select'); sel.value = 'feline';">
                         {{ t_enum('Pet', 'species', 'feline', current_lang) }}
                       </li>
                       <li class="cursor-pointer px-3 py-2 hover:bg-blue-50" role="option"
-                        @click="selected = '{{ t_enum('Pet', 'species', 'bird', current_lang) }}'; open = false; this.closest('div').querySelector('select').value = 'bird';">
+                        @click="selected = '{{ t_enum('Pet', 'species', 'bird', current_lang) }}'; open = false; const sel = $el.closest('.relative').querySelector('select'); sel.value = 'bird';">
                         {{ t_enum('Pet', 'species', 'bird', current_lang) }}
                       </li>
                       <li class="cursor-pointer px-3 py-2 hover:bg-blue-50" role="option"
-                        @click="selected = '{{ t_enum('Pet', 'species', 'rodent', current_lang) }}'; open = false; this.closest('div').querySelector('select').value = 'rodent';">
+                        @click="selected = '{{ t_enum('Pet', 'species', 'rodent', current_lang) }}'; open = false; const sel = $el.closest('.relative').querySelector('select'); sel.value = 'rodent';">
                         {{ t_enum('Pet', 'species', 'rodent', current_lang) }}
                       </li>
                       <li class="cursor-pointer px-3 py-2 hover:bg-blue-50" role="option"
-                        @click="selected = '{{ t_enum('Pet', 'species', 'other', current_lang) }}'; open = false; this.closest('div').querySelector('select').value = 'other';">
+                        @click="selected = '{{ t_enum('Pet', 'species', 'other', current_lang) }}'; open = false; const sel = $el.closest('.relative').querySelector('select'); sel.value = 'other';">
                         {{ t_enum('Pet', 'species', 'other', current_lang) }}
                       </li>
                     </ul>
@@ -1339,7 +1339,7 @@
                   </div>
                   
                   <select name="pets[${this.petCount - 1}][species]" class="hidden">
-                    <option value="canine" selected>{{ t_enum("Pet", "species", "canine", current_lang) }}</option>
+                    <option value="canine">{{ t_enum("Pet", "species", "canine", current_lang) }}</option>
                     <option value="feline">{{ t_enum("Pet", "species", "feline", current_lang) }}</option>
                     <option value="bird">{{ t_enum("Pet", "species", "bird", current_lang) }}</option>
                     <option value="rodent">{{ t_enum("Pet", "species", "rodent", current_lang) }}</option>
@@ -1383,10 +1383,10 @@
                   
                   <div x-show="open" class="absolute z-10 mt-1 w-full rounded-lg bg-white shadow-lg" style="display: none;">
                     <ul class="py-1 text-sm max-h-60 overflow-auto" role="listbox">
-                      <li class="cursor-pointer px-3 py-2 hover:bg-blue-50" role="option" @click="selected = '{{ t_enum('Pet', 'gender', 'male', current_lang) }}'; open = false; this.closest('div').querySelector('select').value = 'male';">
+                      <li class="cursor-pointer px-3 py-2 hover:bg-blue-50" role="option" @click="selected = '{{ t_enum('Pet', 'gender', 'male', current_lang) }}'; open = false; const sel = $el.closest('.relative').querySelector('select'); sel.value = 'male';">
                         {{ t_enum("Pet", "gender", "male", current_lang) }}
                       </li>
-                      <li class="cursor-pointer px-3 py-2 hover:bg-blue-50" role="option" @click="selected = '{{ t_enum('Pet', 'gender', 'female', current_lang) }}'; open = false; this.closest('div').querySelector('select').value = 'female';">
+                      <li class="cursor-pointer px-3 py-2 hover:bg-blue-50" role="option" @click="selected = '{{ t_enum('Pet', 'gender', 'female', current_lang) }}'; open = false; const sel = $el.closest('.relative').querySelector('select'); sel.value = 'female';">
                         {{ t_enum("Pet", "gender", "female", current_lang) }}
                       </li>
                     </ul>
@@ -1403,7 +1403,7 @@
                   </div>
                   
                   <select name="pets[${this.petCount - 1}][gender]" class="hidden">
-                    <option value="male" selected>{{ t_enum("Pet", "gender", "male", current_lang) }}</option>
+                    <option value="male">{{ t_enum("Pet", "gender", "male", current_lang) }}</option>
                     <option value="female">{{ t_enum("Pet", "gender", "female", current_lang) }}</option>
                   </select>
                 </div>
@@ -2330,6 +2330,7 @@
         // Atualiza o contador para refletir a remoção
         window.petManager.petCount = document.querySelectorAll('.pet-form').length;
         window.petManager.atualizarNumerosPets();
+        document.getElementById('pet_count').value = window.petManager.petCount; // Added this line
       }
     }
   }
