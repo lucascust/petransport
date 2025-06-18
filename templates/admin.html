@@ -49,13 +49,12 @@
   <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
     {% for usuario in usuarios %}
     <div class="usuario-card bg-white rounded-lg shadow-md overflow-hidden border border-gray-200"
-      data-tutor="{{ usuario['owner_name'].lower() }}"
+      data-tutor="{{ usuario['owner_name']|default('')|lower }}"
       data-pets="{{ usuario['pets']|map(attribute='name')|join(' ')|lower }}">
 
       <!-- Cabeçalho do card de usuário -->
       <div class="px-4 py-3 bg-gray-50 border-b border-gray-200 flex justify-between items-center">
-        <h3 class="text-lg font-semibold text-gray-800 truncate">{{ usuario['owner_name'] if usuario['owner_name'] is
-          defined else 'Sem nome' }}</h3>
+        <h3 class="text-lg font-semibold text-gray-800 truncate">{{ usuario['owner_name']|default('Sem nome') }}</h3>
         <a href="/{{ usuario['username'] }}" class="text-sm text-primary-600 hover:text-primary-800 font-medium">@{{
           usuario['username'] }}</a>
       </div>
