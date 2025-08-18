@@ -96,6 +96,7 @@ const airportData = [
   { code: "PTY", city: "Panama City", country: "PA" },
   { code: "HAV", city: "Havana", country: "CU" },
   { code: "SDQ", city: "Santo Domingo", country: "DO" },
+  { code: "PUJ", city: "Punta Cana", country: "DO" },
   { code: "SJO", city: "San José", country: "CR" },
 
   // Aeroportos da Ásia e Oceania
@@ -379,6 +380,8 @@ const airportData = [
   { code: "MAJ", city: "Majuro", country: "MH" },
   { code: "TRW", city: "Tarawa", country: "KI" },
   { code: "FUN", city: "Funafuti", country: "TV" },
+
+
 ];
 
 // Lookup airport object by IATA code
