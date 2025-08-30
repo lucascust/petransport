@@ -22,6 +22,7 @@ from bson import ObjectId
 from werkzeug.security import generate_password_hash, check_password_hash
 from pprint import pprint
 import bcrypt
+import csv
 
 # Import Firebase storage module
 from firebase import upload_file_to_firebase, delete_file_from_firebase, get_file_url
@@ -49,6 +50,7 @@ from models import (
 )
 from translations.translation_manager import t_ui
 import unicodedata
+import csv
 
 # Carrega as variáveis de ambiente
 load_dotenv()
@@ -153,6 +155,81 @@ def atualizar_ultimo_acesso(usuario):
 @app.route("/")
 def home():
     return render_template("home.html")
+
+
+@app.route("/phd")
+def phd_dashboard():
+    # Language handling via query string or session
+    lang = request.args.get("lang", session.get("lang", "pt"))
+    if lang in ["pt", "en"]:
+        session["lang"] = lang
+    else:
+        lang = session.get("lang", "pt")
+
+    # Path to static CSV
+    csv_path = os.path.join("static", "data", "database_fernanda.csv")
+
+    # Read CSV data
+    rows = []
+    if os.path.exists(csv_path):
+        try:
+            with open(csv_path, newline="", encoding="utf-8") as csvfile:
+                reader = csv.DictReader(csvfile)
+                for r in reader:
+                    # Parse float values
+                    def parse_float(value):
+                        try:
+                            return float(str(value).replace(",", "."))
+                        except Exception:
+                            return None
+
+                    row = {
+                        "ID": r.get("ID"),
+                        "grupo": r.get("Grupo"),
+                        "n_nos": parse_float(r.get("N_nós")),
+                        "taxa_escala_global": parse_float(r.get("Taxa_escala_global")),
+                        "taxa_escala_local": parse_float(r.get("Taxa_escala_local")),
+                        "categoria": r.get("Categoria"),
+                        "suscetiveis_mean": parse_float(r.get("suscetiveis_mean")),
+                        "suscetiveis_median": parse_float(r.get("suscetiveis_median")),
+                        "suscetiveis_iqr": parse_float(r.get("suscetiveis_iqr")),
+                        "infeccaos_mean": parse_float(r.get("infeccaos_mean")),
+                        "infeccaos_median": parse_float(r.get("infeccaos_median")),
+                        "infeccaos_iqr": parse_float(r.get("infeccaos_iqr")),
+                        "recuperados_mean": parse_float(r.get("recuperados_mean")),
+                        "recuperados_median": parse_float(r.get("recuperados_median")),
+                        "recuperados_iqr": parse_float(r.get("recuperados_iqr")),
+                        "prev_minimo_valor": parse_float(r.get("Prev_Minimo_Valor")),
+                        "prev_tempo_minimo": parse_float(r.get("Prev_Tempo_Minimo")),
+                        "prev_maximo_valor": parse_float(r.get("Prev_Maximo_Valor")),
+                        "prev_tempo_maximo": parse_float(r.get("Prev_Tempo_Maximo")),
+                        "prev_final_valor": parse_float(r.get("Prev_Final_Valor")),
+                    }
+                    rows.append(row)
+        except Exception as e:
+            app.logger.error(f"Erro ao ler CSV database_fernanda.csv: {e}")
+
+    # Filter options
+    groups = ["G1", "G2", "G3", "G4", "G5", "G6"]
+    # Extract unique Taxa_escala_global values from data (or hardcode from known values)
+    taxas = [0.01, 0.034, 0.05, 0.1, 0.15, 0.35, 0.5, 0.8]
+    categorias = [
+        "rede_completa",
+        "frigorifico",
+        "comercial",
+        "reproducao",
+        "sanitario",
+        "outros",
+    ]
+
+    return render_template(
+        "phd3.html",
+        lang=lang,
+        rows=rows,
+        groups=groups,
+        taxas=taxas,
+        categorias=categorias,
+    )
 
 
 @app.route("/<usuario>")
@@ -2317,6 +2394,7 @@ def before_request():
         "admin_logout",
         "register_user",  # Updated route name
         "obrigado",
+        "phd_dashboard",  # Página PHD3 isolada - acesso sem login
     ]
     if request.endpoint not in allowed_routes and not request.endpoint.startswith(
         "admin"

@@ -1,0 +1,1144 @@
+<!DOCTYPE html>
+<html lang="{{ lang }}">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PHD3 - Mathematical Model Simulation Scenarios</title>
+
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Chart.js for Gauge Charts -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+    }
+
+    .gauge-container {
+      position: relative;
+      width: 140px;
+      height: 80px;
+      margin: 0 auto;
+    }
+
+    .gauge-label {
+      position: absolute;
+      bottom: -5px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    .gauge-iqr {
+      text-align: center;
+      font-size: 11px;
+      color: #6B7280;
+      margin-top: 2px;
+    }
+
+    .scenario-card {
+      transition: all 0.3s ease;
+    }
+
+    .scenario-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    }
+
+    /* Custom scrollbar */
+    ::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: #f1f1f1;
+      border-radius: 4px;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: #888;
+      border-radius: 4px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: #555;
+    }
+
+    .tooltip {
+      position: relative;
+      display: inline-block;
+    }
+
+    .tooltip .tooltiptext {
+      visibility: hidden;
+      width: 200px;
+      background-color: #333;
+      color: #fff;
+      text-align: center;
+      border-radius: 4px;
+      padding: 5px;
+      position: absolute;
+      z-index: 1;
+      bottom: 125%;
+      left: 50%;
+      margin-left: -100px;
+      opacity: 0;
+      transition: opacity 0.3s;
+      font-size: 12px;
+    }
+
+    .tooltip:hover .tooltiptext {
+      visibility: visible;
+      opacity: 1;
+    }
+
+    /* Custom Dropdown Styles */
+    .custom-dropdown {
+      position: relative;
+      width: 100%;
+    }
+
+    .dropdown-trigger {
+      width: 100%;
+      padding: 10px 40px 10px 16px;
+      background: white;
+      border: 2px solid #E5E7EB;
+      border-radius: 6px;
+      font-size: 14px;
+      color: #374151;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .dropdown-trigger:hover {
+      border-color: #3B82F6;
+      box-shadow: 0 4px 12px rgba(59, 130, 246, 0.1);
+    }
+
+    .dropdown-trigger.active {
+      border-color: #3B82F6;
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    }
+
+    .dropdown-arrow {
+      position: absolute;
+      right: 16px;
+      top: 50%;
+      transform: translateY(-50%);
+      transition: transform 0.3s ease;
+      pointer-events: none;
+    }
+
+    .dropdown-arrow svg {
+      width: 20px;
+      height: 20px;
+      color: #6B7280;
+    }
+
+    .dropdown-trigger.active .dropdown-arrow {
+      transform: translateY(-50%) rotate(180deg);
+    }
+
+    .dropdown-menu {
+      position: absolute;
+      top: calc(100% + 8px);
+      left: 0;
+      right: 0;
+      background: white;
+      border: 1px solid #E5E7EB;
+      border-radius: 6px;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+      opacity: 0;
+      transform: translateY(-10px);
+      pointer-events: none;
+      transition: all 0.3s ease;
+      z-index: 50;
+      max-height: 280px;
+      overflow-y: auto;
+    }
+
+    .dropdown-menu.active {
+      opacity: 1;
+      transform: translateY(0);
+      pointer-events: auto;
+    }
+
+    .dropdown-option {
+      padding: 12px 16px;
+      font-size: 14px;
+      color: #374151;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      border-bottom: 1px solid #F3F4F6;
+    }
+
+    .dropdown-option:last-child {
+      border-bottom: none;
+    }
+
+    .dropdown-option:hover {
+      background: #F3F4F6;
+      color: #1F2937;
+    }
+
+    .dropdown-option.selected {
+      background: #2f90ff;
+      color: white;
+      font-weight: 500;
+    }
+
+    .dropdown-option.selected:hover {
+      background: #2f90ff;
+    }
+
+    /* Dropdown menu scrollbar */
+    .dropdown-menu::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    .dropdown-menu::-webkit-scrollbar-track {
+      background: #F9FAFB;
+      border-radius: 3px;
+    }
+
+    .dropdown-menu::-webkit-scrollbar-thumb {
+      background: #D1D5DB;
+      border-radius: 3px;
+    }
+
+    .dropdown-menu::-webkit-scrollbar-thumb:hover {
+      background: #9CA3AF;
+    }
+
+    /* Segmented Control Styles */
+    .segmented-control {
+      display: flex;
+      background: #F3F4F6;
+      border-radius: 8px;
+      padding: 2px;
+      width: 100%;
+    }
+
+    .segmented-button {
+      flex: 1;
+      padding: 8px 12px;
+      font-size: 14px;
+      font-weight: 500;
+      text-align: center;
+      border: none;
+      border-radius: 6px;
+      background: transparent;
+      color: #6B7280;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      position: relative;
+    }
+
+    .segmented-button:hover {
+      color: #374151;
+    }
+
+    .segmented-button.active {
+      background: white;
+      color: #1F2937;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06);
+    }
+
+    .segmented-button:focus {
+      outline: none;
+      box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.5);
+    }
+
+    /* Flag Button Styles */
+    .flag-button {
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 8px 12px;
+      background: white;
+      border: 1px solid #E5E7EB;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      min-width: 75px;
+      gap: 8px;
+    }
+
+    .flag-button:hover {
+      border-color: #D1D5DB;
+      background: #F9FAFB;
+    }
+
+    .flag-button.active {
+      border-color: #3B82F6;
+      background: #F8FAFF;
+    }
+
+    .flag-button:focus {
+      outline: none;
+      box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+    }
+
+    .flag-icon {
+      width: 24px;
+      height: 18px;
+      border-radius: 2px;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+      flex-shrink: 0;
+    }
+
+    .flag-label {
+      font-size: 11px;
+      font-weight: 500;
+      color: #6B7280;
+      letter-spacing: 0.3px;
+      transition: color 0.2s ease;
+    }
+
+    .flag-button.active .flag-label {
+      color: #3B82F6;
+      font-weight: 600;
+    }
+
+    .flag-button:hover .flag-label {
+      color: #374151;
+    }
+  </style>
+</head>
+
+<body class="bg-gray-50">
+  <!-- Main Container -->
+  <div class="flex h-screen overflow-hidden">
+
+    <!-- Sidebar -->
+    <div class="w-64 bg-white border-r border-gray-200 p-6 overflow-y-auto flex flex-col h-full">
+      <!-- Top Content -->
+      <div class="flex-grow">
+        <!-- Language Selector -->
+        <div class="mb-3">
+          <label class="text-sm font-medium text-gray-700 mb-2 block" data-translate="language">Idioma</label>
+          <div class="flex gap-2" id="languageSelector">
+            <button class="flag-button {% if lang=='pt' or not lang %}active{% endif %}" data-lang="pt"
+              title="Português">
+              <img src="https://flagicons.lipis.dev/flags/4x3/br.svg" alt="Brasil" class="flag-icon">
+              <span class="flag-label">PT-BR</span>
+            </button>
+            <button class="flag-button {% if lang=='en' %}active{% endif %}" data-lang="en" title="English">
+              <img src="https://flagicons.lipis.dev/flags/4x3/us.svg" alt="United States" class="flag-icon">
+              <span class="flag-label">EN</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Divider -->
+        <div class="border-t border-gray-200 my-4"></div>
+
+        <!-- Authors Section -->
+        <div class="mb-6">
+          <h2 class="text-lg font-semibold text-gray-800 mb-4" data-translate="authors_title">Autores</h2>
+
+          <!-- Authors List -->
+          <div class="space-y-3">
+            <div class="text-sm text-gray-600">
+              <p class="font-medium">Fernanda B. C. Cavalcanti</p>
+              <p class="text-xs text-gray-500" data-translate="role_phd_student">Doutoranda</p>
+              <p class="text-xs text-gray-400">fernanda.cavalcanti@unesp.br</p>
+            </div>
+            <div class="text-sm text-gray-600">
+              <p class="font-medium">Anaiá P. Sevá</p>
+              <p class="text-xs text-gray-500" data-translate="role_co_advisor">Co-orientadora</p>
+              <p class="text-xs text-gray-400">apseva@uesc.br</p>
+            </div>
+            <div class="text-sm text-gray-600">
+              <p class="font-medium">Fabiano A. Cadioli</p>
+              <p class="text-xs text-gray-500" data-translate="role_advisor">Orientador</p>
+              <p class="text-xs text-gray-400">fabiano.cadioli@unesp.br</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Divider -->
+        <div class="border-t border-gray-200 my-4"></div>
+
+        <!-- Mathematical Notation Section -->
+        <div class="mb-4">
+          <h2 class="text-lg font-semibold text-gray-800 mb-4" data-translate="mathematical_notation_title">Mathematical
+            Notation</h2>
+
+          <!-- Mathematical Notation Image -->
+          <div class="flex justify-center">
+            <img id="mathematicalNotationImage" src="/static/images/phd3/legenda_{{ lang }}.png"
+              alt="Mathematical Notation" class="max-w-full h-auto">
+          </div>
+        </div>
+      </div>
+
+      <!-- Bottom Support Section (fixed at bottom) -->
+      <div class="mt-auto">
+        <!-- Divider -->
+        <div class="border-t border-gray-200 mb-4"></div>
+
+        <!-- Support Section -->
+        <div class="space-y-4">
+          <h2 class="text-lg font-semibold text-gray-800 mb-4" data-translate="support_title">Apoio</h2>
+
+          <!-- Logos Grid -->
+          <div class="grid grid-cols-2 gap-3">
+            <!-- UNESP Logo -->
+            <div class="flex justify-center p-2 bg-gray-50 rounded">
+              <img src="/static/images/phd3/unesp_logo.png" alt="UNESP" class="h-12 object-contain">
+            </div>
+
+            <!-- CAPES Logo -->
+            <div class="flex justify-center p-2 bg-gray-50 rounded">
+              <img src="/static/images/phd3/capes_logo.png" alt="CAPES" class="h-12 object-contain">
+            </div>
+
+            <!-- MAPA Logo -->
+            <div class="flex justify-center p-2 bg-gray-50 rounded">
+              <img src="/static/images/phd3/mapa_logo.png" alt="MAPA" class="h-12 object-contain">
+            </div>
+
+            <!-- Defesa Agropecuária SP Logo -->
+            <div class="flex justify-center p-2 bg-gray-50 rounded">
+              <img src="/static/images/phd3/defesa_agropecuaria_sp_logo.png" alt="Defesa Agropecuária SP"
+                class="h-12 object-contain">
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="flex-1 overflow-y-auto">
+      <!-- Header -->
+      <div class="bg-white border-b border-gray-200 px-8 py-6">
+        <h1 class="text-2xl font-bold text-gray-900" data-translate="page_title">
+          Cenários da simulação do modelo matemático
+        </h1>
+        <p class="text-sm text-gray-600 mt-2" data-translate="page_description">
+          Resultados da simulação vinculados à Tese de Doutorado da Profa. Msc. Fernanda Beatriz Custodio Cavalcanti
+          pelo Programa de Pós-Graduação em Ciências Veterinárias da Faculdade de Ciências Agrárias e Veterinárias
+          (FCAV, UNESP Jaboticabal SP, Brasil)
+        </p>
+
+        <!-- Filters -->
+        <div class="mt-6 grid grid-cols-3 gap-4">
+          <!-- Filter 1: Grupo -->
+          <div>
+            <label class="flex items-center text-sm font-medium text-gray-700 mb-2">
+              <span data-translate="filter_group">Grupo</span>
+              <span class="tooltip ml-2">
+                <svg class="w-4 h-4 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+                  <path fill-rule="evenodd"
+                    d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-8-3a1 1 0 00-.867.5 1 1 0 11-1.731-1A3 3 0 0113 8a3.001 3.001 0 01-2 2.83V11a1 1 0 11-2 0v-1a1 1 0 011-1 1 1 0 100-2zm0 8a1 1 0 100-2 1 1 0 000 2z"
+                    clip-rule="evenodd" />
+                </svg>
+                <span class="tooltiptext" data-translate="filter_group_tooltip">
+                  Grupos de simulação (G1-G6) representam diferentes configurações de parâmetros
+                </span>
+              </span>
+            </label>
+            <div class="custom-dropdown" data-dropdown="group">
+              <input type="hidden" id="filterGroup" value="">
+              <div class="dropdown-trigger">
+                <span class="dropdown-value" data-translate="all">Todos</span>
+                <div class="dropdown-arrow">
+                  <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                  </svg>
+                </div>
+              </div>
+              <div class="dropdown-menu">
+                <div class="dropdown-option selected" data-value="" data-translate="all">Todos</div>
+                {% for group in groups %}
+                <div class="dropdown-option" data-value="{{ group }}">{{ group }}</div>
+                {% endfor %}
+              </div>
+            </div>
+          </div>
+
+          <!-- Filter 2: Taxa Escala Global -->
+          <div>
+            <label class="flex items-center text-sm font-medium text-gray-700 mb-2">
+              <span data-translate="filter_rate">Taxa Escala Global</span>
+              <span class="tooltip ml-2">
+                <svg class="w-4 h-4 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+                  <path fill-rule="evenodd"
+                    d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-8-3a1 1 0 00-.867.5 1 1 0 11-1.731-1A3 3 0 0113 8a3.001 3.001 0 01-2 2.83V11a1 1 0 11-2 0v-1a1 1 0 011-1 1 1 0 100-2zm0 8a1 1 0 100-2 1 1 0 000 2z"
+                    clip-rule="evenodd" />
+                </svg>
+                <span class="tooltiptext" data-translate="filter_rate_tooltip">
+                  Taxa de propagação global do modelo epidemiológico
+                </span>
+              </span>
+            </label>
+            <div class="custom-dropdown" data-dropdown="rate">
+              <input type="hidden" id="filterRate" value="">
+              <div class="dropdown-trigger">
+                <span class="dropdown-value" data-translate="all">Todos</span>
+                <div class="dropdown-arrow">
+                  <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                  </svg>
+                </div>
+              </div>
+              <div class="dropdown-menu">
+                <div class="dropdown-option selected" data-value="" data-translate="all">Todos</div>
+                {% for taxa in taxas %}
+                <div class="dropdown-option" data-value="{{ taxa }}">𝑝ᵢ={{ (taxa * 100)|round(1) }}%</div>
+                {% endfor %}
+              </div>
+            </div>
+          </div>
+
+          <!-- Filter 3: Categoria -->
+          <div>
+            <label class="flex items-center text-sm font-medium text-gray-700 mb-2">
+              <span data-translate="filter_category">Categoria</span>
+              <span class="tooltip ml-2">
+                <svg class="w-4 h-4 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+                  <path fill-rule="evenodd"
+                    d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-8-3a1 1 0 00-.867.5 1 1 0 11-1.731-1A3 3 0 0113 8a3.001 3.001 0 01-2 2.83V11a1 1 0 11-2 0v-1a1 1 0 011-1 1 1 0 100-2zm0 8a1 1 0 100-2 1 1 0 000 2z"
+                    clip-rule="evenodd" />
+                </svg>
+                <span class="tooltiptext" data-translate="filter_category_tooltip">
+                  Categoria do cenário de simulação
+                </span>
+              </span>
+            </label>
+            <div class="custom-dropdown" data-dropdown="category">
+              <input type="hidden" id="filterCategory" value="">
+              <div class="dropdown-trigger">
+                <span class="dropdown-value" data-translate="all">Todos</span>
+                <div class="dropdown-arrow">
+                  <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                  </svg>
+                </div>
+              </div>
+              <div class="dropdown-menu">
+                <div class="dropdown-option selected" data-value="" data-translate="all">Todos</div>
+                {% for categoria in categorias %}
+                <div class="dropdown-option" data-value="{{ categoria }}" data-category="{{ categoria }}">{{
+                  categoria|replace('_', ' ')|title }}</div>
+                {% endfor %}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Results Container -->
+      <div class="p-8">
+        <div id="resultsContainer" class="space-y-4">
+          <!-- Results will be dynamically inserted here -->
+        </div>
+
+        <!-- No Results Message -->
+        <div id="noResults" class="hidden text-center py-12">
+          <svg class="w-16 h-16 mx-auto text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          <p class="text-gray-500 text-lg" data-translate="no_results">Nenhum resultado encontrado</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Translation dictionary
+    const translations = {
+      pt: {
+        page_title: "Cenários da simulação do modelo matemático",
+        page_description: "Resultados da simulação vinculados à Tese de Doutorado da Profa. Msc. Fernanda Beatriz Custodio Cavalcanti pelo Programa de Pós-Graduação em Ciências Veterinárias da Faculdade de Ciências Agrárias e Veterinárias (FCAV, UNESP Jaboticabal SP, Brasil)",
+        authors_title: "Autores",
+        language: "Idioma",
+        filter_group: "Grupo",
+        filter_rate: "Taxa Escala Global (𝑝ᵢ)",
+        filter_category: "Categoria",
+        filter_group_tooltip: "Grupos de simulação (G1-G6) representam diferentes configurações de parâmetros",
+        filter_rate_tooltip: "Taxa de propagação global do modelo epidemiológico",
+        filter_category_tooltip: "Categoria do cenário de simulação",
+        all: "Todos",
+        no_results: "Nenhum resultado encontrado",
+        susceptible: "Suscetíveis",
+        infected: "Infectados",
+        recovered: "Recuperados",
+        final_value: "Prevalência Final",
+        max_value: "Prevalência Máxima",
+        period: "Tempo para Prevalência Máxima",
+        simulation_1: "Simulação 1",
+        simulation_2: "Simulação 2",
+        local_rate: "β = ",
+        n_value: "N",
+        // Categories
+        rede_completa: "Rede Completa",
+        frigorifico: "Frigorífico",
+        comercial: "Comercial",
+        reproducao: "Reprodução",
+        sanitario: "Sanitário",
+        outros: "Outros",
+        // Time units in singular and plural
+        year: "ano",
+        years: "anos",
+        month: "mês",
+        months: "meses",
+        week: "semana",
+        weeks: "semanas",
+        day: "dia",
+        days: "dias",
+        and: "e",
+        // Roles
+        role_phd_student: "Doutoranda",
+        role_co_advisor: "Co-orientadora",
+        role_advisor: "Orientador",
+        support_title: "Apoio",
+        mathematical_notation_title: "Notação Matemática"
+      },
+      en: {
+        page_title: "Mathematical Model Simulation Scenarios",
+        page_description: "Simulation results related to the PhD Thesis of Prof. MSc. Fernanda Beatriz Custodio Cavalcanti from the Graduate Program in Veterinary Sciences at the Faculty of Agricultural and Veterinary Sciences (FCAV, UNESP Jaboticabal SP, Brazil)",
+        authors_title: "Authors",
+        language: "Language",
+        filter_group: "Group",
+        filter_rate: "Global Scale Rate (𝑝ᵢ)",
+        filter_category: "Category",
+        filter_group_tooltip: "Simulation groups (G1-G6) represent different parameter configurations",
+        filter_rate_tooltip: "Global propagation rate of the epidemiological model",
+        filter_category_tooltip: "Simulation scenario category",
+        all: "All",
+        no_results: "No results found",
+        susceptible: "Susceptible",
+        infected: "Infected",
+        recovered: "Recovered",
+        final_value: "Final Prevalence",
+        max_value: "Maximum Prevalence",
+        period: "Time to Max Prevalence",
+        simulation_1: "Simulation 1",
+        simulation_2: "Simulation 2",
+        local_rate: "β =",
+        n_value: "N",
+        // Categories
+        rede_completa: "Complete Network",
+        frigorifico: "Refrigerator",
+        comercial: "Commercial",
+        reproducao: "Reproduction",
+        sanitario: "Sanitary",
+        outros: "Others",
+        // Time units in singular and plural
+        year: "year",
+        years: "years",
+        month: "month",
+        months: "months",
+        week: "week",
+        weeks: "weeks",
+        day: "day",
+        days: "days",
+        and: "and",
+        // Roles
+        role_phd_student: "PhD Student",
+        role_co_advisor: "Co-advisor",
+        role_advisor: "Advisor",
+        support_title: "Support",
+        mathematical_notation_title: "Mathematical Notation"
+      }
+    };
+
+    // Data from backend
+    const allRows = {{ rows | tojson }};
+    let currentLang = '{{ lang }}';
+    let chartInstances = {};
+
+    // Group meanings mapping
+    const groupMeanings = {
+      'G1': '100',
+      'G2': '5%',
+      'G3': '10%',
+      'G4': '15%',
+      'G5': '30%',
+      'G6': '50%'
+    };
+
+    // N value mapping table (Group x Category)
+    const nValueTable = {
+      'G1': {
+        'rede_completa': 100,
+        'frigorifico': 100,
+        'comercial': 100,
+        'reproducao': 100,
+        'sanitario': 100,
+        'outros': 100
+      },
+      'G2': {
+        'rede_completa': 123,
+        'frigorifico': 19,
+        'comercial': 85,
+        'reproducao': 102,
+        'sanitario': 0,
+        'outros': 7
+      },
+      'G3': {
+        'rede_completa': 10,
+        'frigorifico': 38,
+        'comercial': 171,
+        'reproducao': 204,
+        'sanitario': 1,
+        'outros': 14
+      },
+      'G4': {
+        'rede_completa': 371,
+        'frigorifico': 58,
+        'comercial': 256,
+        'reproducao': 307,
+        'sanitario': 1,
+        'outros': 22
+      },
+      'G5': {
+        'rede_completa': 742,
+        'frigorifico': 116,
+        'comercial': 513,
+        'reproducao': 614,
+        'sanitario': 3,
+        'outros': 44
+      },
+      'G6': {
+        'rede_completa': 1237,
+        'frigorifico': 193,
+        'comercial': 856,
+        'reproducao': 1024,
+        'sanitario': 5,
+        'outros': 73
+      }
+    };
+
+    // Function to format group with meaning
+    function formatGroup(group) {
+      const meaning = groupMeanings[group];
+      return meaning ? `${group} (${meaning})` : group;
+    }
+
+    // Function to get N value based on group and category
+    function getNValue(grupo, categoria) {
+      // Normalize category name to match the table keys
+      let normalizedCategory = categoria.toLowerCase();
+
+      // Map category names to table keys if needed
+      const categoryMap = {
+        'rede_completa': 'rede_completa',
+        'frigorifico': 'frigorifico',
+        'comercial': 'comercial',
+        'reproducao': 'reproducao',
+        'sanitario': 'sanitario',
+        'outros': 'outros'
+      };
+
+      if (categoryMap[normalizedCategory]) {
+        normalizedCategory = categoryMap[normalizedCategory];
+      }
+
+      // Get the N value from the table
+      if (nValueTable[grupo] && nValueTable[grupo][normalizedCategory] !== undefined) {
+        return nValueTable[grupo][normalizedCategory];
+      }
+
+      // Return 0 as default if not found
+      return 0;
+    }
+
+    // Function to translate category
+    function translateCategory(category, lang) {
+      const t = translations[lang];
+      // If the category key exists in translations, use it; otherwise format the raw value
+      if (t[category]) {
+        return t[category];
+      }
+      // Fallback: replace underscores with spaces and capitalize
+      return category.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase());
+    }
+
+    // Function to generate title based on local rate
+    function generateTitle(taxaLocal, lang) {
+      const t = translations[lang];
+
+      // Parse the local rate value (it's already a decimal number)
+      const localRate = parseFloat(taxaLocal);
+
+      if (localRate === 0) {
+        return t.simulation_1;
+      } else {
+        // Convert decimal to percentage for display
+        const percentageValue = (localRate * 100).toFixed(1);
+        return `${t.simulation_2} (${t.local_rate}${percentageValue}%)`;
+      }
+    }
+
+    // Function to convert days to human-readable format
+    function formatPeriod(days, lang) {
+      const t = translations[lang];
+      const units = [];
+
+      // Convert to years
+      const years = Math.floor(days / 365);
+      let remaining = days % 365;
+
+      if (years > 0) {
+        units.push(`${years} ${years === 1 ? t.year : t.years}`);
+      }
+
+      // Convert to months (if years was used, or if months > 0)
+      const months = Math.floor(remaining / 30);
+      remaining = remaining % 30;
+
+      if (months > 0 && units.length < 2) {
+        units.push(`${months} ${months === 1 ? t.month : t.months}`);
+      }
+
+      // Convert to weeks (only if no other units yet)
+      if (units.length === 0) {
+        const weeks = Math.floor(remaining / 7);
+        remaining = remaining % 7;
+
+        if (weeks > 0 && units.length < 2) {
+          units.push(`${weeks} ${weeks === 1 ? t.week : t.weeks}`);
+        }
+      }
+
+      // Days (only if less than a week and no other units, or as second unit)
+      if ((units.length === 0 && remaining > 0) || (units.length === 1 && remaining > 0)) {
+        if (units.length === 0 || remaining >= 7) { // Show days if it's the only unit or if >= 7 days remaining
+          units.push(`${remaining} ${remaining === 1 ? t.day : t.days}`);
+        }
+      }
+
+      // If still no units (0 days), show "0 days"
+      if (units.length === 0) {
+        units.push(`0 ${t.days}`);
+      }
+
+      // Join with "and" - but only use first 2 units
+      if (units.length > 2) {
+        units = units.slice(0, 2);
+      }
+
+      return units.join(` ${t.and} `);
+    }
+
+    // Language switcher - flag buttons
+    document.getElementById('languageSelector').addEventListener('click', function (e) {
+      // Find the button element (could be the button itself or a child element)
+      const button = e.target.closest('.flag-button');
+
+      if (button) {
+        // Remove active class from all buttons
+        const buttons = this.querySelectorAll('.flag-button');
+        buttons.forEach(btn => btn.classList.remove('active'));
+
+        // Add active class to clicked button
+        button.classList.add('active');
+
+        // Update current language
+        currentLang = button.dataset.lang;
+
+        // Update translations dynamically
+        updateTranslations();
+        updateCategoryDropdown();
+        updateMathematicalNotationImage();
+        renderResults(allRows);
+        // Or reload page for complete refresh
+        // window.location.href = `?lang=${currentLang}`;
+      }
+    });
+
+    // Create gauge chart
+    function createGaugeChart(canvasId, value, color, label) {
+      const ctx = document.getElementById(canvasId).getContext('2d');
+
+      // Destroy existing chart if it exists
+      if (chartInstances[canvasId]) {
+        chartInstances[canvasId].destroy();
+      }
+
+      const data = {
+        datasets: [{
+          data: [value, 100 - value],
+          backgroundColor: [color, '#E5E7EB'],
+          borderWidth: 0,
+          cutout: '75%',
+          rotation: -90,
+          circumference: 180
+        }]
+      };
+
+      const options = {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            display: false
+          },
+          tooltip: {
+            enabled: false
+          }
+        }
+      };
+
+      chartInstances[canvasId] = new Chart(ctx, {
+        type: 'doughnut',
+        data: data,
+        options: options
+      });
+    }
+
+    // Render results
+    function renderResults(filteredRows) {
+      const container = document.getElementById('resultsContainer');
+      const noResults = document.getElementById('noResults');
+
+      container.innerHTML = '';
+
+      if (filteredRows.length === 0) {
+        noResults.classList.remove('hidden');
+        return;
+      }
+
+      noResults.classList.add('hidden');
+
+      filteredRows.forEach((row, index) => {
+        const card = document.createElement('div');
+        card.className = 'scenario-card bg-white rounded shadow-md p-6';
+
+        // Generate unique IDs for charts
+        const sChartId = `chart-s-${index}`;
+        const iChartId = `chart-i-${index}`;
+        const rChartId = `chart-r-${index}`;
+
+        card.innerHTML = `
+                    <div class="grid grid-cols-7 gap-4 items-center">
+                        <!-- Title Column -->
+                        <div class="col-span-1">
+                            <h3 class="font-semibold text-gray-800 text-sm">${generateTitle(row.taxa_escala_local, currentLang)}</h3>
+                            <div class="mt-2 space-y-1">
+                                <span class="inline-block px-2 py-1 bg-blue-100 text-blue-700 text-xs rounded-sm">${formatGroup(row.grupo)}</span>
+                                <span class="inline-block px-2 py-1 bg-green-100 text-green-700 text-xs rounded-sm">𝑝ᵢ=${(row.taxa_escala_global * 100).toFixed(1)}%</span>
+                                <span class="inline-block px-2 py-1 bg-purple-100 text-purple-700 text-xs rounded-sm">${translateCategory(row.categoria, currentLang)}</span>
+                                <span class="inline-block px-2 py-1 bg-gray-100 text-gray-700 text-xs rounded-sm"><i>N</i>=${getNValue(row.grupo, row.categoria)}</span>
+                            </div>
+                        </div>
+                        
+                        <!-- S Gauge -->
+                        <div class="col-span-1">
+                            <div class="text-center">
+                                <p class="text-sm text-gray-600 font-semi-bold mb-2">${translations[currentLang].susceptible}</p>
+                                <div class="gauge-container">
+                                    <canvas id="${sChartId}" width="140" height="80"></canvas>
+                                    <div class="gauge-label text-green-600">${(row.suscetiveis_mean * 100).toFixed(2)}%</div>
+                                </div>
+                                <div class="gauge-iqr">${row.suscetiveis_median.toFixed(2)} (${row.suscetiveis_iqr.toFixed(2)})</div>
+                            </div>
+                        </div>
+                        
+                        <!-- I Gauge -->
+                        <div class="col-span-1">
+                            <div class="text-center">
+                                <p class="text-sm text-gray-600 font-semi-bold mb-2">${translations[currentLang].infected}</p>
+                                <div class="gauge-container">
+                                    <canvas id="${iChartId}" width="140" height="80"></canvas>
+                                    <div class="gauge-label text-red-600">${(row.infeccaos_mean * 100).toFixed(2)}%</div>
+                                </div>
+                                <div class="gauge-iqr">${row.infeccaos_median.toFixed(2)} (${row.infeccaos_iqr.toFixed(2)})</div>
+                            </div>
+                        </div>
+                        
+                        <!-- R Gauge -->
+                        <div class="col-span-1">
+                            <div class="text-center">
+                                <p class="text-sm text-gray-600 font-semi-bold mb-2">${translations[currentLang].recovered}</p>
+                                <div class="gauge-container">
+                                    <canvas id="${rChartId}" width="140" height="80"></canvas>
+                                    <div class="gauge-label text-blue-600">${(row.recuperados_mean * 100).toFixed(2)}%</div>
+                                </div>
+                                <div class="gauge-iqr">${row.recuperados_median.toFixed(2)} (${row.recuperados_iqr.toFixed(2)})</div>
+                            </div>
+                        </div>
+                        
+                        <!-- V_Final -->
+                        <div class="col-span-1 text-center">
+                            <div class="text-3xl font-bold text-gray-800">${row.prev_final_valor ? row.prev_final_valor.toFixed(1) : '0.0'}%</div>
+                            <p class="text-xs text-gray-500 mt-1">${translations[currentLang].final_value}</p>
+                        </div>
+                        
+                        <!-- V_Max -->
+                        <div class="col-span-1 text-center">
+                            <div class="text-3xl font-bold text-gray-800">${row.prev_maximo_valor ? row.prev_maximo_valor.toFixed(1) : '0.0'}%</div>
+                            <p class="text-xs text-gray-500 mt-1">${translations[currentLang].max_value}</p>
+                        </div>
+                        
+                        <!-- Period -->
+                        <div class="col-span-1 text-center">
+                            <div class="text-lg font-semibold text-gray-800">${formatPeriod(row.prev_tempo_maximo, currentLang)}</div>
+                            <p class="text-xs text-gray-500 mt-1">${translations[currentLang].period}</p>
+                        </div>
+                    </div>
+                `;
+
+        container.appendChild(card);
+
+        // Create charts after adding to DOM
+        setTimeout(() => {
+          createGaugeChart(sChartId, row.suscetiveis_mean * 100, '#10B981', 'S');
+          createGaugeChart(iChartId, row.infeccaos_mean * 100, '#EF4444', 'I');
+          createGaugeChart(rChartId, row.recuperados_mean * 100, '#3B82F6', 'R');
+        }, 100);
+      });
+    }
+
+    // Filter data
+    function filterData() {
+      const groupFilter = document.getElementById('filterGroup').value;
+      const rateFilter = document.getElementById('filterRate').value;
+      const categoryFilter = document.getElementById('filterCategory').value;
+
+      const filtered = allRows.filter(row => {
+        const groupMatch = !groupFilter || row.grupo === groupFilter;
+        // Convert both to numbers for comparison since one is string from dropdown, other is number from data
+        const rateMatch = !rateFilter || parseFloat(row.taxa_escala_global) === parseFloat(rateFilter);
+        const categoryMatch = !categoryFilter || row.categoria === categoryFilter;
+
+        return groupMatch && rateMatch && categoryMatch;
+      });
+
+      renderResults(filtered);
+    }
+
+    // Initialize custom dropdowns
+    function initDropdowns() {
+      const dropdowns = document.querySelectorAll('.custom-dropdown');
+
+      dropdowns.forEach(dropdown => {
+        const trigger = dropdown.querySelector('.dropdown-trigger');
+        const menu = dropdown.querySelector('.dropdown-menu');
+        const options = dropdown.querySelectorAll('.dropdown-option');
+        const valueDisplay = dropdown.querySelector('.dropdown-value');
+        const hiddenInput = dropdown.querySelector('input[type="hidden"]');
+
+        // Toggle dropdown
+        trigger.addEventListener('click', (e) => {
+          e.stopPropagation();
+
+          // Close other dropdowns
+          document.querySelectorAll('.custom-dropdown').forEach(other => {
+            if (other !== dropdown) {
+              other.querySelector('.dropdown-trigger').classList.remove('active');
+              other.querySelector('.dropdown-menu').classList.remove('active');
+            }
+          });
+
+          trigger.classList.toggle('active');
+          menu.classList.toggle('active');
+        });
+
+        // Select option
+        options.forEach(option => {
+          option.addEventListener('click', () => {
+            const value = option.dataset.value;
+            const text = option.textContent;
+
+            // Update selected state
+            options.forEach(opt => opt.classList.remove('selected'));
+            option.classList.add('selected');
+
+            // Update display
+            valueDisplay.textContent = text;
+            hiddenInput.value = value;
+
+            // Close dropdown
+            trigger.classList.remove('active');
+            menu.classList.remove('active');
+
+            // Trigger filter
+            filterData();
+          });
+        });
+      });
+
+      // Close dropdowns on outside click
+      document.addEventListener('click', () => {
+        document.querySelectorAll('.dropdown-trigger').forEach(trigger => {
+          trigger.classList.remove('active');
+        });
+        document.querySelectorAll('.dropdown-menu').forEach(menu => {
+          menu.classList.remove('active');
+        });
+      });
+    }
+
+    // Update text translations
+    function updateTranslations() {
+      document.querySelectorAll('[data-translate]').forEach(element => {
+        const key = element.getAttribute('data-translate');
+        if (translations[currentLang][key]) {
+          element.textContent = translations[currentLang][key];
+        }
+      });
+    }
+
+    // Update group dropdown options with meanings
+    function updateGroupDropdown() {
+      const groupDropdown = document.querySelector('[data-dropdown="group"]');
+      if (groupDropdown) {
+        const options = groupDropdown.querySelectorAll('.dropdown-option');
+        options.forEach(option => {
+          const value = option.dataset.value;
+          if (value && value !== '') {
+            option.textContent = formatGroup(value);
+          }
+        });
+      }
+    }
+
+    // Update category dropdown options with translations
+    function updateCategoryDropdown() {
+      const categoryDropdown = document.querySelector('[data-dropdown="category"]');
+      if (categoryDropdown) {
+        const options = categoryDropdown.querySelectorAll('.dropdown-option[data-category]');
+        options.forEach(option => {
+          const category = option.dataset.category;
+          if (category) {
+            option.textContent = translateCategory(category, currentLang);
+          }
+        });
+      }
+    }
+
+    // Update mathematical notation image based on language
+    function updateMathematicalNotationImage() {
+      const image = document.getElementById('mathematicalNotationImage');
+      if (image) {
+        image.src = `/static/images/phd3/legenda_${currentLang}.png`;
+      }
+    }
+
+    // Initialize everything on page load
+    initDropdowns();
+    updateTranslations();
+    updateGroupDropdown();
+    updateCategoryDropdown();
+    renderResults(allRows);
+  </script>
+</body>
+
+</html>
